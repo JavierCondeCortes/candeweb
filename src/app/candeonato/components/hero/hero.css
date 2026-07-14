@@ -1,0 +1,17 @@
+@keyframes flecha {
+    0% {
+        transform: translateY(0rem);
+    }
+
+    50% {
+        transform: translateY(1rem);
+    }
+
+    100% {
+        transform: translateY(0rem);
+    }
+}
+
+.flecha {
+    animation: flecha 2s infinite;
+}

@@ -1,6 +1,22 @@
-<section>
-    <iframe
-        src="https://www.youtube.com/embed/VIDEO_ID?autoplay=1&mute=1&loop=1&playlist=VIDEO_ID&controls=0&showinfo=0&rel=0"
-        title="Hero video" frameborder="0" allow="autoplay; fullscreen" allowfullscreen>
-    </iframe>
+<section class="relative h-screen overflow-hidden mx-auto max-w-[2560px]">
+    <video
+        class="fixed top-1/2 left-1/2 h-full min-w-[120%] max-w-none -translate-x-1/2 -translate-y-1/2 object-cover"
+        #heroVideo autoplay muted loop playsinline preload="auto">
+        <source src="/exampleVideo.mp4" type="video/mp4" />
+    </video>
+    <section class="flex h-screen items-center justify-center lg:items-end lg:justify-start lg:pb-20 lg:pl-20">
+        <div
+            class="z-10 flex flex-col gap-8 text-center text-2xl font-mono text-(--texto) lg:text-left lg:text-3xl xl:text-4xl">
+            <h1>{{ variableTextoVisible() }}</h1>
+            <span>[ 23 : 03 : 25 : 59 ]</span>
+        </div>
+    </section>
+
+    <svg class="flecha fixed bottom-8 left-1/2 z-1 w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true"
+        xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 19V5m0 14-4-4m4 4 4-4" />
+    </svg>
+
+    <div class="fixed inset-0 z-0 bg-linear-to-b from-(--negroPrimario) via-transparent to-(--negroPrimario)"></div>
 </section>
