@@ -1,0 +1,112 @@
+<a class="skip-link" href="#contenido-historial">Saltar al historial</a>
+
+@if (state$ | async; as state) {
+  <header class="archive-hero">
+    <picture aria-hidden="true">
+      <source
+        media="(max-width: 47.99rem)"
+        [srcset]="state.championships[0]?.coverMobileUrl || '/media/hero-poster-mobile.webp'"
+      />
+      <img
+        [src]="state.championships[0]?.coverUrl || '/media/hero-poster.webp'"
+        alt=""
+        width="1600"
+        height="900"
+      />
+    </picture>
+    <div class="archive-vignette" aria-hidden="true"></div>
+    <div class="archive-grid" aria-hidden="true"></div>
+
+    <nav class="archive-nav" aria-label="Navegación principal">
+      <a
+        class="archive-brand"
+        routerLink="/"
+        aria-label="CND/// — Candemor Racing Team, volver al inicio"
+      >
+        CND<span>///</span>
+      </a>
+      <div>
+        <a routerLink="/">Inicio</a>
+        <a routerLink="/candeonato">Candeonato</a>
+        <a routerLink="/candeonatos" aria-current="page">Historial</a>
+      </div>
+    </nav>
+
+    <div class="archive-hero-content">
+      <p class="eyebrow">Archivo deportivo // Candemor Racing Team</p>
+      <h1>Historial de<br /><span>Candeonatos</span></h1>
+      <p>
+        Cada edición, cada circuito y cada punto. Consulta el recorrido deportivo de la comunidad
+        sin perder de vista la historia detrás de las carreras.
+      </p>
+      @if (state.championships[0]?.externalTournamentId; as tournamentId) {
+        <a class="button button-primary" [routerLink]="['/candeonatos', tournamentId]">
+          Explorar clasificación
+        </a>
+      }
+    </div>
+  </header>
+
+  <main id="contenido-historial" class="archive-main" tabindex="-1">
+    <section class="section-shell edition-section" aria-labelledby="editions-title">
+      <div class="section-heading">
+        <p class="eyebrow">Ediciones disponibles</p>
+        <h2 id="editions-title" class="section-title">El archivo</h2>
+        <p class="lede">
+          Las ediciones publicadas desde administración aparecen aquí automáticamente.
+        </p>
+      </div>
+
+      @if (state.kind === 'loading') {
+        <p class="archive-note" role="status">Cargando ediciones…</p>
+      } @else if (state.kind === 'error') {
+        <p class="archive-note" role="alert">
+          El archivo no está disponible ahora. Vuelve a intentarlo dentro de unos minutos.
+        </p>
+      } @else if (state.championships.length === 0) {
+        <p class="archive-note">Todavía no hay Candeonatos publicados.</p>
+      } @else {
+        <div class="edition-list">
+          @for (championship of state.championships; track championship.id) {
+            <article class="edition-card">
+              <div class="edition-index" aria-hidden="true">
+                {{ championship.editionNumber ?? championship.externalTournamentId ?? '—' }}
+              </div>
+              <div class="edition-copy">
+                <div class="edition-meta">
+                  <span>{{ championship.status }}</span>
+                  @if (championship.season) {
+                    <span>{{ championship.season }}</span>
+                  }
+                  <span>{{
+                    championship.syncStatus === 'success'
+                      ? 'Datos sincronizados'
+                      : 'Sincronización pendiente'
+                  }}</span>
+                </div>
+                <h3>{{ championship.name }}</h3>
+                <p>{{ championship.summary || 'Información editorial pendiente.' }}</p>
+                @if (championship.externalTournamentId; as tournamentId) {
+                  <a class="button button-secondary" [routerLink]="['/candeonatos', tournamentId]">
+                    Ver edición <span aria-hidden="true">→</span>
+                  </a>
+                }
+              </div>
+            </article>
+          }
+        </div>
+      }
+
+      <aside class="archive-note" aria-label="Disponibilidad del archivo">
+        <span aria-hidden="true">+</span>
+        <p>Las posiciones y puntos proceden de la fuente deportiva vinculada a cada edición.</p>
+      </aside>
+    </section>
+  </main>
+
+  <footer class="archive-footer">
+    <a class="archive-brand" routerLink="/">CND<span>///</span></a>
+    <p>Archivo deportivo del Candeonato · Datos externos sujetos a disponibilidad.</p>
+    <a routerLink="/candeonato">Volver a la edición actual</a>
+  </footer>
+}

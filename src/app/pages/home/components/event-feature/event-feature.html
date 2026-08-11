@@ -1,0 +1,163 @@
+@if (event$ | async; as event) {
+  <section class="home-event-section" aria-labelledby="event-feature-title">
+    <div class="section-shell home-event-shell">
+      <div class="home-event-heading">
+        <p class="eyebrow">Un evento de Candemor</p>
+        <h2 id="event-feature-title" class="section-title">Evento destacado</h2>
+        <p>
+          Esta es la edición que actualmente está seleccionada desde el panel de administración.
+        </p>
+      </div>
+
+      <article class="home-event-preview" [attr.aria-label]="'Edición actual: ' + event.name">
+        @if (event.backgroundVideoUrl) {
+          <div
+            class="home-event-media-choice"
+            role="group"
+            aria-label="Contenido visual del evento"
+          >
+            <button
+              type="button"
+              [attr.aria-pressed]="mediaMode() === 'poster'"
+              (click)="selectMedia('poster')"
+            >
+              Ver cartel
+            </button>
+            <button
+              type="button"
+              [attr.aria-pressed]="mediaMode() === 'video'"
+              (click)="selectMedia('video')"
+            >
+              Ver vídeo
+            </button>
+          </div>
+        }
+
+        @if (event.backgroundVideoUrl && mediaMode() === 'video') {
+          <video
+            class="home-event-preview-media"
+            controls
+            muted
+            playsinline
+            preload="metadata"
+            [poster]="event.coverUrl || '/media/hero-poster.webp'"
+          >
+            <source
+              [src]="event.backgroundVideoUrl"
+              [type]="event.backgroundVideoMimeType || 'video/mp4'"
+            />
+          </video>
+        } @else {
+          <div class="home-event-poster-frame">
+            <picture class="home-event-preview-media">
+              <source
+                media="(max-width: 47.99rem)"
+                [srcset]="
+                  event.coverMobileUrl || event.coverUrl || '/media/hero-poster-mobile.webp'
+                "
+              />
+              <img
+                [src]="event.coverUrl || '/media/hero-poster.webp'"
+                [alt]="event.coverAlt || ''"
+                width="1600"
+                height="900"
+                loading="lazy"
+              />
+            </picture>
+            <button
+              class="home-event-poster-expand"
+              type="button"
+              aria-label="Ampliar el cartel a pantalla grande"
+              title="Ampliar cartel"
+              (click)="openPoster()"
+            >
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none">
+                <path
+                  d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </button>
+          </div>
+        }
+
+        <div class="home-event-preview-body">
+          <p class="home-event-preview-eyebrow">
+            Candeonato
+            @if (event.editionNumber) {
+              #{{ event.editionNumber }}
+            }
+          </p>
+          <h3>{{ event.name }}</h3>
+          @if (event.subtitle) {
+            <p class="home-event-preview-subtitle">{{ event.subtitle }}</p>
+          }
+          <p class="home-event-preview-summary">
+            {{ event.summary || 'Información editorial pendiente para esta edición.' }}
+          </p>
+
+          <div class="home-event-preview-meta" aria-label="Datos de la edición actual">
+            <span [attr.data-status]="event.status">{{ statusLabel(event.status) }}</span>
+            @if (event.season) {
+              <span>{{ event.season }}</span>
+            }
+            @if (event.startAt) {
+              <span>
+                Inicio
+                <time [attr.datetime]="event.startAt">{{ event.startAt | date: 'dd MMM y' }}</time>
+              </span>
+            }
+            @if (event.endAt) {
+              <span>
+                Final
+                <time [attr.datetime]="event.endAt">{{ event.endAt | date: 'dd MMM y' }}</time>
+              </span>
+            }
+            @if (!event.startAt && !event.endAt) {
+              <span>Fechas por confirmar</span>
+            }
+          </div>
+
+          <div class="home-event-actions">
+            <a class="button button-primary" routerLink="/candeonato">Descubrir este evento</a>
+            <a class="button button-secondary" routerLink="/candeonatos"> Explorar el historial </a>
+          </div>
+        </div>
+      </article>
+
+      <dialog
+        #posterDialog
+        class="home-event-poster-dialog"
+        [attr.aria-label]="'Cartel ampliado de ' + event.name"
+        (click)="closePosterFromBackdrop($event)"
+      >
+        <div class="home-event-poster-dialog-content">
+          <button
+            class="home-event-poster-dialog-close"
+            type="button"
+            aria-label="Cerrar cartel ampliado"
+            (click)="closePoster()"
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="none">
+              <path
+                d="m6 6 12 12M18 6 6 18"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+          <img
+            [src]="event.coverUrl || '/media/hero-poster.webp'"
+            [alt]="event.coverAlt || 'Cartel de ' + event.name"
+            width="1600"
+            height="900"
+          />
+        </div>
+      </dialog>
+    </div>
+  </section>
+}

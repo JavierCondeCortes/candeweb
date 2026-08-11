@@ -1,0 +1,150 @@
+<header class="admin-page-header">
+  <div>
+    <p class="admin-eyebrow">Archivo deportivo</p>
+    <h1>Candeonatos</h1>
+    <p>Gestiona la información editorial y sincroniza los resultados externos de cada edición.</p>
+  </div>
+  <a class="admin-button is-primary" routerLink="/admin/candeonatos/nuevo">Nueva edición</a>
+</header>
+
+@if (message()) {
+  <p class="admin-alert is-success" role="status">{{ message() }}</p>
+}
+@if (errorMessage()) {
+  <div class="admin-alert is-error" role="alert">{{ errorMessage() }}</div>
+}
+
+@if (loading()) {
+  <p role="status">Cargando Candeonatos…</p>
+} @else if (championships().length === 0) {
+  <section class="admin-empty">
+    <h2>No hay ediciones</h2>
+    <p>Crea el primer Candeonato.</p>
+  </section>
+} @else {
+  <div class="admin-filter-bar" aria-label="Filtrar Candeonatos">
+    <label>
+      <span>Buscar</span>
+      <input
+        type="search"
+        placeholder="Nombre, temporada o subtítulo"
+        [value]="query()"
+        (input)="query.set($any($event.target).value)"
+      />
+    </label>
+    <label>
+      <span>Estado</span>
+      <select [value]="statusFilter()" (change)="statusFilter.set($any($event.target).value)">
+        <option value="all">Todos</option>
+        <option value="draft">Borradores</option>
+        <option value="registration">Inscripciones</option>
+        <option value="active">Activos</option>
+        <option value="finished">Finalizados</option>
+        <option value="archived">Archivados</option>
+      </select>
+    </label>
+    <span role="status">{{ filteredChampionships().length }} resultados</span>
+  </div>
+
+  @if (filteredChampionships().length === 0) {
+    <section class="admin-empty">
+      <h2>Sin coincidencias</h2>
+      <p>Cambia el texto de búsqueda o el filtro de estado.</p>
+    </section>
+  } @else {
+    <div class="admin-card-list">
+      @for (championship of filteredChampionships(); track championship.id) {
+        <article class="admin-content-card" [class.is-featured]="championship.isFeatured">
+          <div class="admin-content-card-main">
+            <div class="admin-card-meta">
+              <span class="admin-status" [attr.data-status]="championship.status">
+                {{ championship.status }}
+              </span>
+              @if (championship.isFeatured) {
+                <span>Edición actual</span>
+              }
+              <span>ID externo: {{ championship.externalTournamentId ?? 'Sin conectar' }}</span>
+            </div>
+            <h2>{{ championship.name }}</h2>
+            @if (championship.subtitle) {
+              <p class="admin-preview-subtitle">{{ championship.subtitle }}</p>
+            }
+            <p>{{ championship.summary || 'Sin resumen editorial.' }}</p>
+            <dl class="admin-inline-data">
+              <div>
+                <dt>Sincronización</dt>
+                <dd>{{ championship.syncStatus }}</dd>
+              </div>
+              <div>
+                <dt>Última consulta</dt>
+                <dd>{{ championship.lastSyncedAt || 'Pendiente' }}</dd>
+              </div>
+              <div>
+                <dt>Fondo</dt>
+                <dd>{{ championship.backgroundVideoUrl ? 'Vídeo propio' : 'Solo portada' }}</dd>
+              </div>
+            </dl>
+            @if (championship.syncError) {
+              <p class="field-error">{{ championship.syncError }}</p>
+            }
+          </div>
+          <div class="admin-card-actions">
+            <a class="admin-button" [routerLink]="['/admin/candeonatos', championship.id]"
+              >Editar</a
+            >
+            @if (championship.status !== 'draft') {
+              <a
+                class="admin-button"
+                [routerLink]="[
+                  '/candeonatos',
+                  championship.externalTournamentId || championship.slug,
+                ]"
+                >Ver página pública</a
+              >
+            }
+            @if (championship.status === 'draft') {
+              <button
+                class="admin-button"
+                type="button"
+                [disabled]="busyId() === championship.id"
+                (click)="runAction(championship, 'publish')"
+              >
+                Publicar
+              </button>
+            }
+            @if (!championship.isFeatured && championship.status !== 'draft') {
+              <button
+                class="admin-button"
+                type="button"
+                [disabled]="busyId() === championship.id"
+                (click)="runAction(championship, 'feature')"
+              >
+                Mostrar como actual
+              </button>
+            }
+            @if (championship.externalTournamentId) {
+              <button
+                class="admin-button is-primary"
+                type="button"
+                [disabled]="busyId() === championship.id"
+                (click)="runAction(championship, 'sync')"
+              >
+                Sincronizar
+              </button>
+            }
+            @if (championship.status !== 'archived') {
+              <button
+                class="admin-button is-danger"
+                type="button"
+                [disabled]="busyId() === championship.id"
+                (click)="runAction(championship, 'archive')"
+              >
+                Archivar
+              </button>
+            }
+          </div>
+        </article>
+      }
+    </div>
+  }
+}

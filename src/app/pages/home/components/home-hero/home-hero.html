@@ -1,0 +1,195 @@
+<header
+  id="inicio"
+  class="home-hero"
+  aria-describedby="home-video-description"
+  [class.video-focus-mode]="isVideoFocusMode()"
+>
+  <picture class="home-hero-poster" aria-hidden="true">
+    <source media="(max-width: 47.99rem)" srcset="/media/home-example-poster-mobile.webp" />
+    <img
+      src="/media/home-example-poster.webp"
+      alt=""
+      width="1600"
+      height="900"
+      fetchpriority="high"
+    />
+  </picture>
+
+  <video
+    #homeVideo
+    class="home-hero-video"
+    autoplay
+    muted
+    loop
+    playsinline
+    preload="metadata"
+    poster="/media/home-example-poster.webp"
+    aria-hidden="true"
+    (play)="onVideoPlay()"
+    (pause)="onVideoPause()"
+  >
+    <source src="/media/home-example-optimized.mp4" type="video/mp4" />
+    <source src="/exampleVideo.mp4" type="video/mp4" />
+  </video>
+
+  <div class="home-hero-vignette" aria-hidden="true"></div>
+  <div class="home-track-lines" aria-hidden="true"></div>
+
+  <nav
+    class="home-nav"
+    aria-label="Navegación principal"
+    [class.menu-open]="isMenuOpen()"
+    [attr.aria-hidden]="isVideoFocusMode() ? 'true' : null"
+    [attr.inert]="isVideoFocusMode() ? '' : null"
+  >
+    <a
+      class="home-brand"
+      href="#inicio"
+      aria-label="CND/// — Candemor Racing Team, inicio"
+      aria-current="page"
+    >
+      CND<span>///</span>
+    </a>
+    <button
+      class="home-menu-button"
+      type="button"
+      aria-controls="home-navigation-links"
+      [attr.aria-expanded]="isMenuOpen()"
+      [attr.aria-label]="isMenuOpen() ? 'Cerrar menú' : 'Abrir menú'"
+      (click)="toggleMenu()"
+    >
+      <span></span><span></span>
+    </button>
+    <div id="home-navigation-links" class="home-nav-links">
+      <a href="#comunidad" (click)="closeMenu()">Comunidad</a>
+      <a href="#equipo" (click)="closeMenu()">Equipo</a>
+      <a href="#contenido" (click)="closeMenu()">Contenido</a>
+      <a routerLink="/candeonato" (click)="closeMenu()">Candeonato</a>
+    </div>
+  </nav>
+
+  <app-sound-switch
+    [muted]="isMuted()"
+    [paused]="isPaused()"
+    [viewingVideo]="isVideoFocusMode()"
+    (soundToggle)="toggleSound()"
+    (playToggle)="togglePlayback()"
+    (viewToggle)="toggleVideoFocus()"
+  />
+
+  <div
+    class="home-hero-content"
+    [attr.aria-hidden]="isVideoFocusMode() ? 'true' : null"
+    [attr.inert]="isVideoFocusMode() ? '' : null"
+  >
+    <div class="home-hero-copy">
+      <p class="eyebrow">Simracing // Eventos // Comunidad</p>
+      <h1>CANDEMOR <span>Racing Team</span></h1>
+      <p class="home-hero-lede">
+        Somos una comunidad de simracing. Competimos, compartimos lo que ocurre en pista y creamos
+        experiencias para disfrutar juntos del motor virtual.
+      </p>
+      <div class="home-hero-actions">
+        <a class="button button-primary" href="#comunidad">Descubrir Candemor</a>
+        <a class="button button-secondary" href="#equipo">Conocer al equipo</a>
+      </div>
+    </div>
+
+    @if (streamStatus$ | async; as stream) {
+      <aside class="stream-card" [class.is-live]="stream.kind === 'live'" aria-live="polite">
+        <div class="stream-status-line">
+          <span class="stream-dot" aria-hidden="true"></span>
+          @switch (stream.kind) {
+            @case ('live') {
+              En directo
+            }
+            @case ('loading') {
+              Consultando directo…
+            }
+            @case ('offline') {
+              Ahora sin emisión
+            }
+            @case ('error') {
+              Estado no disponible
+            }
+            @default {
+              Canal oficial
+            }
+          }
+        </div>
+
+        @switch (stream.kind) {
+          @case ('live') {
+            <h2>{{ stream.channelName }}</h2>
+            <p>{{ stream.title }}</p>
+            <div class="stream-meta">
+              <span>{{ stream.category }}</span>
+              @if (stream.viewers !== undefined) {
+                <span>{{ stream.viewers | number }} espectadores</span>
+              }
+            </div>
+            <a
+              class="stream-link"
+              [href]="stream.channelUrl"
+              aria-label="Ver directo en Twitch (se abre en una pestaña nueva)"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Ver directo en Twitch <span aria-hidden="true">↗</span>
+            </a>
+          }
+          @case ('offline') {
+            <h2>El paddock descansa</h2>
+            <p>
+              {{ stream.channelName }} no está emitiendo ahora. Puedes visitar el canal en Twitch.
+            </p>
+            <a
+              class="stream-link"
+              [href]="stream.channelUrl"
+              aria-label="Ver canal en Twitch (se abre en una pestaña nueva)"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Ver canal en Twitch <span aria-hidden="true">↗</span>
+            </a>
+          }
+          @case ('error') {
+            <h2>{{ stream.channelName }}</h2>
+            <p>No podemos comprobar el directo ahora, pero el canal oficial sigue disponible.</p>
+            <a
+              class="stream-link"
+              [href]="stream.channelUrl"
+              aria-label="Abrir Twitch (se abre en una pestaña nueva)"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Abrir Twitch <span aria-hidden="true">↗</span>
+            </a>
+          }
+          @case ('loading') {
+            <h2>Conectando</h2>
+            <p>Consultando la emisión de la comunidad…</p>
+          }
+          @default {
+            <h2>{{ stream.channelName }}</h2>
+            <p>Este es el canal oficial de Candemor. Consulta en Twitch si estamos en directo.</p>
+            <a
+              class="stream-link"
+              [href]="stream.channelUrl"
+              aria-label="Ver canal en Twitch (se abre en una pestaña nueva)"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Ver canal en Twitch <span aria-hidden="true">↗</span>
+            </a>
+          }
+        }
+      </aside>
+    }
+  </div>
+
+  <p id="home-video-description" class="sr-only">
+    Vídeo ambiental de simracing. Toda la identidad y las acciones importantes se ofrecen también
+    como texto y controles accesibles.
+  </p>
+</header>

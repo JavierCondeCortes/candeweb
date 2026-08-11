@@ -1,0 +1,289 @@
+<header class="admin-page-header">
+  <div>
+    <p class="admin-eyebrow">Equipo</p>
+    <h1>{{ memberId() ? 'Editar miembro' : 'Nuevo miembro' }}</h1>
+    <p>Los perfiles publicados y destacados pueden aparecer automáticamente en la portada.</p>
+  </div>
+  <a class="admin-button" routerLink="/admin/miembros">Volver al listado</a>
+</header>
+
+@if (loading()) {
+  <p role="status">Cargando miembro…</p>
+} @else {
+  @if (errorMessage()) {
+    <div id="member-form-error" class="admin-alert is-error" role="alert" tabindex="-1">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <form class="admin-editor-form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+    <section class="admin-form-section" aria-labelledby="member-identity-title">
+      <div>
+        <h2 id="member-identity-title">Identidad</h2>
+        <p>Información que permite reconocer a la persona dentro del equipo.</p>
+      </div>
+      <div class="admin-form-grid">
+        <label>
+          <span>Nombre *</span>
+          <input
+            type="text"
+            formControlName="name"
+            maxlength="80"
+            [attr.aria-invalid]="fieldErrors()['name'] ? 'true' : null"
+            [attr.aria-describedby]="fieldErrors()['name'] ? 'member-name-error' : null"
+          />
+          @if (fieldErrors()['name']; as error) {
+            <small id="member-name-error" class="field-error">{{ error }}</small>
+          }
+        </label>
+        <label>
+          <span>Slug</span>
+          <input
+            type="text"
+            formControlName="slug"
+            maxlength="100"
+            placeholder="Se genera desde el nombre"
+            [attr.aria-invalid]="fieldErrors()['slug'] ? 'true' : null"
+            [attr.aria-describedby]="fieldErrors()['slug'] ? 'member-slug-error' : null"
+          />
+          @if (fieldErrors()['slug']; as error) {
+            <small id="member-slug-error" class="field-error">{{ error }}</small>
+          }
+        </label>
+        <label>
+          <span>Alias</span>
+          <input type="text" formControlName="alias" maxlength="50" />
+        </label>
+        <label>
+          <span>Rol</span>
+          <input
+            type="text"
+            formControlName="roleLabel"
+            maxlength="80"
+            placeholder="Piloto, caster…"
+          />
+        </label>
+        <label class="is-wide">
+          <span>Descripción</span>
+          <textarea formControlName="bio" maxlength="280" rows="4"></textarea>
+        </label>
+      </div>
+    </section>
+
+    <section class="admin-form-section" aria-labelledby="member-image-title">
+      <div>
+        <h2 id="member-image-title">Fotografía</h2>
+        <p>JPEG, PNG o WebP, hasta 8 MB y mínimo 720 × 900 px. Se recorta a 4:5.</p>
+      </div>
+      <div class="admin-form-grid">
+        @if (form.controls.photoUrl.value) {
+          <img
+            class="admin-image-preview"
+            [src]="form.controls.photoUrl.value"
+            alt="Vista previa de la fotografía"
+          />
+        }
+        <label class="is-wide">
+          <span>Subir imagen</span>
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            (change)="chooseImage($event)"
+          />
+          <small>{{
+            uploading() ? 'Subiendo…' : 'La imagen no se publica hasta guardar el perfil.'
+          }}</small>
+        </label>
+        <label class="is-wide">
+          <span>URL de imagen</span>
+          <input
+            type="text"
+            formControlName="photoUrl"
+            [attr.aria-invalid]="fieldErrors()['photoUrl'] ? 'true' : null"
+            [attr.aria-describedby]="fieldErrors()['photoUrl'] ? 'member-photo-url-error' : null"
+          />
+          @if (fieldErrors()['photoUrl']; as error) {
+            <small id="member-photo-url-error" class="field-error">{{ error }}</small>
+          }
+        </label>
+        <label class="is-wide">
+          <span>Texto alternativo</span>
+          <input
+            type="text"
+            formControlName="photoAlt"
+            maxlength="160"
+            [attr.aria-invalid]="fieldErrors()['photoAlt'] ? 'true' : null"
+            [attr.aria-describedby]="fieldErrors()['photoAlt'] ? 'member-photo-alt-error' : null"
+          />
+          @if (fieldErrors()['photoAlt']; as error) {
+            <small id="member-photo-alt-error" class="field-error">{{ error }}</small>
+          }
+        </label>
+        <label class="admin-check is-wide">
+          <input
+            type="checkbox"
+            formControlName="photoConsentConfirmed"
+            [attr.aria-invalid]="fieldErrors()['photoConsentConfirmed'] ? 'true' : null"
+            [attr.aria-describedby]="
+              fieldErrors()['photoConsentConfirmed'] ? 'member-photo-consent-error' : null
+            "
+          />
+          <span>Confirmo que Candemor tiene autorización para publicar esta fotografía.</span>
+          @if (fieldErrors()['photoConsentConfirmed']; as error) {
+            <small id="member-photo-consent-error" class="field-error">{{ error }}</small>
+          }
+        </label>
+      </div>
+    </section>
+
+    <section class="admin-form-section" aria-labelledby="member-social-title">
+      <div>
+        <h2 id="member-social-title">Redes</h2>
+        <p>Todos los campos son opcionales. No se mostrarán botones vacíos.</p>
+      </div>
+      <div class="admin-form-grid">
+        <label>
+          <span>Twitch</span>
+          <input
+            type="url"
+            formControlName="twitchUrl"
+            [attr.aria-invalid]="fieldErrors()['twitchUrl'] ? 'true' : null"
+            [attr.aria-describedby]="fieldErrors()['twitchUrl'] ? 'member-twitch-error' : null"
+          />
+          @if (fieldErrors()['twitchUrl']; as error) {
+            <small id="member-twitch-error" class="field-error">{{ error }}</small>
+          }
+        </label>
+        <label>
+          <span>Instagram</span>
+          <input
+            type="url"
+            formControlName="instagramUrl"
+            [attr.aria-invalid]="fieldErrors()['instagramUrl'] ? 'true' : null"
+            [attr.aria-describedby]="
+              fieldErrors()['instagramUrl'] ? 'member-instagram-error' : null
+            "
+          />
+          @if (fieldErrors()['instagramUrl']; as error) {
+            <small id="member-instagram-error" class="field-error">{{ error }}</small>
+          }
+        </label>
+        <label>
+          <span>YouTube</span>
+          <input
+            type="url"
+            formControlName="youtubeUrl"
+            [attr.aria-invalid]="fieldErrors()['youtubeUrl'] ? 'true' : null"
+            [attr.aria-describedby]="fieldErrors()['youtubeUrl'] ? 'member-youtube-error' : null"
+          />
+          @if (fieldErrors()['youtubeUrl']; as error) {
+            <small id="member-youtube-error" class="field-error">{{ error }}</small>
+          }
+        </label>
+        <label>
+          <span>X</span>
+          <input
+            type="url"
+            formControlName="xUrl"
+            [attr.aria-invalid]="fieldErrors()['xUrl'] ? 'true' : null"
+            [attr.aria-describedby]="fieldErrors()['xUrl'] ? 'member-x-error' : null"
+          />
+          @if (fieldErrors()['xUrl']; as error) {
+            <small id="member-x-error" class="field-error">{{ error }}</small>
+          }
+        </label>
+      </div>
+    </section>
+
+    <section class="admin-form-section" aria-labelledby="member-publish-title">
+      <div>
+        <h2 id="member-publish-title">Publicación</h2>
+        <p>Un perfil publicado necesita fotografía y texto alternativo.</p>
+      </div>
+      <div class="admin-form-grid">
+        <label>
+          <span>Estado</span>
+          <select formControlName="status">
+            <option value="draft">Borrador</option>
+            <option value="published">Publicado</option>
+            <option value="archived">Archivado</option>
+          </select>
+        </label>
+        <label>
+          <span>Orden</span>
+          <input
+            type="number"
+            formControlName="displayOrder"
+            min="0"
+            [attr.aria-invalid]="fieldErrors()['displayOrder'] ? 'true' : null"
+            [attr.aria-describedby]="
+              fieldErrors()['displayOrder'] ? 'member-display-order-error' : null
+            "
+          />
+          @if (fieldErrors()['displayOrder']; as error) {
+            <small id="member-display-order-error" class="field-error">{{ error }}</small>
+          }
+        </label>
+        <label class="admin-check">
+          <input type="checkbox" formControlName="isFeatured" />
+          <span>Mostrar en portada</span>
+        </label>
+      </div>
+    </section>
+
+    <section class="admin-form-section" aria-labelledby="member-preview-title">
+      <div>
+        <h2 id="member-preview-title">Vista previa privada</h2>
+        <p>Refleja el formulario actual sin publicar ni crear una URL indexable.</p>
+      </div>
+      <article class="admin-live-preview" aria-label="Vista previa del perfil">
+        @if (form.controls.photoUrl.value) {
+          <img
+            [src]="form.controls.photoUrl.value"
+            [alt]="form.controls.photoAlt.value || ''"
+            width="288"
+            height="360"
+          />
+        }
+        <div>
+          <p class="admin-eyebrow">El paddock</p>
+          <h3>{{ form.controls.name.value || 'Nombre del miembro' }}</h3>
+          @if (form.controls.roleLabel.value) {
+            <p>{{ form.controls.roleLabel.value }}</p>
+          }
+          @if (form.controls.bio.value) {
+            <p>{{ form.controls.bio.value }}</p>
+          }
+          <div class="admin-preview-links" aria-label="Redes que aparecerán publicadas">
+            @if (form.controls.twitchUrl.value) {
+              <span>Twitch</span>
+            }
+            @if (form.controls.instagramUrl.value) {
+              <span>Instagram</span>
+            }
+            @if (form.controls.youtubeUrl.value) {
+              <span>YouTube</span>
+            }
+            @if (form.controls.xUrl.value) {
+              <span>X</span>
+            }
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <div class="admin-form-actions">
+      <button class="admin-button is-primary" type="submit" [disabled]="saving() || uploading()">
+        {{ saving() ? 'Guardando…' : 'Guardar miembro' }}
+      </button>
+      <a class="admin-button" routerLink="/admin/miembros">Cancelar</a>
+    </div>
+    @if (memberId()) {
+      <p class="admin-form-meta">
+        Última modificación:
+        <time [attr.datetime]="loadedUpdatedAt()">{{ loadedUpdatedAt() | date: 'short' }}</time>
+        · {{ updatedByName() || 'Sistema' }}
+      </p>
+    }
+  </form>
+}

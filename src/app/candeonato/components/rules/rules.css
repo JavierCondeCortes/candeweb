@@ -1,0 +1,68 @@
+.rules-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--border);
+}
+
+.rules-list li {
+  display: grid;
+  grid-template-columns: 3rem 1fr;
+  gap: 1rem;
+  padding: clamp(1.4rem, 4vw, 2.4rem) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.rule-number {
+  color: var(--magenta);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.rules-list h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(1.25rem, 3vw, 2rem);
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.rules-list p {
+  max-width: 60ch;
+  margin: 0.6rem 0 0;
+  color: var(--text-muted);
+}
+
+.rules-manifesto {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+  margin-top: clamp(2rem, 6vw, 5rem);
+  padding: clamp(1.25rem, 4vw, 2.5rem);
+  border: 1px solid var(--lime);
+  background: rgba(222, 255, 0, 0.04);
+}
+
+.rules-manifesto span {
+  color: var(--lime);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 900;
+}
+
+.rules-manifesto p {
+  max-width: 45ch;
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(1.15rem, 3vw, 1.7rem);
+  font-weight: 750;
+  line-height: 1.4;
+}
+
+@media (min-width: 48rem) {
+  .rules-list li {
+    grid-template-columns: 5rem minmax(0, 1fr);
+  }
+}

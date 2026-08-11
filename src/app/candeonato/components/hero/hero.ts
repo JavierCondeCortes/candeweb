@@ -1,55 +1,173 @@
-import { Component, OnInit, signal } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  computed,
+  ElementRef,
+  HostListener,
+  input,
+  OnDestroy,
+  ViewChild,
+  signal,
+} from '@angular/core';
+import { ChampionshipContent } from '../../../core/models/content-admin.model';
+import { SoundSwitch } from '../sound-switch/sound-switch';
+
+type Countdown = {
+  days: string;
+  hours: string;
+  minutes: string;
+  seconds: string;
+};
 
 @Component({
   selector: 'app-hero',
-  imports: [],
+  imports: [SoundSwitch],
   templateUrl: './hero.html',
   styleUrl: './hero.css',
 })
-export class Hero implements OnInit {
-variableTextoVisible = signal('');
-textos = [
-  'CANDEONATO NEW ERA',
-  '[ 02 - SEPTIEMBRE - 2026 ]',
-  'OTRO MENSAJE'
-];
+export class Hero implements AfterViewInit, OnDestroy {
+  private heroVideo?: ElementRef<HTMLVideoElement>;
 
-indiceTexto = 0;
+  @ViewChild('heroVideo')
+  set videoElement(element: ElementRef<HTMLVideoElement> | undefined) {
+    this.heroVideo = element;
+    if (element && this.motionQuery) this.setReducedMotion(this.motionQuery.matches);
+  }
 
-ngOnInit(): void {
-  this.escribirTexto(this.textos[this.indiceTexto]);
-}
+  readonly championship = input<ChampionshipContent | null>(null);
 
-escribirTexto(textoFinal: string): void {
-  let i = 0;
-  this.variableTextoVisible.set('');
+  readonly isMuted = signal(true);
+  readonly isPaused = signal(false);
+  readonly isVideoFocusMode = signal(false);
+  readonly countdown = signal<Countdown>({ days: '00', hours: '00', minutes: '00', seconds: '00' });
+  readonly editionNumber = computed(() => this.championship()?.editionNumber ?? 8);
+  readonly editionCode = computed(() => String(this.editionNumber()).padStart(2, '0'));
+  readonly editionSubtitle = computed(
+    () => this.championship()?.subtitle ?? this.championship()?.name ?? 'New Era Edition',
+  );
+  readonly heroSubtitle = computed(
+    () =>
+      this.championship()?.summary ?? 'Carreras limpias, Mazda MX-5 y buen ambiente en iRacing.',
+  );
+  readonly coverUrl = computed(() => this.championship()?.coverUrl ?? '/media/hero-poster.webp');
+  readonly coverMobileUrl = computed(() => {
+    const championship = this.championship();
+    return championship
+      ? (championship.coverMobileUrl ?? championship.coverUrl ?? '/media/hero-poster-mobile.webp')
+      : '/media/hero-poster-mobile.webp';
+  });
+  readonly backgroundVideoUrl = computed(() => this.championship()?.backgroundVideoUrl ?? null);
+  readonly backgroundVideoMimeType = computed(
+    () => this.championship()?.backgroundVideoMimeType ?? 'video/mp4',
+  );
+  readonly startAt = computed(() => this.championship()?.startAt ?? '2026-09-04T18:00:00+02:00');
+  readonly dateLabel = computed(() =>
+    new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
+      .format(new Date(this.startAt()))
+      .replaceAll('/', ' · '),
+  );
+  readonly historyUrl = computed(
+    () => `/candeonatos/${this.championship()?.externalTournamentId ?? 42}`,
+  );
+  readonly registrationUrl = computed(() => this.championship()?.registrationUrl ?? '#inscripcion');
 
-  const interval = setInterval(() => {
-    this.variableTextoVisible.set(textoFinal.slice(0, i + 1));
-    i++;
+  private countdownTimer?: ReturnType<typeof setInterval>;
+  private motionQuery?: MediaQueryList;
 
-    if (i >= textoFinal.length) {
-      clearInterval(interval);
+  ngAfterViewInit(): void {
+    this.updateCountdown();
+    this.countdownTimer = setInterval(() => this.updateCountdown(), 1000);
 
-      setTimeout(() => {
-        this.borrarTexto(textoFinal);
-      }, 1500);
+    if (typeof window.matchMedia !== 'function') {
+      return;
     }
-  }, 120);
-}
 
-borrarTexto(textoFinal: string): void {
-  let i = textoFinal.length;
+    this.motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    this.setReducedMotion(this.motionQuery.matches);
+    this.motionQuery.addEventListener('change', this.onMotionPreferenceChange);
+  }
 
-  const interval = setInterval(() => {
-    this.variableTextoVisible.set(textoFinal.slice(0, i - 1));
-    i--;
-
-    if (i <= 0) {
-      clearInterval(interval);
-      this.indiceTexto = (this.indiceTexto + 1) % this.textos.length;
-      this.escribirTexto(this.textos[this.indiceTexto]);
+  ngOnDestroy(): void {
+    if (this.countdownTimer) {
+      clearInterval(this.countdownTimer);
     }
-  }, 80);
-}
+    this.motionQuery?.removeEventListener('change', this.onMotionPreferenceChange);
+  }
+
+  toggleSound(): void {
+    const video = this.heroVideo?.nativeElement;
+    if (!video) return;
+
+    video.muted = !video.muted;
+    this.isMuted.set(video.muted);
+  }
+
+  toggleVideoFocus(): void {
+    this.isVideoFocusMode.update((active) => !active);
+  }
+
+  @HostListener('document:keydown.escape')
+  exitVideoFocus(): void {
+    this.isVideoFocusMode.set(false);
+  }
+
+  async togglePlayback(): Promise<void> {
+    const video = this.heroVideo?.nativeElement;
+    if (!video) return;
+
+    if (video.paused) {
+      try {
+        await video.play();
+      } catch {
+        this.isPaused.set(true);
+      }
+    } else {
+      video.pause();
+    }
+  }
+
+  onVideoPlay(): void {
+    this.isPaused.set(false);
+  }
+
+  onVideoPause(): void {
+    this.isPaused.set(true);
+  }
+
+  private readonly onMotionPreferenceChange = (event: MediaQueryListEvent): void => {
+    this.setReducedMotion(event.matches);
+  };
+
+  private setReducedMotion(reduceMotion: boolean): void {
+    const video = this.heroVideo?.nativeElement;
+    if (!video) return;
+
+    if (reduceMotion) {
+      video.pause();
+      this.isPaused.set(true);
+      return;
+    }
+
+    video.muted = true;
+    this.isMuted.set(true);
+    video.play().catch(() => this.isPaused.set(true));
+  }
+
+  private updateCountdown(): void {
+    const distance = Math.max(0, new Date(this.startAt()).getTime() - Date.now());
+    const day = 86_400_000;
+    const hour = 3_600_000;
+    const minute = 60_000;
+
+    this.countdown.set({
+      days: this.pad(Math.floor(distance / day)),
+      hours: this.pad(Math.floor((distance % day) / hour)),
+      minutes: this.pad(Math.floor((distance % hour) / minute)),
+      seconds: this.pad(Math.floor((distance % minute) / 1000)),
+    });
+  }
+
+  private pad(value: number): string {
+    return value.toString().padStart(2, '0');
+  }
 }

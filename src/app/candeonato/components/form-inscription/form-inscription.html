@@ -1,1 +1,193 @@
-<p>form-inscription works!</p>
+<section
+  id="inscripcion"
+  class="section-shell registration-section"
+  aria-labelledby="inscripcion-title"
+>
+  <div class="section-heading reveal">
+    <p class="eyebrow">04 / Inscripción</p>
+    <h2 id="inscripcion-title" class="section-title">Entra en parrilla</h2>
+    <p class="lede">
+      Completa tus datos. La organización revisará la solicitud y te enviará por Discord el acceso,
+      el horario final y los circuitos.
+    </p>
+  </div>
+
+  <div class="registration-layout">
+    <form
+      #registrationForm
+      class="registration-form"
+      [formGroup]="form"
+      (ngSubmit)="submit()"
+      novalidate
+    >
+      <div class="field-group">
+        <label for="iracingName"
+          >Nombre de piloto en iRacing <span aria-hidden="true">*</span></label
+        >
+        <input
+          id="iracingName"
+          name="entry.907677391"
+          type="text"
+          formControlName="iracingName"
+          autocomplete="name"
+          minlength="2"
+          required
+          aria-describedby="iracing-help iracing-error"
+          [attr.aria-invalid]="showError('iracingName')"
+        />
+        <p id="iracing-help" class="field-help">
+          Escribe el nombre exacto que aparece en tu perfil de iRacing.
+        </p>
+        @if (showError('iracingName')) {
+          <p id="iracing-error" class="field-error" role="alert">
+            Introduce tu nombre de piloto, con al menos 2 caracteres.
+          </p>
+        }
+      </div>
+
+      <div class="field-group">
+        <label for="discordName">Usuario de Discord <span aria-hidden="true">*</span></label>
+        <input
+          id="discordName"
+          name="entry.1512476117"
+          type="text"
+          formControlName="discordName"
+          autocomplete="username"
+          minlength="2"
+          required
+          aria-describedby="discord-help discord-error"
+          [attr.aria-invalid]="showError('discordName')"
+        />
+        <p id="discord-help" class="field-help">
+          En Discord, abre tu perfil y copia el nombre de usuario situado bajo tu nombre visible.
+        </p>
+        @if (showError('discordName')) {
+          <p id="discord-error" class="field-error" role="alert">
+            Introduce un usuario de Discord válido.
+          </p>
+        }
+      </div>
+
+      <div class="field-group field-wide">
+        <label for="email">Correo electrónico <span aria-hidden="true">*</span></label>
+        <input
+          id="email"
+          name="emailAddress"
+          type="email"
+          formControlName="email"
+          autocomplete="email"
+          inputmode="email"
+          required
+          aria-describedby="email-help email-error"
+          [attr.aria-invalid]="showError('email')"
+        />
+        <p id="email-help" class="field-help">
+          Lo utilizaremos únicamente como vía alternativa para gestionar tu inscripción.
+        </p>
+        @if (showError('email')) {
+          <p id="email-error" class="field-error" role="alert">
+            Introduce un correo electrónico válido.
+          </p>
+        }
+      </div>
+
+      <fieldset class="field-group field-wide" aria-describedby="mood-help mood-error">
+        <legend>¿Estás de los auténticos nervios? <span aria-hidden="true">*</span></legend>
+        <p id="mood-help" class="field-help">
+          Elige la respuesta que mejor represente tu estado pre-carrera.
+        </p>
+        <div class="radio-grid">
+          @for (option of moodOptions; track option) {
+            <label class="radio-option">
+              <input type="radio" name="mood" formControlName="mood" [value]="option" required />
+              <span>{{ option }}</span>
+            </label>
+          }
+        </div>
+        @if (showError('mood')) {
+          <p id="mood-error" class="field-error" role="alert">Selecciona una respuesta.</p>
+        }
+      </fieldset>
+
+      <div class="consent field-wide">
+        <label>
+          <input
+            type="checkbox"
+            name="consent"
+            formControlName="consent"
+            required
+            aria-describedby="privacy-summary consent-error"
+            [attr.aria-invalid]="showError('consent')"
+          />
+          <span
+            >He leído la información de privacidad y acepto el tratamiento de mis datos para
+            gestionar la inscripción. *</span
+          >
+        </label>
+        @if (showError('consent')) {
+          <p id="consent-error" class="field-error" role="alert">
+            Debes aceptar la información de privacidad para continuar.
+          </p>
+        }
+      </div>
+
+      <div class="submit-row field-wide">
+        <button
+          class="button button-primary submit-button"
+          type="submit"
+          [disabled]="status() === 'sending'"
+        >
+          @if (status() === 'sending') {
+            Enviando…
+          } @else {
+            Enviar inscripción
+          }
+        </button>
+        <p class="required-note">* Campos obligatorios</p>
+      </div>
+
+      <div class="form-status field-wide" role="status" aria-live="polite">
+        @if (status() === 'success') {
+          <p class="status-success">
+            <strong>Inscripción enviada.</strong> Conserva tu usuario de Discord activo para recibir
+            la confirmación.
+          </p>
+        }
+        @if (status() === 'error') {
+          <p class="status-error">
+            <strong>No se pudo enviar.</strong> Comprueba tu conexión o utiliza el
+            <a
+              [href]="googleFormUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Formulario oficial de Google (se abre en una pestaña nueva)"
+              >formulario oficial de Google</a
+            >.
+          </p>
+        }
+      </div>
+    </form>
+
+    <aside id="privacidad" class="privacy-card" aria-labelledby="privacy-title">
+      <p class="eyebrow">Datos / Privacidad</p>
+      <h3 id="privacy-title">Tu inscripción, sin letra pequeña</h3>
+      <p id="privacy-summary">
+        Los datos se envían al formulario oficial de Google del Candeonato y se utilizan
+        exclusivamente para organizar el evento, validar participantes y facilitar el acceso a
+        Discord.
+      </p>
+      <ul>
+        <li>No utilizaremos tus datos para publicidad.</li>
+        <li>No compartas contraseñas ni información de pago.</li>
+        <li>Puedes solicitar a la organización la corrección o eliminación de tus datos.</li>
+      </ul>
+      <a
+        [href]="googleFormUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Abrir formulario oficial (se abre en una pestaña nueva)"
+        >Abrir formulario oficial <span aria-hidden="true">↗</span></a
+      >
+    </aside>
+  </div>
+</section>

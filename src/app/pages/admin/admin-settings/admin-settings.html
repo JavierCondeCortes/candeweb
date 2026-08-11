@@ -1,0 +1,174 @@
+<header class="admin-page-header">
+  <div>
+    <p class="admin-eyebrow">Configuración pública</p>
+    <h1>Ajustes</h1>
+    <p>Valores reutilizados por la portada, el footer y la navegación.</p>
+  </div>
+</header>
+
+@if (loading()) {
+  <p role="status">Cargando ajustes…</p>
+} @else {
+  @if (message()) {
+    <p class="admin-alert is-success" role="status">{{ message() }}</p>
+  }
+  @if (errorMessage()) {
+    <div id="settings-form-error" class="admin-alert is-error" role="alert" tabindex="-1">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <form class="admin-editor-form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+    <section class="admin-form-section" aria-labelledby="settings-twitch-title">
+      <div>
+        <h2 id="settings-twitch-title">Twitch</h2>
+        <p>Canal utilizado por el indicador de directo y los enlaces oficiales.</p>
+      </div>
+      <div class="admin-form-grid">
+        <label>
+          <span>Login del canal</span
+          ><input
+            type="text"
+            formControlName="twitchChannelLogin"
+            [attr.aria-invalid]="fieldErrors()['twitchChannelLogin'] ? 'true' : null"
+            [attr.aria-describedby]="
+              fieldErrors()['twitchChannelLogin'] ? 'settings-twitch-login-error' : null
+            "
+          />
+          @if (fieldErrors()['twitchChannelLogin']; as error) {
+            <small id="settings-twitch-login-error" class="field-error">{{ error }}</small>
+          }
+        </label>
+        <label>
+          <span>URL del canal</span
+          ><input
+            type="url"
+            formControlName="twitchChannelUrl"
+            [attr.aria-invalid]="fieldErrors()['twitchChannelUrl'] ? 'true' : null"
+            [attr.aria-describedby]="
+              fieldErrors()['twitchChannelUrl'] ? 'settings-twitch-url-error' : null
+            "
+          />
+          @if (fieldErrors()['twitchChannelUrl']; as error) {
+            <small id="settings-twitch-url-error" class="field-error">{{ error }}</small>
+          }
+        </label>
+        <label class="is-wide">
+          <span>Canales adicionales</span>
+          <textarea
+            formControlName="twitchChannelsText"
+            rows="5"
+            autocomplete="off"
+            [attr.aria-describedby]="
+              fieldErrors()['twitchChannels']
+                ? 'settings-twitch-channels-help settings-twitch-channels-error'
+                : 'settings-twitch-channels-help'
+            "
+            [attr.aria-invalid]="fieldErrors()['twitchChannels'] ? 'true' : null"
+          ></textarea>
+          <small id="settings-twitch-channels-help">
+            Un login o URL de Twitch por línea, en orden de prioridad. Máximo cinco. El canal
+            oficial siempre tiene prioridad cuando también está emitiendo.
+          </small>
+          @if (fieldErrors()['twitchChannels']; as error) {
+            <small id="settings-twitch-channels-error" class="field-error">{{ error }}</small>
+          }
+        </label>
+      </div>
+    </section>
+
+    <section class="admin-form-section" aria-labelledby="settings-featured-title">
+      <div>
+        <h2 id="settings-featured-title">Edición destacada</h2>
+        <p>Determina qué Candeonato se presenta como actual.</p>
+      </div>
+      <div class="admin-form-grid">
+        <label>
+          <span>Candeonato</span>
+          <select formControlName="featuredChampionshipId">
+            <option value="">Sin edición destacada</option>
+            @for (championship of championships(); track championship.id) {
+              <option [value]="championship.id">
+                {{ championship.name }} · {{ championship.status }}
+              </option>
+            }
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <section class="admin-form-section" aria-labelledby="settings-contact-title">
+      <div>
+        <h2 id="settings-contact-title">Contacto y redes</h2>
+        <p>Los campos vacíos no se mostrarán en la web.</p>
+      </div>
+      <div class="admin-form-grid">
+        <label>
+          <span>Correo</span>
+          <input
+            type="email"
+            formControlName="contactEmail"
+            [attr.aria-invalid]="fieldErrors()['contactEmail'] ? 'true' : null"
+            [attr.aria-describedby]="
+              fieldErrors()['contactEmail'] ? 'settings-contact-email-error' : null
+            "
+          />
+          @if (fieldErrors()['contactEmail']; as error) {
+            <small id="settings-contact-email-error" class="field-error">{{ error }}</small>
+          }
+        </label>
+        <label>
+          <span>Discord</span>
+          <input
+            type="url"
+            formControlName="discordUrl"
+            [attr.aria-invalid]="fieldErrors()['discordUrl'] ? 'true' : null"
+            [attr.aria-describedby]="fieldErrors()['discordUrl'] ? 'settings-discord-error' : null"
+          />
+          @if (fieldErrors()['discordUrl']; as error) {
+            <small id="settings-discord-error" class="field-error">{{ error }}</small>
+          }
+        </label>
+        <label>
+          <span>Instagram</span>
+          <input
+            type="url"
+            formControlName="instagramUrl"
+            [attr.aria-invalid]="fieldErrors()['instagramUrl'] ? 'true' : null"
+            [attr.aria-describedby]="
+              fieldErrors()['instagramUrl'] ? 'settings-instagram-error' : null
+            "
+          />
+          @if (fieldErrors()['instagramUrl']; as error) {
+            <small id="settings-instagram-error" class="field-error">{{ error }}</small>
+          }
+        </label>
+        <label>
+          <span>YouTube</span>
+          <input
+            type="url"
+            formControlName="youtubeUrl"
+            [attr.aria-invalid]="fieldErrors()['youtubeUrl'] ? 'true' : null"
+            [attr.aria-describedby]="fieldErrors()['youtubeUrl'] ? 'settings-youtube-error' : null"
+          />
+          @if (fieldErrors()['youtubeUrl']; as error) {
+            <small id="settings-youtube-error" class="field-error">{{ error }}</small>
+          }
+        </label>
+      </div>
+    </section>
+
+    <div class="admin-form-actions">
+      <button class="admin-button is-primary" type="submit" [disabled]="saving()">
+        {{ saving() ? 'Guardando…' : 'Guardar ajustes' }}
+      </button>
+    </div>
+    @if (current(); as settings) {
+      <p class="admin-form-meta">
+        Última modificación:
+        <time [attr.datetime]="settings.updatedAt">{{ settings.updatedAt | date: 'short' }}</time>
+        · {{ settings.updatedByName || 'Sistema' }}
+      </p>
+    }
+  </form>
+}

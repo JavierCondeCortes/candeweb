@@ -1,0 +1,52 @@
+<a class="skip-link" href="#contenido-inicio">Saltar al contenido principal</a>
+
+<app-home-hero />
+
+<main id="contenido-inicio" class="home-main" tabindex="-1">
+  <app-community-intro [discordUrl]="(settings$ | async)?.discordUrl || null" />
+  <app-team-showcase />
+  <app-experience-gallery />
+  <app-event-feature />
+</main>
+
+<footer class="home-footer" aria-label="Información de Candemor Racing Team">
+  <div class="home-footer-inner">
+    <div class="home-footer-intro">
+      <a
+        class="home-brand"
+        href="#inicio"
+        aria-label="CND/// — Candemor Racing Team, volver al inicio"
+      >
+        CND<span>///</span>
+      </a>
+      <p>Una comunidad de simracing que compite, comparte y crea experiencias propias.</p>
+    </div>
+    <nav aria-label="Navegación secundaria">
+      <a routerLink="/candeonatos">Historial de Candeonatos</a>
+      <a
+        [href]="(settings$ | async)?.twitchChannelUrl || 'https://www.twitch.tv/candemorracingteam'"
+        aria-label="Twitch de Candemor (se abre en una pestaña nueva)"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Twitch <span aria-hidden="true">↗</span>
+      </a>
+      @if ((settings$ | async)?.discordUrl; as discordUrl) {
+        <a
+          [href]="discordUrl"
+          aria-label="Discord de Candemor (se abre en una pestaña nueva)"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Discord <span aria-hidden="true">↗</span>
+        </a>
+      }
+      @if ((settings$ | async)?.contactEmail; as email) {
+        <a [href]="'mailto:' + email">Contacto</a>
+      }
+    </nav>
+  </div>
+  <p class="home-footer-bottom">
+    © {{ currentYear }} Candemor Racing Team · Contenido externo sujeto a disponibilidad.
+  </p>
+</footer>

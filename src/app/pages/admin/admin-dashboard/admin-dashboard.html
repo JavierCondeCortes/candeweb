@@ -1,0 +1,51 @@
+<header class="admin-page-header">
+  <div>
+    <p class="admin-eyebrow">Centro de control</p>
+    <h1>Resumen</h1>
+    <p>Estado editorial y deportivo de Candemor.</p>
+  </div>
+  <div class="admin-header-actions">
+    <a class="admin-button is-primary" routerLink="/admin/miembros/nuevo">Nuevo miembro</a>
+    <a class="admin-button" routerLink="/admin/candeonatos/nuevo">Nuevo Candeonato</a>
+  </div>
+</header>
+
+@if (errorMessage()) {
+  <div class="admin-alert is-error" role="alert">{{ errorMessage() }}</div>
+} @else if (!summary()) {
+  <p role="status">Cargando resumen…</p>
+} @else if (summary(); as data) {
+  <section class="admin-metrics" aria-label="Resumen de contenidos">
+    <article>
+      <span>Miembros publicados</span>
+      <strong>{{ data.members.published }}</strong>
+      <small>{{ data.members.featured }} aparecen en portada</small>
+    </article>
+    <article>
+      <span>Borradores</span>
+      <strong>{{ data.members.drafts + data.championships.drafts }}</strong>
+      <small>Pendientes de revisión</small>
+    </article>
+    <article [class.has-error]="data.championships.sync_errors > 0">
+      <span>Errores de sincronización</span>
+      <strong>{{ data.championships.sync_errors }}</strong>
+      <small>Fuentes deportivas</small>
+    </article>
+  </section>
+
+  <section class="admin-panel" aria-labelledby="featured-title">
+    <div>
+      <p class="admin-eyebrow">Edición destacada</p>
+      <h2 id="featured-title">{{ data.featuredChampionship?.name ?? 'Sin seleccionar' }}</h2>
+      @if (data.featuredChampionship; as championship) {
+        <p>
+          Estado: {{ championship.status }} · Última sincronización:
+          {{ championship.lastSyncedAt ? championship.lastSyncedAt : 'pendiente' }}
+        </p>
+      } @else {
+        <p>Selecciona una edición publicada para mostrarla en la portada.</p>
+      }
+    </div>
+    <a class="admin-button" routerLink="/admin/candeonatos">Gestionar ediciones</a>
+  </section>
+}

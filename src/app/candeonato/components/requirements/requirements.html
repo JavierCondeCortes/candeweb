@@ -1,12 +1,76 @@
-<section class="relative text-(--texto) grid mx-18 lg:grid-cols-[1.2fr_1fr] ">
+<section
+  id="requisitos"
+  class="section-shell requirements-section"
+  aria-labelledby="requisitos-title"
+>
+  <div class="section-heading reveal">
+    <p class="eyebrow">02 / Requisitos</p>
+    <h2 id="requisitos-title" class="section-title">Ficha técnica</h2>
+    <p class="lede">
+      Lo esencial para entrar en pista. Sin compras sorpresa y sin ventajas ocultas.
+    </p>
+  </div>
+
+  <dl class="data-grid">
+    <div class="data-card reveal">
+      <dt>Simulador</dt>
+      <dd class="data-value">iRacing</dd>
+      <dd class="data-description">Necesitas una cuenta activa y acceso al simulador.</dd>
+    </div>
+    <div class="data-card reveal">
+      <dt>Coche</dt>
+      <dd class="data-value">Mazda MX-5</dd>
+      <dd class="data-description">El vehículo incluido que utilizaremos durante el evento.</dd>
+    </div>
+    <div class="data-card reveal">
+      <dt>Configuración</dt>
+      <dd class="data-value">Setup fixed</dd>
+      <dd class="data-description">Todos competimos con los mismos ajustes.</dd>
+    </div>
+    <div class="data-card reveal">
+      <dt>Circuitos</dt>
+      <dd class="data-value">Gratuitos</dd>
+      <dd class="data-description">La selección definitiva se comunicará en Discord.</dd>
+    </div>
+  </dl>
+
+  <div class="entry-notes">
     <div>
-        <!-- <div class="absolute top-3 left-32">_____________________</div>
-        <div class="absolute top-2 left-32">__________________</div> -->
-        <h2 class=" text-3xl italic z-2 font-bold"> REQUISITOS</h2>
-        <p class=" mt-4">Ganas de correr con gente sin meterse en lios, disfrutar de la carrera y no impactarse hasta final de carrera que IMPACTAREMOS TODOOS.</p>
-        <p class=" mt-4">Necesitaras tener el juego, dentro de el tendrás el coche y los circuitos que usaremos de forma totalmente gratuita.</p>
+      <span aria-hidden="true">01</span>
+      <p><strong>Participación gratuita.</strong> No hay cuota de inscripción al Candeonato.</p>
     </div>
-    <div class="mt-12 text-center">
-        imagen de coche rotando
+    <div>
+      <span aria-hidden="true">02</span>
+      <p>
+        <strong>Plazas por confirmar.</strong> Se asignarán según orden de inscripción y validación.
+      </p>
     </div>
+    <div>
+      <span aria-hidden="true">03</span>
+      <p>
+        <strong>Confirmación por Discord.</strong> Allí recibirás acceso, circuitos y horario final.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section id="calendario" class="section-shell schedule-section" aria-labelledby="calendario-title">
+  <div class="schedule-card reveal">
+    <div>
+      <p class="eyebrow">Race day / {{ year() }}</p>
+      <h2 id="calendario-title">{{ longDate() }}</h2>
+      <p>
+        Evento online en iRacing. La hora de convocatoria y el briefing se confirmarán a las
+        personas inscritas mediante Discord.
+      </p>
+    </div>
+    <ol aria-label="Proceso hasta la carrera">
+      <li><span>Ahora</span><strong>Inscripción abierta</strong></li>
+      <li><span>Antes del evento</span><strong>Confirmación y acceso a Discord</strong></li>
+      <li>
+        <span>{{ shortDate() }}</span
+        ><strong>Briefing y carrera</strong>
+      </li>
+    </ol>
+  </div>
 </section>

@@ -1,0 +1,118 @@
+<section
+  id="contenido"
+  class="section-shell experiences-section"
+  aria-labelledby="experiences-title"
+>
+  <div class="section-heading experiences-heading">
+    <div>
+      <p class="eyebrow">Contenido Candemor</p>
+      <h2 id="experiences-title" class="section-title">La pista continúa</h2>
+    </div>
+    <p class="body-copy">
+      El directo y los clips públicos del canal prolongan la experiencia más allá de cada carrera.
+      Los vídeos solo se abren después de elegir una pieza.
+    </p>
+  </div>
+
+  @if (state$ | async; as state) {
+    @if (state.kind === 'loading') {
+      <p class="experience-message" role="status">Consultando el contenido de Twitch…</p>
+    }
+
+    <div class="experience-grid">
+      <article class="experience-card experience-card-main">
+        <img
+          [src]="
+            state.content?.channel?.offlineImageUrl ||
+            state.content?.channel?.profileImageUrl ||
+            '/media/hero-poster.webp'
+          "
+          [alt]="
+            state.content?.channel
+              ? 'Imagen pública del canal de Twitch ' + state.content?.channel?.displayName
+              : 'Coche de simracing utilizado en el universo audiovisual de Candemor'
+          "
+          width="1600"
+          height="900"
+          loading="lazy"
+        />
+        <div class="experience-overlay">
+          <p class="eyebrow">Canal oficial</p>
+          <h3>{{ state.content?.channel?.displayName || 'Candemor en vivo' }}</h3>
+          <p>
+            {{
+              state.content?.channel?.description ||
+                'Carreras, retransmisiones y voces de la comunidad reunidas en un mismo lugar.'
+            }}
+          </p>
+          <a
+            class="experience-status"
+            [href]="state.content?.channel?.url || 'https://www.twitch.tv/candemorracingteam'"
+            aria-label="Ver Candemor en Twitch (se abre en una pestaña nueva)"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Ver canal en Twitch <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </article>
+
+      @if (state.content?.clips?.length) {
+        <ul class="twitch-clips" aria-label="Clips destacados del canal de Twitch">
+          @for (clip of state.content?.clips; track clip.id) {
+            <li>
+              @if (clip.url; as clipUrl) {
+                <a
+                  class="twitch-clip-link"
+                  [href]="clipUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  [attr.aria-label]="clip.title + ' (se abre en Twitch en una pestaña nueva)'"
+                >
+                  <img
+                    [src]="clip.thumbnailUrl || '/media/hero-poster.webp'"
+                    [alt]="'Miniatura del clip «' + clip.title + '»'"
+                    width="480"
+                    height="272"
+                    loading="lazy"
+                  />
+                  <span class="twitch-clip-copy">
+                    <span class="eyebrow">Clip de Twitch</span>
+                    <strong>{{ clip.title }}</strong>
+                    <span class="twitch-clip-meta">
+                      @if (clip.creatorName) {
+                        por {{ clip.creatorName }}
+                        <span aria-hidden="true">·</span>
+                      }
+                      {{ clip.viewCount | number }} visualizaciones
+                      <span aria-hidden="true">·</span>
+                      {{ clip.durationSeconds | number: '1.0-0' }} s
+                    </span>
+                  </span>
+                </a>
+              }
+            </li>
+          }
+        </ul>
+      } @else {
+        <article class="experience-card experience-card-archive">
+          <div class="archive-art" aria-hidden="true">
+            <span>CND</span>
+            <i></i><i></i><i></i>
+          </div>
+          <div class="experience-overlay">
+            <p class="eyebrow">Twitch</p>
+            <h3>Clips en preparación</h3>
+            <p>
+              @if (state.kind === 'error') {
+                Twitch no está disponible temporalmente. El canal oficial sigue accesible.
+              } @else {
+                El canal todavía no devuelve clips públicos para mostrar en esta selección.
+              }
+            </p>
+          </div>
+        </article>
+      }
+    </div>
+  }
+</section>

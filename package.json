@@ -3,27 +3,37 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
+    "start": "node --env-file-if-exists=.env server/dev.mjs",
+    "start:web": "ng serve",
+    "api": "node --env-file-if-exists=.env server/server.mjs",
+    "serve:prod": "node --env-file-if-exists=.env server/server.mjs",
+    "backup": "node --env-file-if-exists=.env server/backup.mjs",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "test:server": "node --test server/**/*.spec.mjs",
+    "verify": "npm run test:server && npm test -- --watch=false && npm run build && npm audit --omit=dev"
   },
   "private": true,
   "packageManager": "npm@11.18.0",
+  "engines": {
+    "node": ">=22.13"
+  },
   "dependencies": {
-    "@angular/common": "^21.2.0",
-    "@angular/compiler": "^21.2.0",
-    "@angular/core": "^21.2.0",
-    "@angular/forms": "^21.2.0",
-    "@angular/platform-browser": "^21.2.0",
-    "@angular/router": "^21.2.0",
+    "@angular/common": "^21.2.19",
+    "@angular/compiler": "^21.2.19",
+    "@angular/core": "^21.2.19",
+    "@angular/forms": "^21.2.19",
+    "@angular/platform-browser": "^21.2.19",
+    "@angular/router": "^21.2.19",
     "rxjs": "~7.8.0",
+    "sharp": "^0.35.3",
     "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@angular/build": "^21.2.13",
-    "@angular/cli": "^21.2.13",
-    "@angular/compiler-cli": "^21.2.0",
+    "@angular/build": "^21.2.19",
+    "@angular/cli": "^21.2.19",
+    "@angular/compiler-cli": "^21.2.19",
     "@tailwindcss/postcss": "^4.1.12",
     "jsdom": "^28.0.0",
     "postcss": "^8.5.3",

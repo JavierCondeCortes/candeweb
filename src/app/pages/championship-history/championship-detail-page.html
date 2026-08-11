@@ -1,0 +1,233 @@
+<a class="skip-link" href="#contenido-clasificacion">Saltar a la clasificación</a>
+
+<header class="detail-hero">
+  <div class="detail-grid" aria-hidden="true"></div>
+  <nav class="detail-nav" aria-label="Navegación principal">
+    <a
+      class="detail-brand"
+      routerLink="/"
+      aria-label="CND/// — Candemor Racing Team, volver al inicio"
+    >
+      CND<span>///</span>
+    </a>
+    <div>
+      <a routerLink="/">Inicio</a>
+      <a routerLink="/candeonato">Candeonato</a>
+      <a routerLink="/candeonatos">Historial</a>
+    </div>
+  </nav>
+
+  <div class="detail-hero-content">
+    <p class="eyebrow">Archivo deportivo // Torneo {{ tournamentId() }}</p>
+    <h1>Candeonato</h1>
+    @if (championship(); as data) {
+      <p class="edition-name">{{ data.name }}</p>
+      <div class="format-tags" aria-label="Características del campeonato">
+        @for (tag of data.formatTags; track tag) {
+          <span>{{ tag }}</span>
+        }
+        <span>{{ data.stats.roundCount }} rondas</span>
+      </div>
+      @if (editions().length) {
+        <div class="edition-selector">
+          <label for="edition-select">Cambiar de edición</label>
+          <select id="edition-select" (change)="selectEdition($event)">
+            @for (edition of editions(); track edition.id) {
+              <option
+                [value]="edition.externalTournamentId"
+                [selected]="edition.externalTournamentId === tournamentId()"
+              >
+                {{ edition.name }} · Torneo {{ edition.externalTournamentId }}
+              </option>
+            }
+          </select>
+        </div>
+      }
+    } @else {
+      <p class="edition-name">Clasificación y archivo de carreras</p>
+    }
+  </div>
+</header>
+
+<main id="contenido-clasificacion" class="detail-main" tabindex="-1">
+  @if (state() === 'loading') {
+    <section
+      class="section-shell loading-section"
+      aria-busy="true"
+      aria-label="Cargando campeonato"
+    >
+      <p class="eyebrow">Conectando con dirección de carrera</p>
+      <div class="loading-title" aria-hidden="true"></div>
+      <div class="loading-grid" aria-hidden="true">
+        <span></span><span></span><span></span><span></span>
+      </div>
+      <p class="loading-copy">Estamos recuperando rondas, puntos y estadísticas…</p>
+    </section>
+  }
+
+  @if (state() === 'error') {
+    <section class="section-shell error-section" role="alert">
+      <p class="eyebrow">Conexión interrumpida</p>
+      <h2>No pudimos cargar la edición</h2>
+      <p>{{ errorMessage() }}</p>
+      <div class="error-actions">
+        <button class="button button-primary" type="button" (click)="refresh()">Reintentar</button>
+        <a class="button button-secondary" routerLink="/candeonatos">Volver al historial</a>
+      </div>
+    </section>
+  }
+
+  @if (state() === 'ready' && championship(); as data) {
+    <div class="data-toolbar section-shell" aria-live="polite">
+      <div>
+        <span class="data-status" [class.stale]="isStale()">
+          <i aria-hidden="true"></i>
+          {{
+            isStale()
+              ? 'Última copia en memoria'
+              : dataSource() === 'snapshot'
+                ? 'Snapshot verificado'
+                : 'Fuente en directo'
+          }}
+        </span>
+        <span>Actualizado el {{ lastUpdated() }}</span>
+      </div>
+      <button type="button" [disabled]="isRefreshing()" (click)="refresh()">
+        {{ isRefreshing() ? 'Actualizando…' : 'Actualizar datos' }}
+      </button>
+    </div>
+
+    @if (errorMessage()) {
+      <p class="refresh-error section-shell" role="status">{{ errorMessage() }}</p>
+    }
+
+    @if (data.warnings.length) {
+      <aside class="data-notice section-shell" aria-labelledby="data-notice-title">
+        <div class="notice-mark" aria-hidden="true">!</div>
+        <div>
+          <p id="data-notice-title" class="notice-title">Datos parciales de la fuente</p>
+          <ul>
+            @for (warning of data.warnings; track warning.code) {
+              <li>{{ warning.message }}</li>
+            }
+          </ul>
+        </div>
+      </aside>
+    }
+
+    @if (corrections().length) {
+      <aside class="data-notice section-shell" aria-labelledby="editorial-corrections-title">
+        <div class="notice-mark" aria-hidden="true">i</div>
+        <div>
+          <p id="editorial-corrections-title" class="notice-title">Aclaraciones editoriales</p>
+          <p>Estas notas no alteran los resultados recibidos de Fat Cat Race.</p>
+          <ul>
+            @for (correction of corrections(); track correction.id) {
+              <li>
+                <strong>{{ correction.reason }}:</strong> {{ correction.note }}
+                <small>— {{ correction.createdByName }}</small>
+              </li>
+            }
+          </ul>
+        </div>
+      </aside>
+    }
+
+    <section class="section-shell summary-section" aria-labelledby="summary-title">
+      <div class="section-heading">
+        <p class="eyebrow">El campeonato en cifras</p>
+        <h2 id="summary-title" class="section-title">Resumen</h2>
+        <p class="lede">
+          Una lectura directa de la actividad acumulada en {{ data.stats.circuitCount }} circuitos.
+          Las cifras proceden de la API pública del torneo.
+        </p>
+      </div>
+      <app-championship-stats [stats]="data.stats" />
+    </section>
+
+    <section
+      id="clasificacion"
+      class="section-shell standings-section"
+      aria-labelledby="standings-title"
+    >
+      <div class="section-heading section-heading-split">
+        <div>
+          <p class="eyebrow">Puntos acumulados</p>
+          <h2 id="standings-title" class="section-title">Clasificación</h2>
+        </div>
+        <p class="body-copy">
+          El orden y los puntos pertenecen al sistema de Fat Cat Race y se conservan tal como llegan
+          de la fuente. Candemor no recalcula desempates, puntuación ni sanciones.
+        </p>
+      </div>
+      <app-standings-table [standings]="data.standings" [championshipName]="data.name" />
+    </section>
+
+    <section id="rondas" class="section-shell rounds-section" aria-labelledby="rounds-title">
+      <div class="section-heading section-heading-split">
+        <div>
+          <p class="eyebrow">Calendario deportivo</p>
+          <h2 id="rounds-title" class="section-title">Rondas</h2>
+        </div>
+        <p class="body-copy">
+          Las sesiones se agrupan visualmente por circuito, manteniendo el número real de cada
+          ronda.
+        </p>
+      </div>
+      <app-rounds-list [groups]="data.roundGroups" />
+    </section>
+
+    @if (data.leaders.length) {
+      <section
+        id="estadisticas"
+        class="section-shell leaders-section"
+        aria-labelledby="leaders-title"
+      >
+        <div class="section-heading">
+          <p class="eyebrow">Rendimiento destacado</p>
+          <h2 id="leaders-title" class="section-title">Telemetría</h2>
+        </div>
+        <dl class="leaders-grid">
+          @for (leader of data.leaders; track leader.label) {
+            <div>
+              <dt>{{ leader.label }}</dt>
+              <dd class="leader-value">
+                <strong>{{ leader.value }}</strong> {{ leader.unit }}
+              </dd>
+              <dd class="leader-driver">{{ leader.driverLabel }}</dd>
+            </div>
+          }
+        </dl>
+      </section>
+    }
+
+    <section class="section-shell pending-section" aria-labelledby="results-title">
+      <div>
+        <p class="eyebrow">Datos parciales</p>
+        <h2 id="results-title">Puntos por carrera</h2>
+        <p>
+          Ya puedes abrir las posiciones, vueltas, tiempos e incidentes de cada sesión desde la
+          sección de rondas. Fat Cat Race todavía no publica el desglose de puntos concedidos en
+          cada carrera, así que no lo inferimos.
+        </p>
+      </div>
+      <span class="pending-code" aria-hidden="true">DATA<br />PARTIAL</span>
+    </section>
+
+    <div class="source-row section-shell">
+      <p>Fuente externa · Los datos pueden cambiar en origen.</p>
+      <a [href]="sourceBaseUrl + '/' + tournamentId()" target="_blank" rel="noopener noreferrer">
+        Consultar JSON original <span class="sr-only">(abre en una pestaña nueva)</span>
+      </a>
+    </div>
+  }
+</main>
+
+<footer class="detail-footer">
+  <a class="detail-brand" routerLink="/">CND<span>///</span></a>
+  <p>Archivo deportivo · Candemor Racing Team</p>
+  <nav aria-label="Navegación del archivo">
+    <a routerLink="/candeonatos">Todas las ediciones</a>
+    <a routerLink="/">Edición actual</a>
+  </nav>
+</footer>

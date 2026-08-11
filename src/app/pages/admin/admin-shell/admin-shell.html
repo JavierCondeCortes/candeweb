@@ -1,0 +1,33 @@
+<a class="skip-link" href="#admin-content">Saltar al contenido administrativo</a>
+
+<div class="admin-layout">
+  <header class="admin-topbar">
+    <a class="admin-brand" routerLink="/admin" aria-label="Administración de Candemor, inicio">
+      CND<span>///</span> ADMIN
+    </a>
+    <div class="admin-identity">
+      @if (session()?.admin; as admin) {
+        <span>{{ admin.displayName }} · Administrador</span>
+      }
+      <a routerLink="/" target="_blank" aria-label="Ver web pública (se abre en una pestaña nueva)"
+        >Ver web <span aria-hidden="true">↗</span></a
+      >
+      <button type="button" (click)="logout()">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <nav class="admin-sidebar" aria-label="Navegación de administración">
+    <a routerLink="/admin" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">
+      Resumen
+    </a>
+    <a routerLink="/admin/miembros" routerLinkActive="is-active">Miembros</a>
+    <a routerLink="/admin/candeonatos" routerLinkActive="is-active">Candeonatos</a>
+    <a routerLink="/admin/ajustes" routerLinkActive="is-active">Ajustes</a>
+    <a routerLink="/admin/seguridad" routerLinkActive="is-active">Seguridad</a>
+    <a routerLink="/admin/auditoria" routerLinkActive="is-active">Auditoría</a>
+  </nav>
+
+  <main id="admin-content" class="admin-content" tabindex="-1">
+    <router-outlet />
+  </main>
+</div>

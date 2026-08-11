@@ -1,22 +1,132 @@
-<section class="relative h-screen overflow-hidden mx-auto max-w-[2560px]">
+<header
+  id="inicio"
+  class="hero"
+  aria-describedby="video-description"
+  [class.video-focus-mode]="isVideoFocusMode()"
+>
+  <picture class="hero-poster" aria-hidden="true">
+    <source media="(max-width: 47.99rem)" [srcset]="coverMobileUrl()" />
+    <img [src]="coverUrl()" alt="" width="1600" height="900" fetchpriority="high" />
+  </picture>
+
+  @if (backgroundVideoUrl(); as videoUrl) {
     <video
-        class="fixed top-1/2 left-1/2 h-full min-w-[120%] max-w-none -translate-x-1/2 -translate-y-1/2 object-cover"
-        #heroVideo autoplay muted loop playsinline preload="auto">
-        <source src="/exampleVideo.mp4" type="video/mp4" />
+      #heroVideo
+      class="hero-video"
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="metadata"
+      [poster]="coverUrl()"
+      aria-hidden="true"
+      (play)="onVideoPlay()"
+      (pause)="onVideoPause()"
+    >
+      <source [src]="videoUrl" [type]="backgroundVideoMimeType()" />
     </video>
-    <section class="flex h-screen items-center justify-center lg:items-end lg:justify-start lg:pb-20 lg:pl-20">
-        <div
-            class="z-10 flex flex-col gap-8 text-center text-2xl font-mono text-(--texto) lg:text-left lg:text-3xl xl:text-4xl">
-            <h1>{{ variableTextoVisible() }}</h1>
-            <span>[ 23 : 03 : 25 : 59 ]</span>
-        </div>
-    </section>
+  }
 
-    <svg class="flecha fixed bottom-8 left-1/2 z-1 w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true"
-        xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M12 19V5m0 14-4-4m4 4 4-4" />
+  <div class="hero-vignette" aria-hidden="true"></div>
+  <div class="hero-grid" aria-hidden="true"></div>
+
+  <nav
+    class="hero-nav"
+    aria-label="Navegación principal"
+    [attr.aria-hidden]="isVideoFocusMode() ? 'true' : null"
+    [attr.inert]="isVideoFocusMode() ? '' : null"
+  >
+    <a
+      class="brand"
+      href="#inicio"
+      [attr.aria-label]="'CND///' + editionCode() + ' — Candeonato ' + editionNumber() + ', inicio'"
+    >
+      CND<span>///</span>{{ editionCode() }}
+    </a>
+    <div class="nav-links">
+      <a href="#evento">Qué es</a>
+      <a href="#requisitos">Requisitos</a>
+      <a href="#reglas">Reglas</a>
+      <a [href]="historyUrl()">Historial</a>
+      <a href="#inscripcion">Inscripción</a>
+    </div>
+  </nav>
+
+  @if (backgroundVideoUrl()) {
+    <app-sound-switch
+      [muted]="isMuted()"
+      [paused]="isPaused()"
+      [viewingVideo]="isVideoFocusMode()"
+      (soundToggle)="toggleSound()"
+      (playToggle)="togglePlayback()"
+      (viewToggle)="toggleVideoFocus()"
+    >
+    </app-sound-switch>
+  }
+
+  <div
+    class="hero-content"
+    [attr.aria-hidden]="isVideoFocusMode() ? 'true' : null"
+    [attr.inert]="isVideoFocusMode() ? '' : null"
+  >
+    <p class="eyebrow hero-kicker">{{ editionCode() }} / {{ editionSubtitle() }}</p>
+    <h1 class="display-title" aria-label="CANDEONATO">CANDEONATO</h1>
+    <p class="hero-subtitle">{{ heroSubtitle() }}</p>
+
+    <div class="hero-meta">
+      <time [attr.datetime]="startAt()">{{ dateLabel() }}</time>
+      <span aria-hidden="true">//</span>
+      <span>iRacing · Online</span>
+    </div>
+
+    <div class="countdown" role="timer" [attr.aria-label]="'Cuenta atrás para ' + dateLabel()">
+      <div>
+        <strong>{{ countdown().days }}</strong>
+        <span>días</span>
+      </div>
+      <span class="count-separator" aria-hidden="true">:</span>
+      <div>
+        <strong>{{ countdown().hours }}</strong>
+        <span>horas</span>
+      </div>
+      <span class="count-separator" aria-hidden="true">:</span>
+      <div>
+        <strong>{{ countdown().minutes }}</strong>
+        <span>minutos</span>
+      </div>
+      <span class="count-separator" aria-hidden="true">:</span>
+      <div>
+        <strong>{{ countdown().seconds }}</strong>
+        <span>segundos</span>
+      </div>
+    </div>
+
+    <div class="hero-actions">
+      <a class="button button-primary" [href]="registrationUrl()">Inscribirme</a>
+      <a class="button button-secondary" href="#reglas">Ver reglas</a>
+    </div>
+  </div>
+
+  <a
+    class="scroll-cue"
+    href="#evento"
+    [attr.aria-hidden]="isVideoFocusMode() ? 'true' : null"
+    [attr.inert]="isVideoFocusMode() ? '' : null"
+  >
+    <span>Descubrir</span>
+    <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="none">
+      <path
+        d="M12 4v15m0 0-5-5m5 5 5-5"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
     </svg>
+  </a>
 
-    <div class="fixed inset-0 z-0 bg-linear-to-b from-(--negroPrimario) via-transparent to-(--negroPrimario)"></div>
-</section>
+  <p id="video-description" class="sr-only">
+    El fondo presenta visualmente esta edición del Candeonato. Toda la información esencial también
+    aparece como texto en esta página.
+  </p>
+</header>

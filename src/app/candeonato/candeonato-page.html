@@ -1,0 +1,47 @@
+<a class="skip-link" href="#contenido">Saltar al contenido principal</a>
+
+<app-hero [championship]="featured$ | async"></app-hero>
+
+<main id="contenido" class="site-main" tabindex="-1">
+  <app-about [championship]="featured$ | async"></app-about>
+  <app-requirements [championship]="featured$ | async"></app-requirements>
+  <app-rules></app-rules>
+  <app-form-inscription></app-form-inscription>
+</main>
+
+<footer class="site-footer" aria-label="Información del evento">
+  <div class="footer-inner">
+    <a
+      class="footer-mark"
+      href="#inicio"
+      [attr.aria-label]="
+        'CND///' + ((featured$ | async)?.editionNumber ?? '08') + ' — Volver al inicio'
+      "
+    >
+      CND<span>///</span>{{ (featured$ | async)?.editionNumber ?? '08' }}
+    </a>
+    <div>
+      <p class="footer-label">Comunidad</p>
+      <a href="/">Candemor Racing Team</a>
+    </div>
+    <div>
+      <p class="footer-label">Resultados</p>
+      <a [href]="'/candeonatos/' + ((featured$ | async)?.externalTournamentId ?? 42)">
+        Historial deportivo
+      </a>
+    </div>
+    <div>
+      <p class="footer-label">Contacto</p>
+      <a href="#inscripcion">Formulario de inscripción</a>
+    </div>
+    <div>
+      <p class="footer-label">Privacidad</p>
+      <a href="#privacidad">Uso de datos</a>
+    </div>
+  </div>
+  <p class="footer-bottom">
+    CANDEONATO #{{ (featured$ | async)?.editionNumber ?? 8 }} ·
+    {{ (featured$ | async)?.subtitle ?? 'NEW ERA EDITION' }} ·
+    {{ (featured$ | async)?.season ?? '2026' }}
+  </p>
+</footer>

@@ -1,0 +1,27 @@
+<dl class="stats-grid" aria-label="Resumen estadístico del campeonato">
+  <div>
+    <dt>Rondas</dt>
+    <dd class="stat-value">{{ stats().roundCount }}</dd>
+    <dd class="stat-description">Sesiones contabilizadas</dd>
+  </div>
+  <div>
+    <dt>Circuitos</dt>
+    <dd class="stat-value">{{ stats().circuitCount }}</dd>
+    <dd class="stat-description">Combinaciones de pista</dd>
+  </div>
+  <div>
+    <dt>Pilotos</dt>
+    <dd class="stat-value">{{ stats().driverCount }}</dd>
+    <dd class="stat-description">Presentes en la clasificación</dd>
+  </div>
+  <div>
+    <dt>Vueltas</dt>
+    <dd class="stat-value">{{ stats().totalLaps }}</dd>
+    <dd class="stat-description">Acumuladas por el campeonato</dd>
+  </div>
+  <div>
+    <dt>Incidentes</dt>
+    <dd class="stat-value">{{ stats().totalIncidents }}</dd>
+    <dd class="stat-description">Dato acumulado de seguridad</dd>
+  </div>
+</dl>

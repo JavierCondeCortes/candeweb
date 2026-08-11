@@ -1,0 +1,102 @@
+<header class="admin-page-header">
+  <div>
+    <p class="admin-eyebrow">Protección de la cuenta</p>
+    <h1>Seguridad</h1>
+    <p>Configura un código temporal compatible con aplicaciones TOTP.</p>
+  </div>
+</header>
+
+@if (message()) {
+  <p class="admin-alert is-success" role="status">{{ message() }}</p>
+}
+@if (errorMessage()) {
+  <div class="admin-alert is-error" role="alert">{{ errorMessage() }}</div>
+}
+
+<section class="admin-panel admin-security-panel" aria-labelledby="mfa-title">
+  <div>
+    <p class="admin-eyebrow">Segundo factor</p>
+    <h2 id="mfa-title">
+      {{ session()?.admin?.mfaEnabled ? 'Activado' : 'Pendiente de configurar' }}
+    </h2>
+    <p>
+      TOTP es un código temporal de seis cifras que cambia cada 30 segundos en una aplicación como
+      Google Authenticator, Microsoft Authenticator o 2FAS. Además de la contraseña, el acceso
+      solicitará ese código o uno de recuperación.
+    </p>
+
+    @if (!setup() && recoveryCodes().length === 0) {
+      <button
+        class="admin-button is-primary"
+        type="button"
+        [disabled]="loading()"
+        (click)="startSetup()"
+      >
+        {{
+          loading()
+            ? 'Preparando…'
+            : session()?.admin?.mfaEnabled
+              ? 'Rotar segundo factor'
+              : 'Configurar ahora'
+        }}
+      </button>
+    }
+  </div>
+</section>
+
+@if (setup(); as configuration) {
+  <section class="admin-form-section" aria-labelledby="mfa-setup-title">
+    <div>
+      <h2 id="mfa-setup-title">Vincular aplicación</h2>
+      <p>La configuración anterior seguirá siendo válida hasta confirmar esta nueva clave.</p>
+    </div>
+    <div>
+      <ol class="admin-security-steps">
+        <li>Abre una aplicación autenticadora y elige añadir una cuenta manualmente.</li>
+        <li>Usa el tipo basado en tiempo, seis cifras y periodo de 30 segundos.</li>
+        <li>
+          Introduce esta clave:
+          <code>{{ configuration.secret }}</code>
+          <button class="admin-button" type="button" (click)="copySecret()">Copiar clave</button>
+        </li>
+        <li>Escribe el código generado para confirmar.</li>
+      </ol>
+
+      <form class="admin-form" [formGroup]="form" (ngSubmit)="confirm()" novalidate>
+        <label>
+          <span>Código de seis cifras</span>
+          <input
+            type="text"
+            formControlName="code"
+            autocomplete="one-time-code"
+            inputmode="numeric"
+            pattern="[0-9]{6}"
+            maxlength="6"
+          />
+        </label>
+        <button class="admin-button is-primary" type="submit" [disabled]="confirming()">
+          {{ confirming() ? 'Verificando…' : 'Activar segundo factor' }}
+        </button>
+      </form>
+    </div>
+  </section>
+}
+
+@if (recoveryCodes().length) {
+  <section class="admin-form-section" aria-labelledby="recovery-title">
+    <div>
+      <h2 id="recovery-title">Códigos de recuperación</h2>
+      <p>Solo se muestran una vez. Cada código permite un único acceso.</p>
+    </div>
+    <div>
+      <ul class="admin-recovery-codes" aria-label="Códigos de recuperación">
+        @for (code of recoveryCodes(); track code) {
+          <li>
+            <code>{{ code }}</code>
+          </li>
+        }
+      </ul>
+      <button class="admin-button" type="button" (click)="copyRecoveryCodes()">Copiar todos</button>
+    </div>
+  </section>
+}

@@ -1,0 +1,46 @@
+<header class="admin-page-header">
+  <div>
+    <p class="admin-eyebrow">Seguridad</p>
+    <h1>Auditoría</h1>
+    <p>Últimas 200 acciones administrativas registradas.</p>
+  </div>
+</header>
+
+@if (errorMessage()) {
+  <div class="admin-alert is-error" role="alert">{{ errorMessage() }}</div>
+} @else if (entries().length === 0) {
+  <p role="status">Cargando auditoría…</p>
+} @else {
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <caption>
+        Historial administrativo reciente
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Fecha</th>
+          <th scope="col">Persona</th>
+          <th scope="col">Acción</th>
+          <th scope="col">Entidad</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (entry of entries(); track entry.id) {
+          <tr>
+            <td>{{ entry.createdAt | date: 'short' }}</td>
+            <td>{{ entry.actorName || entry.actorEmail || 'Sistema' }}</td>
+            <td>
+              <code>{{ entry.action }}</code>
+            </td>
+            <td>
+              {{ entry.entityType }}
+              @if (entry.entityId) {
+                <small>{{ entry.entityId }}</small>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

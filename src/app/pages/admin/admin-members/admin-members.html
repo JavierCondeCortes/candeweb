@@ -1,0 +1,156 @@
+<header class="admin-page-header">
+  <div>
+    <p class="admin-eyebrow">Equipo</p>
+    <h1>Miembros</h1>
+    <p>Publica perfiles reales, controla sus redes y decide el orden de la portada.</p>
+  </div>
+  <a class="admin-button is-primary" routerLink="/admin/miembros/nuevo">Añadir miembro</a>
+</header>
+
+@if (message()) {
+  <p class="admin-alert is-success" role="status">{{ message() }}</p>
+}
+@if (errorMessage()) {
+  <div class="admin-alert is-error" role="alert">{{ errorMessage() }}</div>
+}
+
+@if (loading()) {
+  <p role="status">Cargando miembros…</p>
+} @else if (members().length === 0) {
+  <section class="admin-empty">
+    <h2>Todavía no hay miembros</h2>
+    <p>Crea el primer perfil y publícalo cuando tenga fotografía y texto alternativo.</p>
+  </section>
+} @else {
+  <div class="admin-filter-bar" aria-label="Filtrar miembros">
+    <label>
+      <span>Buscar</span>
+      <input
+        type="search"
+        placeholder="Nombre, alias o rol"
+        [value]="query()"
+        (input)="query.set($any($event.target).value)"
+      />
+    </label>
+    <label>
+      <span>Estado</span>
+      <select [value]="statusFilter()" (change)="statusFilter.set($any($event.target).value)">
+        <option value="all">Todos</option>
+        <option value="draft">Borradores</option>
+        <option value="published">Publicados</option>
+        <option value="archived">Archivados</option>
+      </select>
+    </label>
+    <span role="status">{{ filteredMembers().length }} resultados</span>
+  </div>
+
+  @if (filteredMembers().length === 0) {
+    <section class="admin-empty">
+      <h2>Sin coincidencias</h2>
+      <p>Cambia el texto de búsqueda o el filtro de estado.</p>
+    </section>
+  } @else {
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <caption>
+          Miembros ordenados como aparecerán en la web
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Orden</th>
+            <th scope="col">Miembro</th>
+            <th scope="col">Estado</th>
+            <th scope="col">Portada</th>
+            <th scope="col">Redes</th>
+            <th scope="col">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (member of filteredMembers(); track member.id; let index = $index) {
+            <tr>
+              <td>
+                @if (!isFiltered()) {
+                  <div class="admin-order-actions" [attr.aria-label]="'Ordenar a ' + member.name">
+                    <button
+                      type="button"
+                      [disabled]="index === 0"
+                      [attr.aria-label]="'Subir a ' + member.name"
+                      (click)="move(index, -1)"
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      [disabled]="index === members().length - 1"
+                      [attr.aria-label]="'Bajar a ' + member.name"
+                      (click)="move(index, 1)"
+                    >
+                      ↓
+                    </button>
+                  </div>
+                } @else {
+                  {{ member.displayOrder + 1 }}
+                }
+              </td>
+              <th scope="row">
+                <div class="admin-person">
+                  @if (member.photoUrl) {
+                    <img [src]="member.photoUrl" alt="" width="48" height="60" />
+                  }
+                  <span>
+                    {{ member.name }}
+                    @if (member.isDemo) {
+                      <small>Contenido de demostración</small>
+                    }
+                  </span>
+                </div>
+              </th>
+              <td>
+                <span class="admin-status" [attr.data-status]="member.status">{{
+                  member.status
+                }}</span>
+              </td>
+              <td>{{ member.isFeatured ? 'Sí' : 'No' }}</td>
+              <td>{{ member.twitchUrl ? 'Twitch' : 'Sin redes' }}</td>
+              <td>
+                <div class="admin-row-actions">
+                  <a [routerLink]="['/admin/miembros', member.id]">Editar</a>
+                  @if (member.status === 'published') {
+                    <a routerLink="/" fragment="equipo">Ver en la web</a>
+                  }
+                  @if (member.status !== 'published') {
+                    <button
+                      type="button"
+                      [disabled]="busyId() === member.id"
+                      (click)="runAction(member, 'publish')"
+                    >
+                      Publicar
+                    </button>
+                  }
+                  @if (member.status !== 'archived') {
+                    <button
+                      class="is-danger"
+                      type="button"
+                      [disabled]="busyId() === member.id"
+                      (click)="runAction(member, 'archive')"
+                    >
+                      Archivar
+                    </button>
+                  }
+                  <button
+                    class="is-danger"
+                    type="button"
+                    [disabled]="busyId() === member.id"
+                    (click)="deleteMember(member)"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+}

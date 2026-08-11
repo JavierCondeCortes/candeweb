@@ -1,0 +1,145 @@
+<div class="round-grid">
+  @for (group of groups(); track group.key; let circuitIndex = $index) {
+    <article class="round-card">
+      <header>
+        <p class="track-number" aria-hidden="true">0{{ circuitIndex + 1 }}</p>
+        <div>
+          <p class="track-label">Circuito</p>
+          <h3>{{ group.circuit }}</h3>
+          <p class="track-layout">{{ group.layout }}</p>
+        </div>
+      </header>
+
+      <ol aria-label="Rondas en {{ group.circuit }}">
+        @for (round of group.rounds; track round.id) {
+          <li>
+            <div class="round-title">
+              <span>Ronda {{ round.number.toString().padStart(2, '0') }}</span>
+              <strong>{{ round.typeLabel }}</strong>
+            </div>
+            <dl>
+              <div>
+                <dt>Fecha</dt>
+                <dd>{{ round.dateLabel }}</dd>
+              </div>
+              <div>
+                <dt>Vueltas</dt>
+                <dd>{{ round.laps ?? '—' }}</dd>
+              </div>
+              <div>
+                <dt><abbr title="Strength of Field">SOF</abbr></dt>
+                <dd>{{ round.sof ?? '—' }}</dd>
+              </div>
+            </dl>
+            @if (round.externalSessionId; as sessionId) {
+              <button
+                class="round-results-toggle"
+                [id]="'round-results-button-' + sessionId"
+                type="button"
+                [attr.aria-expanded]="openSessionId() === sessionId"
+                [attr.aria-controls]="'round-results-' + sessionId"
+                (click)="toggleResults(sessionId)"
+              >
+                {{ openSessionId() === sessionId ? 'Ocultar posiciones' : 'Ver posiciones' }}
+              </button>
+            }
+          </li>
+        }
+      </ol>
+    </article>
+  } @empty {
+    <p class="empty-state">La fuente todavía no contiene rondas para esta edición.</p>
+  }
+</div>
+
+@if (selectedRound(); as round) {
+  @if (round.externalSessionId; as sessionId) {
+    <section
+      class="round-results"
+      [id]="'round-results-' + sessionId"
+      [attr.aria-labelledby]="'round-results-button-' + sessionId"
+    >
+      <div class="round-results-heading">
+        <div>
+          <p class="track-label">Resultado de sesión</p>
+          <h3>{{ round.name }}</h3>
+        </div>
+        <button type="button" (click)="toggleResults(sessionId)">Cerrar</button>
+      </div>
+
+      @switch (resultState(sessionId)?.kind) {
+        @case ('loading') {
+          <p class="round-results-message" role="status">Cargando posiciones de la carrera…</p>
+        }
+        @case ('error') {
+          <div class="round-results-message" role="alert">
+            <p>No se han podido recuperar las posiciones de esta sesión.</p>
+            <button type="button" (click)="retryResults(sessionId)">Reintentar</button>
+          </div>
+        }
+        @case ('ready') {
+          @if (resultState(sessionId); as state) {
+            @if (state.kind === 'ready') {
+              @if (state.response.results.length) {
+                <div class="round-results-scroll" tabindex="0" aria-label="Tabla desplazable">
+                  <table>
+                    <caption>
+                      Posiciones de
+                      {{
+                        round.name
+                      }}. La fuente no publica puntos por carrera.
+                    </caption>
+                    <thead>
+                      <tr>
+                        <th scope="col">Pos.</th>
+                        <th scope="col">Piloto</th>
+                        <th scope="col">Equipo</th>
+                        <th scope="col">Vueltas</th>
+                        <th scope="col">Tiempo total</th>
+                        <th scope="col">Media</th>
+                        <th scope="col">Inc.</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (
+                        result of state.response.results;
+                        track result.position + ':' + result.driverName
+                      ) {
+                        <tr>
+                          <td>
+                            <strong>{{ result.position }}</strong>
+                          </td>
+                          <td>{{ result.driverName }}</td>
+                          <td>{{ result.team || '—' }}</td>
+                          <td>{{ result.laps ?? '—' }}</td>
+                          <td>{{ result.totalTime || '—' }}</td>
+                          <td>{{ result.averageLap || '—' }}</td>
+                          <td>{{ result.incidents ?? '—' }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              } @else {
+                <p class="round-results-message">
+                  La fuente no contiene posiciones para esta sesión.
+                </p>
+              }
+              <div class="round-results-source">
+                <p>Datos recuperados bajo demanda y conservados durante 24 horas.</p>
+                <a
+                  [href]="state.response.sourceUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Consultar resultado original en Fat Cat Race (se abre en una pestaña nueva)"
+                >
+                  Ver fuente original <span aria-hidden="true">↗</span>
+                </a>
+              </div>
+            }
+          }
+        }
+      }
+    </section>
+  }
+}

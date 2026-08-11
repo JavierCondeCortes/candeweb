@@ -1,13 +1,42 @@
-<section class="relative text-(--texto) grid mx-18 lg:grid-cols-[1.2fr_1fr] ">
-    <div>
-        <!-- <div class="absolute top-3 left-32">_____________________</div>
-        <div class="absolute top-2 left-32">__________________</div> -->
-        <h2 class=" text-3xl italic z-2 font-bold">¿QUE ES?</h2>
-        <p class=" mt-4">El candeonato es un campeonato con una serie de carreras donde el objetivo es pasarla bien. Las risas forman parte del evento, todos correremos con el mazda en circuitos gratuitos por lo que estas totalmente invitado a participar.</p>
-        <p class=" mt-4">El evento no es para competir de forma directa, sino de forma limpia. Estan prohibidos los enfados, por lo que una acción similar puede llevar sancioón de participación en proximos candeonatos</p>
-    </div>
-    <div class="mt-12 text-center">
-        imagen de coche rotando
-    </div>
-</section>
+<section id="evento" class="section-shell event-section" aria-labelledby="evento-title">
+  <div class="section-heading reveal">
+    <p class="eyebrow">01 / Evento</p>
+    <h2 id="evento-title" class="section-title">¿Qué es?</h2>
+  </div>
 
+  <div class="event-layout">
+    <div class="event-copy">
+      <p class="lede">
+        {{
+          championship()?.description ||
+            'El Candeonato es una serie de carreras para disfrutar de iRacing en comunidad, sin convertir cada curva en una guerra.'
+        }}
+      </p>
+      <p class="body-copy">
+        Todos competimos con el Mazda MX-5 en circuitos gratuitos y con una configuración fija. La
+        prioridad es correr limpio, aprender juntos y terminar la noche con ganas de repetir.
+      </p>
+      <blockquote>
+        <span aria-hidden="true">“</span>
+        Competimos en pista. Fuera de ella, somos equipo.
+      </blockquote>
+    </div>
+
+    <figure class="car-visual reveal">
+      <div class="car-frame">
+        <img
+          src="/media/mazda-outline.webp"
+          alt="Ilustración luminosa de perfil del Mazda MX-5 utilizado en el Candeonato"
+          width="1400"
+          height="788"
+          loading="lazy"
+        />
+        <span class="scan-line" aria-hidden="true"></span>
+      </div>
+      <figcaption>
+        <span>MX-5 / CUP</span>
+        Un coche para todos. La diferencia la marca cómo compartimos la pista.
+      </figcaption>
+    </figure>
+  </div>
+</section>

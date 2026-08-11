@@ -1,0 +1,107 @@
+<section id="equipo" class="section-shell team-section" aria-labelledby="team-title">
+  <div class="section-heading team-heading">
+    <div>
+      <p class="eyebrow">El paddock</p>
+      <h2 id="team-title" class="section-title">Detrás del volante</h2>
+    </div>
+    <p class="body-copy">
+      Conoce a las personas que compiten, retransmiten y hacen posible la comunidad de Candemor.
+    </p>
+  </div>
+
+  @if (state$ | async; as state) {
+    @if (state.kind === 'loading') {
+      <p class="team-demo-note" role="status">Cargando equipo…</p>
+    } @else if (state.kind === 'error') {
+      <p class="team-demo-note" role="status">
+        El equipo no está disponible ahora. Vuelve a intentarlo dentro de unos minutos.
+      </p>
+    } @else if (state.members.length === 0) {
+      <p class="team-demo-note">Los perfiles oficiales se publicarán próximamente.</p>
+    } @else {
+      @if (state.hasDemo) {
+        <p class="team-demo-note" role="note">
+          <span aria-hidden="true">*</span>
+          Contenido de demostración pendiente de sustituir desde el panel de administración.
+        </p>
+      }
+
+      <ul class="team-grid" aria-label="Miembros del equipo">
+        @for (member of state.members; track member.id) {
+          <li>
+            <article class="team-card">
+              @if (member.photoUrl) {
+                <img
+                  [src]="member.photoUrl"
+                  [alt]="member.photoAlt || ''"
+                  width="720"
+                  height="900"
+                  loading="lazy"
+                />
+              }
+              <div class="team-card-vignette" aria-hidden="true"></div>
+              <div class="team-card-copy">
+                <h3>{{ member.name }}</h3>
+                @if (member.roleLabel) {
+                  <p>{{ member.roleLabel }}</p>
+                }
+                @if (member.twitchUrl || member.instagramUrl || member.youtubeUrl || member.xUrl) {
+                  <div class="team-card-socials">
+                    @if (member.twitchUrl) {
+                      <a
+                        [href]="member.twitchUrl"
+                        [attr.aria-label]="
+                          'Twitch de ' + member.name + ' (se abre en una pestaña nueva)'
+                        "
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Twitch <span aria-hidden="true">↗</span>
+                      </a>
+                    }
+                    @if (member.instagramUrl) {
+                      <a
+                        [href]="member.instagramUrl"
+                        [attr.aria-label]="
+                          'Instagram de ' + member.name + ' (se abre en una pestaña nueva)'
+                        "
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Instagram <span aria-hidden="true">↗</span>
+                      </a>
+                    }
+                    @if (member.youtubeUrl) {
+                      <a
+                        [href]="member.youtubeUrl"
+                        [attr.aria-label]="
+                          'YouTube de ' + member.name + ' (se abre en una pestaña nueva)'
+                        "
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        YouTube <span aria-hidden="true">↗</span>
+                      </a>
+                    }
+                    @if (member.xUrl) {
+                      <a
+                        [href]="member.xUrl"
+                        [attr.aria-label]="
+                          'X de ' + member.name + ' (se abre en una pestaña nueva)'
+                        "
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        X <span aria-hidden="true">↗</span>
+                      </a>
+                    }
+                  </div>
+                }
+              </div>
+            </article>
+          </li>
+        }
+      </ul>
+    }
+  }
+</section>
