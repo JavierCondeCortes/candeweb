@@ -1,27 +1,27 @@
-<dl class="stats-grid" aria-label="Resumen estadístico del campeonato">
+<dl class="stats-grid" [attr.aria-label]="'candeonato.sports.statsLabel' | translate">
   <div>
-    <dt>Rondas</dt>
+    <dt>{{ 'candeonato.sports.rounds' | translate }}</dt>
     <dd class="stat-value">{{ stats().roundCount }}</dd>
-    <dd class="stat-description">Sesiones contabilizadas</dd>
+    <dd class="stat-description">{{ 'candeonato.sports.sessions' | translate }}</dd>
   </div>
   <div>
-    <dt>Circuitos</dt>
+    <dt>{{ 'candeonato.sports.circuits' | translate }}</dt>
     <dd class="stat-value">{{ stats().circuitCount }}</dd>
-    <dd class="stat-description">Combinaciones de pista</dd>
+    <dd class="stat-description">{{ 'candeonato.sports.trackCombinations' | translate }}</dd>
   </div>
   <div>
-    <dt>Pilotos</dt>
+    <dt>{{ 'candeonato.sports.drivers' | translate }}</dt>
     <dd class="stat-value">{{ stats().driverCount }}</dd>
-    <dd class="stat-description">Presentes en la clasificación</dd>
+    <dd class="stat-description">{{ 'candeonato.sports.driversDescription' | translate }}</dd>
   </div>
   <div>
-    <dt>Vueltas</dt>
+    <dt>{{ 'candeonato.sports.laps' | translate }}</dt>
     <dd class="stat-value">{{ stats().totalLaps }}</dd>
-    <dd class="stat-description">Acumuladas por el campeonato</dd>
+    <dd class="stat-description">{{ 'candeonato.sports.lapsDescription' | translate }}</dd>
   </div>
   <div>
-    <dt>Incidentes</dt>
+    <dt>{{ 'candeonato.sports.incidents' | translate }}</dt>
     <dd class="stat-value">{{ stats().totalIncidents }}</dd>
-    <dd class="stat-description">Dato acumulado de seguridad</dd>
+    <dd class="stat-description">{{ 'candeonato.sports.incidentsDescription' | translate }}</dd>
   </div>
 </dl>

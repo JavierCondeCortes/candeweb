@@ -1,14 +1,19 @@
 <header class="admin-page-header">
   <div>
-    <p class="admin-eyebrow">Archivo deportivo</p>
-    <h1>{{ championshipId() ? 'Editar Candeonato' : 'Nuevo Candeonato' }}</h1>
-    <p>Los textos son editoriales; las posiciones y puntos se importan desde Fat Cat Race.</p>
+    <p class="admin-eyebrow">{{ 'admin.championshipForm.eyebrow' | translate }}</p>
+    <h1>
+      {{
+        (championshipId() ? 'admin.championshipForm.editTitle' : 'admin.championshipForm.newTitle')
+          | translate
+      }}
+    </h1>
+    <p>{{ 'admin.championshipForm.intro' | translate }}</p>
   </div>
-  <a class="admin-button" routerLink="/admin/candeonatos">Volver al listado</a>
+  <a class="admin-button" routerLink="/admin/candeonatos">{{ 'admin.common.back' | translate }}</a>
 </header>
 
 @if (loading()) {
-  <p role="status">Cargando edición…</p>
+  <p role="status">{{ 'admin.championshipForm.loading' | translate }}</p>
 } @else {
   @if (errorMessage()) {
     <div id="championship-form-error" class="admin-alert is-error" role="alert" tabindex="-1">
@@ -19,12 +24,14 @@
   <form class="admin-editor-form" [formGroup]="form" (ngSubmit)="save()" novalidate>
     <section class="admin-form-section" aria-labelledby="championship-identity-title">
       <div>
-        <h2 id="championship-identity-title">Identidad</h2>
-        <p>Nombre y referencia estable de la edición.</p>
+        <h2 id="championship-identity-title">
+          {{ 'admin.championshipForm.identity' | translate }}
+        </h2>
+        <p>{{ 'admin.championshipForm.identityHelp' | translate }}</p>
       </div>
       <div class="admin-form-grid">
         <label>
-          <span>Nombre *</span>
+          <span>{{ 'admin.championshipForm.name' | translate }}</span>
           <input
             type="text"
             formControlName="name"
@@ -37,7 +44,7 @@
           }
         </label>
         <label>
-          <span>Slug</span>
+          <span>{{ 'admin.championshipForm.slug' | translate }}</span>
           <input
             type="text"
             formControlName="slug"
@@ -50,7 +57,7 @@
           }
         </label>
         <label>
-          <span>Número de edición</span>
+          <span>{{ 'admin.championshipForm.editionNumber' | translate }}</span>
           <input
             type="number"
             formControlName="editionNumber"
@@ -65,22 +72,24 @@
           }
         </label>
         <label
-          ><span>Temporada</span><input type="text" formControlName="season" maxlength="30"
+          ><span>{{ 'admin.championshipForm.season' | translate }}</span
+          ><input type="text" formControlName="season" maxlength="30"
         /></label>
         <label class="is-wide"
-          ><span>Subtítulo</span><input type="text" formControlName="subtitle" maxlength="100"
+          ><span>{{ 'admin.championshipForm.subtitle' | translate }}</span
+          ><input type="text" formControlName="subtitle" maxlength="100"
         /></label>
       </div>
     </section>
 
     <section class="admin-form-section" aria-labelledby="championship-source-title">
       <div>
-        <h2 id="championship-source-title">Fuente deportiva</h2>
-        <p>Al guardar un ID nuevo se comprobará que Fat Cat Race devuelve un torneo válido.</p>
+        <h2 id="championship-source-title">{{ 'admin.championshipForm.source' | translate }}</h2>
+        <p>{{ 'admin.championshipForm.sourceHelp' | translate }}</p>
       </div>
       <div class="admin-form-grid">
         <label>
-          <span>ID externo</span>
+          <span>{{ 'admin.championshipForm.externalId' | translate }}</span>
           <input
             type="number"
             formControlName="externalTournamentId"
@@ -102,12 +111,25 @@
             [disabled]="sourceChecking()"
             (click)="checkSource()"
           >
-            {{ sourceChecking() ? 'Comprobando…' : 'Comprobar torneo' }}
+            {{
+              (sourceChecking()
+                ? 'admin.championshipForm.checkingSource'
+                : 'admin.championshipForm.checkSource'
+              ) | translate
+            }}
           </button>
           @if (sourcePreview(); as tournament) {
             <p class="admin-alert is-success" role="status">
-              Encontrado: <strong>{{ tournament.name }}</strong> · ID {{ tournament.id }} ·
-              {{ tournament.rounds }} rondas · {{ tournament.drivers }} pilotos
+              {{
+                'admin.championshipForm.sourceFound'
+                  | translate
+                    : {
+                        name: tournament.name,
+                        id: tournament.id,
+                        rounds: tournament.rounds,
+                        drivers: tournament.drivers,
+                      }
+              }}
             </p>
           }
           @if (sourceError()) {
@@ -119,27 +141,44 @@
 
     <section class="admin-form-section" aria-labelledby="championship-content-title">
       <div>
-        <h2 id="championship-content-title">Contenido</h2>
-        <p>Información editorial visible en portada e historial.</p>
+        <h2 id="championship-content-title">{{ 'admin.championshipForm.content' | translate }}</h2>
+        <p>{{ 'admin.championshipForm.contentHelp' | translate }}</p>
       </div>
       <div class="admin-form-grid">
+        <p class="admin-language-heading is-wide">
+          {{ 'admin.championshipForm.spanish' | translate }}
+        </p>
         <label class="is-wide"
-          ><span>Resumen</span
+          ><span>{{ 'admin.championshipForm.summary' | translate }}</span
           ><textarea formControlName="summary" maxlength="320" rows="3"></textarea>
         </label>
         <label class="is-wide"
-          ><span>Descripción</span
+          ><span>{{ 'admin.championshipForm.description' | translate }}</span
           ><textarea formControlName="description" maxlength="5000" rows="8"></textarea>
+        </label>
+        <p class="admin-language-heading is-wide">
+          {{ 'admin.championshipForm.english' | translate }}
+        </p>
+        <p class="is-wide admin-form-help">
+          {{ 'admin.championshipForm.englishHelp' | translate }}
+        </p>
+        <label class="is-wide">
+          <span>{{ 'admin.championshipForm.summaryEn' | translate }}</span>
+          <textarea formControlName="summaryEn" maxlength="320" rows="3" lang="en"></textarea>
+        </label>
+        <label class="is-wide">
+          <span>{{ 'admin.championshipForm.descriptionEn' | translate }}</span>
+          <textarea formControlName="descriptionEn" maxlength="5000" rows="8" lang="en"></textarea>
         </label>
         @if (form.controls.coverUrl.value) {
           <img
             class="admin-cover-preview"
             [src]="form.controls.coverUrl.value"
-            alt="Vista previa de la portada"
+            [alt]="'admin.championshipForm.coverPreviewAlt' | translate"
           />
         }
         <label class="is-wide">
-          <span>Subir portada</span>
+          <span>{{ 'admin.championshipForm.cover' | translate }}</span>
           <input
             type="file"
             accept="image/jpeg,image/png,image/webp,image/avif"
@@ -148,8 +187,8 @@
           <small>
             {{
               uploading()
-                ? 'Procesando y subiendo la portada…'
-                : 'JPEG, PNG, WebP o AVIF hasta 12 MB. Admite cartel horizontal, vertical o cuadrado.'
+                ? ('admin.championshipForm.uploadingCover' | translate)
+                : ('admin.championshipForm.coverRequirements' | translate)
             }}
           </small>
           @if (coverUploadError()) {
@@ -160,7 +199,7 @@
           }
         </label>
         <label class="is-wide">
-          <span>URL de portada</span
+          <span>{{ 'admin.championshipForm.coverUrl' | translate }}</span
           ><input
             type="text"
             formControlName="coverUrl"
@@ -174,7 +213,7 @@
           }
         </label>
         <label class="is-wide">
-          <span>Texto alternativo</span
+          <span>{{ 'admin.championshipForm.coverAlt' | translate }}</span
           ><input
             type="text"
             formControlName="coverAlt"
@@ -188,16 +227,22 @@
             <small id="championship-cover-alt-error" class="field-error">{{ error }}</small>
           }
         </label>
+        <label class="is-wide">
+          <span>{{ 'admin.championshipForm.coverAltEn' | translate }}</span>
+          <input type="text" formControlName="coverAltEn" maxlength="160" lang="en" />
+          @if (fieldErrors()['coverAltEn']; as error) {
+            <small class="field-error">{{ error }}</small>
+          }
+        </label>
       </div>
     </section>
 
     <section class="admin-form-section" aria-labelledby="championship-media-title">
       <div>
-        <h2 id="championship-media-title">Vídeo de fondo</h2>
-        <p>
-          Este vídeo pertenece únicamente a esta edición. Las demás ediciones mantienen su propio
-          vídeo o muestran solamente su portada.
-        </p>
+        <h2 id="championship-media-title">
+          {{ 'admin.championshipForm.backgroundVideo' | translate }}
+        </h2>
+        <p>{{ 'admin.championshipForm.backgroundVideoHelp' | translate }}</p>
       </div>
       <div class="admin-form-grid">
         @if (form.controls.backgroundVideoUrl.value) {
@@ -211,18 +256,19 @@
           ></video>
         }
         <label class="is-wide">
-          <span>Subir vídeo de fondo</span>
+          <span>{{ 'admin.championshipForm.uploadVideo' | translate }}</span>
           <input type="file" accept="video/mp4,video/webm" (change)="chooseVideo($event)" />
           <small>
             {{
-              videoUploading()
-                ? 'Subiendo…'
-                : 'MP4 o WebM de hasta 80 MB. Recomendado: 1920 × 1080, sin audio necesario.'
+              (videoUploading()
+                ? 'admin.championshipForm.videoUploading'
+                : 'admin.championshipForm.videoRequirements'
+              ) | translate
             }}
           </small>
         </label>
         <label class="is-wide">
-          <span>URL del vídeo</span>
+          <span>{{ 'admin.championshipForm.videoUrl' | translate }}</span>
           <input
             type="text"
             formControlName="backgroundVideoUrl"
@@ -236,9 +282,9 @@
           }
         </label>
         <label>
-          <span>Formato</span>
+          <span>{{ 'admin.championshipForm.format' | translate }}</span>
           <select formControlName="backgroundVideoMimeType">
-            <option value="">Detectar por la URL</option>
+            <option value="">{{ 'admin.championshipForm.detectFromUrl' | translate }}</option>
             <option value="video/mp4">MP4</option>
             <option value="video/webm">WebM</option>
           </select>
@@ -250,11 +296,18 @@
     </section>
 
     <section class="admin-form-section" aria-labelledby="championship-calendar-title">
-      <div><h2 id="championship-calendar-title">Calendario y enlaces</h2></div>
+      <div>
+        <h2 id="championship-calendar-title">
+          {{ 'admin.championshipForm.calendar' | translate }}
+        </h2>
+      </div>
       <div class="admin-form-grid">
-        <label><span>Inicio</span><input type="datetime-local" formControlName="startAt" /></label>
+        <label
+          ><span>{{ 'admin.championshipForm.start' | translate }}</span
+          ><input type="datetime-local" formControlName="startAt"
+        /></label>
         <label>
-          <span>Final</span
+          <span>{{ 'admin.championshipForm.end' | translate }}</span
           ><input
             type="datetime-local"
             formControlName="endAt"
@@ -266,7 +319,7 @@
           }
         </label>
         <label>
-          <span>Inscripción</span>
+          <span>{{ 'admin.championshipForm.registration' | translate }}</span>
           <input
             type="url"
             formControlName="registrationUrl"
@@ -280,7 +333,7 @@
           }
         </label>
         <label>
-          <span>Reglamento</span>
+          <span>{{ 'admin.championshipForm.rules' | translate }}</span>
           <input
             type="text"
             formControlName="rulesUrl"
@@ -296,22 +349,30 @@
 
     <section class="admin-form-section" aria-labelledby="championship-publish-title">
       <div>
-        <h2 id="championship-publish-title">Publicación</h2>
-        <p>Al crear o publicar una edición, pasa a ser la edición actual de /candeonato.</p>
+        <h2 id="championship-publish-title">
+          {{ 'admin.championshipForm.publication' | translate }}
+        </h2>
+        <p>{{ 'admin.championshipForm.publicationHelp' | translate }}</p>
       </div>
       <div class="admin-form-grid">
         <label>
-          <span>Estado</span>
+          <span>{{ 'admin.championshipForm.status' | translate }}</span>
           <select formControlName="status">
-            <option value="draft">Borrador</option>
-            <option value="registration">Inscripciones</option>
-            <option value="active">Activo</option>
-            <option value="finished">Finalizado</option>
-            <option value="archived">Archivado</option>
+            <option value="draft">{{ 'admin.championshipForm.statusDraft' | translate }}</option>
+            <option value="registration">
+              {{ 'admin.championshipForm.statusRegistration' | translate }}
+            </option>
+            <option value="active">{{ 'admin.championshipForm.statusActive' | translate }}</option>
+            <option value="finished">
+              {{ 'admin.championshipForm.statusFinished' | translate }}
+            </option>
+            <option value="archived">
+              {{ 'admin.championshipForm.statusArchived' | translate }}
+            </option>
           </select>
         </label>
         <label>
-          <span>Orden</span>
+          <span>{{ 'admin.championshipForm.order' | translate }}</span>
           <input
             type="number"
             formControlName="displayOrder"
@@ -334,7 +395,7 @@
               fieldErrors()['isFeatured'] ? 'championship-featured-error' : null
             "
           />
-          <span>Mostrar como edición actual</span>
+          <span>{{ 'admin.championshipForm.feature' | translate }}</span>
           @if (fieldErrors()['isFeatured']; as error) {
             <small id="championship-featured-error" class="field-error">{{ error }}</small>
           }
@@ -344,10 +405,13 @@
 
     <section class="admin-form-section" aria-labelledby="championship-preview-title">
       <div>
-        <h2 id="championship-preview-title">Vista previa privada</h2>
-        <p>Comprueba la jerarquía y la portada sin publicar el borrador.</p>
+        <h2 id="championship-preview-title">{{ 'admin.championshipForm.preview' | translate }}</h2>
+        <p>{{ 'admin.championshipForm.previewHelp' | translate }}</p>
       </div>
-      <article class="admin-live-preview is-championship" aria-label="Vista previa del Candeonato">
+      <article
+        class="admin-live-preview is-championship"
+        [attr.aria-label]="'admin.championshipForm.previewLabel' | translate"
+      >
         @if (form.controls.backgroundVideoUrl.value) {
           <video
             autoplay
@@ -370,11 +434,17 @@
             Candeonato
             {{ form.controls.editionNumber.value ? '#' + form.controls.editionNumber.value : '' }}
           </p>
-          <h3>{{ form.controls.name.value || 'Nombre de la edición' }}</h3>
+          <h3>
+            {{ form.controls.name.value || ('admin.championshipForm.previewName' | translate) }}
+          </h3>
           @if (form.controls.subtitle.value) {
             <p class="admin-preview-subtitle">{{ form.controls.subtitle.value }}</p>
           }
-          <p>{{ form.controls.summary.value || 'Añade un resumen editorial de la edición.' }}</p>
+          <p>
+            {{
+              form.controls.summary.value || ('admin.championshipForm.previewSummary' | translate)
+            }}
+          </p>
           <div class="admin-preview-links">
             <span>{{ form.controls.status.value }}</span>
             @if (form.controls.season.value) {
@@ -388,17 +458,16 @@
     @if (championshipId()) {
       <section class="admin-form-section" aria-labelledby="championship-corrections-title">
         <div>
-          <h2 id="championship-corrections-title">Correcciones editoriales</h2>
-          <p>
-            Añade una aclaración visible sin modificar las posiciones ni el payload recibido de Fat
-            Cat Race.
-          </p>
+          <h2 id="championship-corrections-title">
+            {{ 'admin.championshipForm.corrections' | translate }}
+          </h2>
+          <p>{{ 'admin.championshipForm.correctionsHelp' | translate }}</p>
         </div>
         <div>
           @if (correctionsLoading()) {
-            <p role="status">Cargando correcciones…</p>
+            <p role="status">{{ 'admin.championshipForm.loadingCorrections' | translate }}</p>
           } @else if (corrections().length === 0) {
-            <p>No hay correcciones registradas.</p>
+            <p>{{ 'admin.championshipForm.noCorrections' | translate }}</p>
           } @else {
             <ol class="admin-correction-list">
               @for (correction of corrections(); track correction.id) {
@@ -421,11 +490,11 @@
               <p class="admin-alert is-error" role="alert">{{ correctionError() }}</p>
             }
             <label>
-              <span>Motivo</span>
+              <span>{{ 'admin.championshipForm.reason' | translate }}</span>
               <input type="text" formControlName="reason" maxlength="200" />
             </label>
             <label>
-              <span>Aclaración pública</span>
+              <span>{{ 'admin.championshipForm.publicNote' | translate }}</span>
               <textarea formControlName="note" maxlength="1200" rows="4"></textarea>
             </label>
             <button
@@ -434,7 +503,12 @@
               [disabled]="correctionSaving()"
               (click)="createCorrection()"
             >
-              {{ correctionSaving() ? 'Registrando…' : 'Registrar corrección' }}
+              {{
+                (correctionSaving()
+                  ? 'admin.championshipForm.savingCorrection'
+                  : 'admin.championshipForm.saveCorrection'
+                ) | translate
+              }}
             </button>
           </div>
         </div>
@@ -447,15 +521,21 @@
         type="submit"
         [disabled]="saving() || uploading() || videoUploading()"
       >
-        {{ saving() ? 'Validando y guardando…' : 'Guardar Candeonato' }}
+        {{
+          saving()
+            ? ('admin.common.saving' | translate)
+            : ('admin.championshipForm.saveChampionship' | translate)
+        }}
       </button>
-      <a class="admin-button" routerLink="/admin/candeonatos">Cancelar</a>
+      <a class="admin-button" routerLink="/admin/candeonatos">{{
+        'admin.common.cancel' | translate
+      }}</a>
     </div>
     @if (championshipId()) {
       <p class="admin-form-meta">
-        Última modificación:
+        {{ 'admin.common.lastUpdated' | translate }}
         <time [attr.datetime]="loadedUpdatedAt()">{{ loadedUpdatedAt() | date: 'short' }}</time>
-        · {{ updatedByName() || 'Sistema' }}
+        · {{ updatedByName() || ('admin.common.system' | translate) }}
       </p>
     }
   </form>

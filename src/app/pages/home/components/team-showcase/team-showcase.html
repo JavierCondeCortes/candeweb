@@ -1,32 +1,32 @@
 <section id="equipo" class="section-shell team-section" aria-labelledby="team-title">
   <div class="section-heading team-heading">
     <div>
-      <p class="eyebrow">El paddock</p>
-      <h2 id="team-title" class="section-title">Detrás del volante</h2>
+      <p class="eyebrow">{{ 'home.team.eyebrow' | translate }}</p>
+      <h2 id="team-title" class="section-title">{{ 'home.team.title' | translate }}</h2>
     </div>
     <p class="body-copy">
-      Conoce a las personas que compiten, retransmiten y hacen posible la comunidad de Candemor.
+      {{ 'home.team.intro' | translate }}
     </p>
   </div>
 
   @if (state$ | async; as state) {
     @if (state.kind === 'loading') {
-      <p class="team-demo-note" role="status">Cargando equipo…</p>
+      <p class="team-demo-note" role="status">{{ 'home.team.loading' | translate }}</p>
     } @else if (state.kind === 'error') {
       <p class="team-demo-note" role="status">
-        El equipo no está disponible ahora. Vuelve a intentarlo dentro de unos minutos.
+        {{ 'home.team.error' | translate }}
       </p>
     } @else if (state.members.length === 0) {
-      <p class="team-demo-note">Los perfiles oficiales se publicarán próximamente.</p>
+      <p class="team-demo-note">{{ 'home.team.empty' | translate }}</p>
     } @else {
       @if (state.hasDemo) {
         <p class="team-demo-note" role="note">
           <span aria-hidden="true">*</span>
-          Contenido de demostración pendiente de sustituir desde el panel de administración.
+          {{ 'home.team.demo' | translate }}
         </p>
       }
 
-      <ul class="team-grid" aria-label="Miembros del equipo">
+      <ul class="team-grid" [attr.aria-label]="'home.team.listLabel' | translate">
         @for (member of state.members; track member.id) {
           <li>
             <article class="team-card">

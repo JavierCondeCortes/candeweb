@@ -1,51 +1,88 @@
 <header class="admin-page-header">
   <div>
-    <p class="admin-eyebrow">Centro de control</p>
-    <h1>Resumen</h1>
-    <p>Estado editorial y deportivo de Candemor.</p>
+    <p class="admin-eyebrow">{{ 'admin.dashboard.eyebrow' | translate }}</p>
+    <h1>{{ 'admin.dashboard.title' | translate }}</h1>
+    <p>{{ 'admin.dashboard.intro' | translate }}</p>
   </div>
   <div class="admin-header-actions">
-    <a class="admin-button is-primary" routerLink="/admin/miembros/nuevo">Nuevo miembro</a>
-    <a class="admin-button" routerLink="/admin/candeonatos/nuevo">Nuevo Candeonato</a>
+    <a class="admin-button is-primary" routerLink="/admin/miembros/nuevo">{{
+      'admin.dashboard.newMember' | translate
+    }}</a>
+    <a class="admin-button" routerLink="/admin/candeonatos/nuevo">{{
+      'admin.dashboard.newChampionship' | translate
+    }}</a>
+    <a class="admin-button" routerLink="/admin/sponsors/nuevo">{{
+      'admin.dashboard.newSponsor' | translate
+    }}</a>
   </div>
 </header>
 
 @if (errorMessage()) {
   <div class="admin-alert is-error" role="alert">{{ errorMessage() }}</div>
 } @else if (!summary()) {
-  <p role="status">Cargando resumen…</p>
+  <p role="status">{{ 'admin.dashboard.loading' | translate }}</p>
 } @else if (summary(); as data) {
-  <section class="admin-metrics" aria-label="Resumen de contenidos">
+  <section class="admin-metrics" [attr.aria-label]="'admin.dashboard.contentSummary' | translate">
     <article>
-      <span>Miembros publicados</span>
+      <span>{{ 'admin.dashboard.publishedMembers' | translate }}</span>
       <strong>{{ data.members.published }}</strong>
-      <small>{{ data.members.featured }} aparecen en portada</small>
+      <small>{{
+        'admin.dashboard.featuredMembers' | translate: { count: data.members.featured }
+      }}</small>
     </article>
     <article>
-      <span>Borradores</span>
-      <strong>{{ data.members.drafts + data.championships.drafts }}</strong>
-      <small>Pendientes de revisión</small>
+      <span>{{ 'admin.dashboard.drafts' | translate }}</span>
+      <strong>{{ data.members.drafts + data.championships.drafts + data.sponsors.drafts }}</strong>
+      <small>{{ 'admin.dashboard.pendingReview' | translate }}</small>
     </article>
     <article [class.has-error]="data.championships.sync_errors > 0">
-      <span>Errores de sincronización</span>
+      <span>{{ 'admin.dashboard.syncErrors' | translate }}</span>
       <strong>{{ data.championships.sync_errors }}</strong>
-      <small>Fuentes deportivas</small>
+      <small>{{ 'admin.dashboard.sportsSources' | translate }}</small>
     </article>
+  </section>
+
+  <section class="admin-panel" aria-labelledby="sponsors-summary-title">
+    <div>
+      <p class="admin-eyebrow">{{ 'admin.dashboard.sponsors' | translate }}</p>
+      <h2 id="sponsors-summary-title">
+        {{ 'admin.dashboard.publishedSponsors' | translate: { count: data.sponsors.published } }}
+      </h2>
+      <p>
+        {{
+          'admin.dashboard.savedSponsors'
+            | translate: { total: data.sponsors.total, drafts: data.sponsors.drafts }
+        }}
+      </p>
+    </div>
+    <a class="admin-button" routerLink="/admin/sponsors">{{
+      'admin.dashboard.manageSponsors' | translate
+    }}</a>
   </section>
 
   <section class="admin-panel" aria-labelledby="featured-title">
     <div>
-      <p class="admin-eyebrow">Edición destacada</p>
-      <h2 id="featured-title">{{ data.featuredChampionship?.name ?? 'Sin seleccionar' }}</h2>
+      <p class="admin-eyebrow">{{ 'admin.dashboard.featuredEdition' | translate }}</p>
+      <h2 id="featured-title">
+        {{ data.featuredChampionship?.name ?? ('admin.dashboard.notSelected' | translate) }}
+      </h2>
       @if (data.featuredChampionship; as championship) {
         <p>
-          Estado: {{ championship.status }} · Última sincronización:
-          {{ championship.lastSyncedAt ? championship.lastSyncedAt : 'pendiente' }}
+          {{
+            'admin.dashboard.editionStatus'
+              | translate
+                : {
+                    status: championship.status,
+                    synced: championship.lastSyncedAt || ('admin.dashboard.pending' | translate),
+                  }
+          }}
         </p>
       } @else {
-        <p>Selecciona una edición publicada para mostrarla en la portada.</p>
+        <p>{{ 'admin.dashboard.selectEdition' | translate }}</p>
       }
     </div>
-    <a class="admin-button" routerLink="/admin/candeonatos">Gestionar ediciones</a>
+    <a class="admin-button" routerLink="/admin/candeonatos">{{
+      'admin.dashboard.manageEditions' | translate
+    }}</a>
   </section>
 }

@@ -1,12 +1,9 @@
 <section id="comunidad" class="section-shell community-section" aria-labelledby="community-title">
   <div class="community-copy">
     <div class="section-heading">
-      <p class="eyebrow">La comunidad</p>
-      <h2 id="community-title" class="section-title">Esto es Candemor</h2>
-      <p class="lede">
-        Candemor Racing Team es el punto de encuentro para quienes disfrutan del simracing con
-        intensidad, respeto y buen ambiente dentro y fuera de la pista.
-      </p>
+      <p class="eyebrow">{{ 'home.community.eyebrow' | translate }}</p>
+      <h2 id="community-title" class="section-title">{{ 'home.community.title' | translate }}</h2>
+      <p class="lede">{{ 'home.community.lede' | translate }}</p>
     </div>
 
     <ol class="community-values">
@@ -14,8 +11,8 @@
         <li>
           <span>{{ value.index }}</span>
           <div>
-            <h3>{{ value.title }}</h3>
-            <p>{{ value.description }}</p>
+            <h3>{{ 'home.community.values.' + value.key + 'Title' | translate }}</h3>
+            <p>{{ 'home.community.values.' + value.key + 'Description' | translate }}</p>
           </div>
         </li>
       }
@@ -27,9 +24,14 @@
         [href]="url"
         target="_blank"
         rel="noopener noreferrer"
-        aria-label="Entrar al Discord de Candemor (se abre en una pestaña nueva)"
+        [attr.aria-label]="
+          ('home.community.joinDiscord' | translate) +
+          ' (' +
+          ('home.common.newTab' | translate) +
+          ')'
+        "
       >
-        Entrar al Discord <span aria-hidden="true">↗</span>
+        {{ 'home.community.joinDiscord' | translate }} <span aria-hidden="true">↗</span>
       </a>
     }
   </div>
@@ -38,12 +40,12 @@
     <div class="community-frame">
       <img
         src="/media/mazda-outline.webp"
-        alt="Silueta lateral de un coche de competición dentro del universo visual de Candemor"
+        [alt]="'home.community.imageAlt' | translate"
         width="1280"
         height="720"
         loading="lazy"
       />
     </div>
-    <figcaption>Candemor Racing Team // Simracing con espíritu de paddock.</figcaption>
+    <figcaption>{{ 'home.community.caption' | translate }}</figcaption>
   </figure>
 </section>

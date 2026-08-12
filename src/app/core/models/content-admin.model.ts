@@ -24,6 +24,21 @@ export interface TeamMemberContent {
   updatedByName?: string | null;
 }
 
+export interface SponsorContent {
+  id: string;
+  name: string;
+  description: string | null;
+  logoUrl: string | null;
+  logoAlt: string | null;
+  websiteUrl: string | null;
+  displayOrder: number;
+  status: MemberStatus;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  updatedByName?: string | null;
+}
+
 export type ChampionshipStatus = 'draft' | 'registration' | 'active' | 'finished' | 'archived';
 export type SyncStatus = 'never' | 'syncing' | 'success' | 'error';
 
@@ -51,10 +66,13 @@ export interface ChampionshipContent {
   subtitle: string | null;
   season: string | null;
   summary: string | null;
+  summaryEn?: string | null;
   description: string | null;
+  descriptionEn?: string | null;
   coverUrl: string | null;
   coverMobileUrl?: string | null;
   coverAlt: string | null;
+  coverAltEn?: string | null;
   backgroundVideoUrl: string | null;
   backgroundVideoMimeType: string | null;
   startAt: string | null;
@@ -123,6 +141,7 @@ export interface AuditEntry {
 export interface DashboardSummary {
   members: { total: number; published: number; drafts: number; featured: number };
   championships: { total: number; drafts: number; sync_errors: number };
+  sponsors: { total: number; published: number; drafts: number };
   featuredChampionship: ChampionshipContent | null;
 }
 

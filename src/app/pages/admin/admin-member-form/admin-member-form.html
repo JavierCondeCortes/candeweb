@@ -1,14 +1,16 @@
 <header class="admin-page-header">
   <div>
-    <p class="admin-eyebrow">Equipo</p>
-    <h1>{{ memberId() ? 'Editar miembro' : 'Nuevo miembro' }}</h1>
-    <p>Los perfiles publicados y destacados pueden aparecer automáticamente en la portada.</p>
+    <p class="admin-eyebrow">{{ 'admin.memberForm.eyebrow' | translate }}</p>
+    <h1>
+      {{ (memberId() ? 'admin.memberForm.editTitle' : 'admin.memberForm.newTitle') | translate }}
+    </h1>
+    <p>{{ 'admin.memberForm.intro' | translate }}</p>
   </div>
-  <a class="admin-button" routerLink="/admin/miembros">Volver al listado</a>
+  <a class="admin-button" routerLink="/admin/miembros">{{ 'admin.common.back' | translate }}</a>
 </header>
 
 @if (loading()) {
-  <p role="status">Cargando miembro…</p>
+  <p role="status">{{ 'admin.memberForm.loading' | translate }}</p>
 } @else {
   @if (errorMessage()) {
     <div id="member-form-error" class="admin-alert is-error" role="alert" tabindex="-1">
@@ -19,12 +21,12 @@
   <form class="admin-editor-form" [formGroup]="form" (ngSubmit)="save()" novalidate>
     <section class="admin-form-section" aria-labelledby="member-identity-title">
       <div>
-        <h2 id="member-identity-title">Identidad</h2>
-        <p>Información que permite reconocer a la persona dentro del equipo.</p>
+        <h2 id="member-identity-title">{{ 'admin.memberForm.identity' | translate }}</h2>
+        <p>{{ 'admin.memberForm.identityHelp' | translate }}</p>
       </div>
       <div class="admin-form-grid">
         <label>
-          <span>Nombre *</span>
+          <span>{{ 'admin.memberForm.name' | translate }}</span>
           <input
             type="text"
             formControlName="name"
@@ -37,12 +39,12 @@
           }
         </label>
         <label>
-          <span>Slug</span>
+          <span>{{ 'admin.memberForm.slug' | translate }}</span>
           <input
             type="text"
             formControlName="slug"
             maxlength="100"
-            placeholder="Se genera desde el nombre"
+            [placeholder]="'admin.memberForm.slugPlaceholder' | translate"
             [attr.aria-invalid]="fieldErrors()['slug'] ? 'true' : null"
             [attr.aria-describedby]="fieldErrors()['slug'] ? 'member-slug-error' : null"
           />
@@ -51,20 +53,20 @@
           }
         </label>
         <label>
-          <span>Alias</span>
+          <span>{{ 'admin.memberForm.alias' | translate }}</span>
           <input type="text" formControlName="alias" maxlength="50" />
         </label>
         <label>
-          <span>Rol</span>
+          <span>{{ 'admin.memberForm.role' | translate }}</span>
           <input
             type="text"
             formControlName="roleLabel"
             maxlength="80"
-            placeholder="Piloto, caster…"
+            [placeholder]="'admin.memberForm.rolePlaceholder' | translate"
           />
         </label>
         <label class="is-wide">
-          <span>Descripción</span>
+          <span>{{ 'admin.memberForm.description' | translate }}</span>
           <textarea formControlName="bio" maxlength="280" rows="4"></textarea>
         </label>
       </div>
@@ -72,30 +74,30 @@
 
     <section class="admin-form-section" aria-labelledby="member-image-title">
       <div>
-        <h2 id="member-image-title">Fotografía</h2>
-        <p>JPEG, PNG o WebP, hasta 8 MB y mínimo 720 × 900 px. Se recorta a 4:5.</p>
+        <h2 id="member-image-title">{{ 'admin.memberForm.photo' | translate }}</h2>
+        <p>{{ 'admin.memberForm.photoHelp' | translate }}</p>
       </div>
       <div class="admin-form-grid">
         @if (form.controls.photoUrl.value) {
           <img
             class="admin-image-preview"
             [src]="form.controls.photoUrl.value"
-            alt="Vista previa de la fotografía"
+            [alt]="'admin.memberForm.photoPreviewAlt' | translate"
           />
         }
         <label class="is-wide">
-          <span>Subir imagen</span>
+          <span>{{ 'admin.memberForm.uploadImage' | translate }}</span>
           <input
             type="file"
             accept="image/jpeg,image/png,image/webp"
             (change)="chooseImage($event)"
           />
           <small>{{
-            uploading() ? 'Subiendo…' : 'La imagen no se publica hasta guardar el perfil.'
+            (uploading() ? 'admin.common.uploading' : 'admin.memberForm.uploadHelp') | translate
           }}</small>
         </label>
         <label class="is-wide">
-          <span>URL de imagen</span>
+          <span>{{ 'admin.common.imageUrl' | translate }}</span>
           <input
             type="text"
             formControlName="photoUrl"
@@ -107,7 +109,7 @@
           }
         </label>
         <label class="is-wide">
-          <span>Texto alternativo</span>
+          <span>{{ 'admin.common.alternativeText' | translate }}</span>
           <input
             type="text"
             formControlName="photoAlt"
@@ -128,7 +130,7 @@
               fieldErrors()['photoConsentConfirmed'] ? 'member-photo-consent-error' : null
             "
           />
-          <span>Confirmo que Candemor tiene autorización para publicar esta fotografía.</span>
+          <span>{{ 'admin.memberForm.consent' | translate }}</span>
           @if (fieldErrors()['photoConsentConfirmed']; as error) {
             <small id="member-photo-consent-error" class="field-error">{{ error }}</small>
           }
@@ -138,8 +140,8 @@
 
     <section class="admin-form-section" aria-labelledby="member-social-title">
       <div>
-        <h2 id="member-social-title">Redes</h2>
-        <p>Todos los campos son opcionales. No se mostrarán botones vacíos.</p>
+        <h2 id="member-social-title">{{ 'admin.members.socials' | translate }}</h2>
+        <p>{{ 'admin.memberForm.socialsHelp' | translate }}</p>
       </div>
       <div class="admin-form-grid">
         <label>
@@ -197,20 +199,20 @@
 
     <section class="admin-form-section" aria-labelledby="member-publish-title">
       <div>
-        <h2 id="member-publish-title">Publicación</h2>
-        <p>Un perfil publicado necesita fotografía y texto alternativo.</p>
+        <h2 id="member-publish-title">{{ 'admin.common.publication' | translate }}</h2>
+        <p>{{ 'admin.memberForm.publicationHelp' | translate }}</p>
       </div>
       <div class="admin-form-grid">
         <label>
-          <span>Estado</span>
+          <span>{{ 'admin.common.status' | translate }}</span>
           <select formControlName="status">
-            <option value="draft">Borrador</option>
-            <option value="published">Publicado</option>
-            <option value="archived">Archivado</option>
+            <option value="draft">{{ 'admin.common.draft' | translate }}</option>
+            <option value="published">{{ 'admin.common.published' | translate }}</option>
+            <option value="archived">{{ 'admin.common.archived' | translate }}</option>
           </select>
         </label>
         <label>
-          <span>Orden</span>
+          <span>{{ 'admin.common.order' | translate }}</span>
           <input
             type="number"
             formControlName="displayOrder"
@@ -226,17 +228,20 @@
         </label>
         <label class="admin-check">
           <input type="checkbox" formControlName="isFeatured" />
-          <span>Mostrar en portada</span>
+          <span>{{ 'admin.memberForm.showHome' | translate }}</span>
         </label>
       </div>
     </section>
 
     <section class="admin-form-section" aria-labelledby="member-preview-title">
       <div>
-        <h2 id="member-preview-title">Vista previa privada</h2>
-        <p>Refleja el formulario actual sin publicar ni crear una URL indexable.</p>
+        <h2 id="member-preview-title">{{ 'admin.common.privatePreview' | translate }}</h2>
+        <p>{{ 'admin.memberForm.previewHelp' | translate }}</p>
       </div>
-      <article class="admin-live-preview" aria-label="Vista previa del perfil">
+      <article
+        class="admin-live-preview"
+        [attr.aria-label]="'admin.memberForm.previewLabel' | translate"
+      >
         @if (form.controls.photoUrl.value) {
           <img
             [src]="form.controls.photoUrl.value"
@@ -246,15 +251,18 @@
           />
         }
         <div>
-          <p class="admin-eyebrow">El paddock</p>
-          <h3>{{ form.controls.name.value || 'Nombre del miembro' }}</h3>
+          <p class="admin-eyebrow">{{ 'admin.memberForm.paddock' | translate }}</p>
+          <h3>{{ form.controls.name.value || ('admin.memberForm.previewName' | translate) }}</h3>
           @if (form.controls.roleLabel.value) {
             <p>{{ form.controls.roleLabel.value }}</p>
           }
           @if (form.controls.bio.value) {
             <p>{{ form.controls.bio.value }}</p>
           }
-          <div class="admin-preview-links" aria-label="Redes que aparecerán publicadas">
+          <div
+            class="admin-preview-links"
+            [attr.aria-label]="'admin.memberForm.previewSocials' | translate"
+          >
             @if (form.controls.twitchUrl.value) {
               <span>Twitch</span>
             }
@@ -274,15 +282,17 @@
 
     <div class="admin-form-actions">
       <button class="admin-button is-primary" type="submit" [disabled]="saving() || uploading()">
-        {{ saving() ? 'Guardando…' : 'Guardar miembro' }}
+        {{ (saving() ? 'admin.common.saving' : 'admin.memberForm.save') | translate }}
       </button>
-      <a class="admin-button" routerLink="/admin/miembros">Cancelar</a>
+      <a class="admin-button" routerLink="/admin/miembros">{{
+        'admin.common.cancel' | translate
+      }}</a>
     </div>
     @if (memberId()) {
       <p class="admin-form-meta">
-        Última modificación:
+        {{ 'admin.common.lastUpdated' | translate }}
         <time [attr.datetime]="loadedUpdatedAt()">{{ loadedUpdatedAt() | date: 'short' }}</time>
-        · {{ updatedByName() || 'Sistema' }}
+        · {{ updatedByName() || ('admin.common.system' | translate) }}
       </p>
     }
   </form>

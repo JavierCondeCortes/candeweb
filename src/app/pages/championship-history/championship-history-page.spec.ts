@@ -22,6 +22,8 @@ describe('ChampionshipHistoryPage', () => {
                     editionNumber: 8,
                     name: 'Candeonato Bandido',
                     summary: 'Edición de prueba',
+                    coverUrl: '/media/current-edition.webp',
+                    coverAlt: 'Cartel de la edición de prueba',
                     status: 'active',
                     syncStatus: 'success',
                   },
@@ -38,6 +40,10 @@ describe('ChampionshipHistoryPage', () => {
     expect(host.querySelectorAll('h1')).toHaveLength(1);
     expect(host.querySelector('h1')?.textContent).toContain('Historial');
     expect(host.querySelector('a[href="/candeonatos/42"]')).toBeTruthy();
+    expect(host.querySelector('.edition-index')).toBeFalsy();
+    expect(host.querySelector<HTMLImageElement>('.edition-cover img')?.src).toContain(
+      'current-edition.webp',
+    );
 
     const brand = host.querySelector<HTMLAnchorElement>('a.archive-brand');
     expect(brand?.getAttribute('aria-label')).toContain(brand?.textContent?.trim());

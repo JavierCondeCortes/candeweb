@@ -61,6 +61,34 @@ describe('Hero', () => {
     expect(host.querySelector('.hero-nav')?.hasAttribute('inert')).toBe(false);
   });
 
+  it('opens and closes the mobile navigation accessibly', () => {
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+    const menuButton = host.querySelector<HTMLButtonElement>('.hero-menu-button');
+    const firstLink = host.querySelector<HTMLAnchorElement>('.nav-links a');
+
+    expect(menuButton?.getAttribute('aria-expanded')).toBe('false');
+
+    menuButton?.click();
+    fixture.detectChanges();
+
+    expect(component.isMenuOpen()).toBe(true);
+    expect(host.querySelector('.hero-nav')?.classList.contains('menu-open')).toBe(true);
+    expect(menuButton?.getAttribute('aria-expanded')).toBe('true');
+
+    firstLink?.click();
+    fixture.detectChanges();
+
+    expect(component.isMenuOpen()).toBe(false);
+
+    menuButton?.click();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    fixture.detectChanges();
+
+    expect(component.isMenuOpen()).toBe(false);
+    expect(menuButton?.getAttribute('aria-expanded')).toBe('false');
+  });
+
   it('uses only the poster when an edition has no background video', () => {
     fixture.componentRef.setInput('championship', {
       ...newEraChampionship,

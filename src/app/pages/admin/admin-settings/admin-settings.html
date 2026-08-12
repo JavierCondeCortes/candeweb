@@ -1,13 +1,13 @@
 <header class="admin-page-header">
   <div>
-    <p class="admin-eyebrow">Configuración pública</p>
-    <h1>Ajustes</h1>
-    <p>Valores reutilizados por la portada, el footer y la navegación.</p>
+    <p class="admin-eyebrow">{{ 'admin.settings.eyebrow' | translate }}</p>
+    <h1>{{ 'admin.settings.title' | translate }}</h1>
+    <p>{{ 'admin.settings.intro' | translate }}</p>
   </div>
 </header>
 
 @if (loading()) {
-  <p role="status">Cargando ajustes…</p>
+  <p role="status">{{ 'admin.settings.loading' | translate }}</p>
 } @else {
   @if (message()) {
     <p class="admin-alert is-success" role="status">{{ message() }}</p>
@@ -22,11 +22,11 @@
     <section class="admin-form-section" aria-labelledby="settings-twitch-title">
       <div>
         <h2 id="settings-twitch-title">Twitch</h2>
-        <p>Canal utilizado por el indicador de directo y los enlaces oficiales.</p>
+        <p>{{ 'admin.settings.twitchHelp' | translate }}</p>
       </div>
       <div class="admin-form-grid">
         <label>
-          <span>Login del canal</span
+          <span>{{ 'admin.settings.channelLogin' | translate }}</span
           ><input
             type="text"
             formControlName="twitchChannelLogin"
@@ -40,7 +40,7 @@
           }
         </label>
         <label>
-          <span>URL del canal</span
+          <span>{{ 'admin.settings.channelUrl' | translate }}</span
           ><input
             type="url"
             formControlName="twitchChannelUrl"
@@ -54,7 +54,7 @@
           }
         </label>
         <label class="is-wide">
-          <span>Canales adicionales</span>
+          <span>{{ 'admin.settings.additionalChannels' | translate }}</span>
           <textarea
             formControlName="twitchChannelsText"
             rows="5"
@@ -67,8 +67,7 @@
             [attr.aria-invalid]="fieldErrors()['twitchChannels'] ? 'true' : null"
           ></textarea>
           <small id="settings-twitch-channels-help">
-            Un login o URL de Twitch por línea, en orden de prioridad. Máximo cinco. El canal
-            oficial siempre tiene prioridad cuando también está emitiendo.
+            {{ 'admin.settings.additionalHelp' | translate }}
           </small>
           @if (fieldErrors()['twitchChannels']; as error) {
             <small id="settings-twitch-channels-error" class="field-error">{{ error }}</small>
@@ -79,14 +78,14 @@
 
     <section class="admin-form-section" aria-labelledby="settings-featured-title">
       <div>
-        <h2 id="settings-featured-title">Edición destacada</h2>
-        <p>Determina qué Candeonato se presenta como actual.</p>
+        <h2 id="settings-featured-title">{{ 'admin.settings.featuredEdition' | translate }}</h2>
+        <p>{{ 'admin.settings.featuredHelp' | translate }}</p>
       </div>
       <div class="admin-form-grid">
         <label>
-          <span>Candeonato</span>
+          <span>{{ 'admin.settings.championship' | translate }}</span>
           <select formControlName="featuredChampionshipId">
-            <option value="">Sin edición destacada</option>
+            <option value="">{{ 'admin.settings.noFeatured' | translate }}</option>
             @for (championship of championships(); track championship.id) {
               <option [value]="championship.id">
                 {{ championship.name }} · {{ championship.status }}
@@ -99,12 +98,12 @@
 
     <section class="admin-form-section" aria-labelledby="settings-contact-title">
       <div>
-        <h2 id="settings-contact-title">Contacto y redes</h2>
-        <p>Los campos vacíos no se mostrarán en la web.</p>
+        <h2 id="settings-contact-title">{{ 'admin.settings.contact' | translate }}</h2>
+        <p>{{ 'admin.settings.contactHelp' | translate }}</p>
       </div>
       <div class="admin-form-grid">
         <label>
-          <span>Correo</span>
+          <span>{{ 'admin.settings.email' | translate }}</span>
           <input
             type="email"
             formControlName="contactEmail"
@@ -160,14 +159,14 @@
 
     <div class="admin-form-actions">
       <button class="admin-button is-primary" type="submit" [disabled]="saving()">
-        {{ saving() ? 'Guardando…' : 'Guardar ajustes' }}
+        {{ (saving() ? 'admin.common.saving' : 'admin.settings.save') | translate }}
       </button>
     </div>
     @if (current(); as settings) {
       <p class="admin-form-meta">
-        Última modificación:
+        {{ 'admin.common.lastUpdated' | translate }}
         <time [attr.datetime]="settings.updatedAt">{{ settings.updatedAt | date: 'short' }}</time>
-        · {{ settings.updatedByName || 'Sistema' }}
+        · {{ settings.updatedByName || ('admin.common.system' | translate) }}
       </p>
     }
   </form>

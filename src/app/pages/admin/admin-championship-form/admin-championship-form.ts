@@ -11,6 +11,8 @@ import {
   TournamentSourceSummary,
 } from '../../../core/models/content-admin.model';
 import { AdminApiService } from '../../../core/services/admin-api.service';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import {
   apiErrorMessage,
   apiFieldErrors,
@@ -20,7 +22,7 @@ import {
 
 @Component({
   selector: 'app-admin-championship-form',
-  imports: [DatePipe, ReactiveFormsModule, RouterLink],
+  imports: [DatePipe, ReactiveFormsModule, RouterLink, TranslatePipe],
   templateUrl: './admin-championship-form.html',
 })
 export class AdminChampionshipForm implements OnInit, HasPendingChanges {
@@ -28,6 +30,7 @@ export class AdminChampionshipForm implements OnInit, HasPendingChanges {
   private readonly formBuilder = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly i18n = inject(I18nService);
 
   readonly championshipId = signal<string | null>(null);
   readonly loading = signal(false);
@@ -58,9 +61,12 @@ export class AdminChampionshipForm implements OnInit, HasPendingChanges {
     subtitle: ['', [Validators.maxLength(100)]],
     season: ['', [Validators.maxLength(30)]],
     summary: ['', [Validators.maxLength(320)]],
+    summaryEn: ['', [Validators.maxLength(320)]],
     description: ['', [Validators.maxLength(5000)]],
+    descriptionEn: ['', [Validators.maxLength(5000)]],
     coverUrl: [''],
     coverAlt: ['', [Validators.maxLength(160)]],
+    coverAltEn: ['', [Validators.maxLength(160)]],
     backgroundVideoUrl: [''],
     backgroundVideoMimeType: [''],
     startAt: [''],
@@ -94,7 +100,12 @@ export class AdminChampionshipForm implements OnInit, HasPendingChanges {
           this.form.markAsPristine();
           if (championship.externalTournamentId) this.checkSource();
         },
-        error: (error) => this.errorMessage.set(apiErrorMessage(error)),
+        error: (error) =>
+          this.errorMessage.set(
+            apiErrorMessage(error, this.i18n.translate('admin.common.operationFailed'), (key) =>
+              this.i18n.translate(key),
+            ),
+          ),
       });
   }
 
@@ -113,7 +124,12 @@ export class AdminChampionshipForm implements OnInit, HasPendingChanges {
           this.correctionForm.reset({ reason: '', note: '' });
           this.correctionForm.markAsPristine();
         },
-        error: (error) => this.correctionError.set(apiErrorMessage(error)),
+        error: (error) =>
+          this.correctionError.set(
+            apiErrorMessage(error, this.i18n.translate('admin.common.operationFailed'), (key) =>
+              this.i18n.translate(key),
+            ),
+          ),
       });
   }
 
@@ -122,18 +138,25 @@ export class AdminChampionshipForm implements OnInit, HasPendingChanges {
     this.errorMessage.set('');
     this.fieldErrors.set({});
     if (this.form.invalid) {
-      this.errorMessage.set('Revisa los campos señalados antes de guardar.');
+      this.errorMessage.set(this.i18n.translate('admin.common.reviewFields'));
       this.fieldErrors.set(
-        clientFieldErrors(this.form, {
-          name: 'El nombre',
-          slug: 'El slug',
-          subtitle: 'El subtítulo',
-          season: 'La temporada',
-          summary: 'El resumen',
-          description: 'La descripción',
-          coverAlt: 'El texto alternativo',
-          displayOrder: 'El orden',
-        }),
+        clientFieldErrors(
+          this.form,
+          {
+            name: this.i18n.translate('admin.championshipForm.name').replace(' *', ''),
+            slug: this.i18n.translate('admin.championshipForm.slug'),
+            subtitle: this.i18n.translate('admin.championshipForm.subtitle'),
+            season: this.i18n.translate('admin.championshipForm.season'),
+            summary: this.i18n.translate('admin.championshipForm.summary'),
+            summaryEn: this.i18n.translate('admin.championshipForm.summaryEn'),
+            description: this.i18n.translate('admin.championshipForm.description'),
+            descriptionEn: this.i18n.translate('admin.championshipForm.descriptionEn'),
+            coverAlt: this.i18n.translate('admin.championshipForm.coverAlt'),
+            coverAltEn: this.i18n.translate('admin.championshipForm.coverAltEn'),
+            displayOrder: this.i18n.translate('admin.common.order'),
+          },
+          (key, params) => this.i18n.translate(key, params),
+        ),
       );
       focusErrorSummary('championship-form-error');
       return;
@@ -146,9 +169,9 @@ export class AdminChampionshipForm implements OnInit, HasPendingChanges {
       externalTournamentId !== this.loadedExternalId() &&
       this.sourcePreview()?.id !== externalTournamentId
     ) {
-      this.errorMessage.set('Comprueba el torneo externo antes de guardar el Candeonato.');
+      this.errorMessage.set(this.i18n.translate('admin.championshipForm.invalidSource'));
       this.fieldErrors.set({
-        externalTournamentId: 'Pulsa “Comprobar torneo” y revisa el nombre encontrado.',
+        externalTournamentId: this.i18n.translate('admin.championshipForm.sourceCheckRequired'),
       });
       focusErrorSummary('championship-form-error');
       return;
@@ -169,7 +192,11 @@ export class AdminChampionshipForm implements OnInit, HasPendingChanges {
         void this.router.navigate(['/admin/candeonatos', championship.id]);
       },
       error: (error) => {
-        this.errorMessage.set(apiErrorMessage(error));
+        this.errorMessage.set(
+          apiErrorMessage(error, this.i18n.translate('admin.common.operationFailed'), (key) =>
+            this.i18n.translate(key),
+          ),
+        );
         this.fieldErrors.set(apiFieldErrors(error));
         focusErrorSummary('championship-form-error');
       },
@@ -181,7 +208,7 @@ export class AdminChampionshipForm implements OnInit, HasPendingChanges {
     this.sourcePreview.set(null);
     this.sourceError.set('');
     if (!externalTournamentId || !Number.isInteger(externalTournamentId)) {
-      this.sourceError.set('Introduce primero un ID de torneo válido.');
+      this.sourceError.set(this.i18n.translate('admin.championshipForm.invalidSourceId'));
       return;
     }
     this.sourceChecking.set(true);
@@ -197,7 +224,12 @@ export class AdminChampionshipForm implements OnInit, HasPendingChanges {
             return next;
           });
         },
-        error: (error) => this.sourceError.set(apiErrorMessage(error)),
+        error: (error) =>
+          this.sourceError.set(
+            apiErrorMessage(error, this.i18n.translate('admin.common.operationFailed'), (key) =>
+              this.i18n.translate(key),
+            ),
+          ),
       });
   }
 
@@ -211,7 +243,7 @@ export class AdminChampionshipForm implements OnInit, HasPendingChanges {
       !['image/jpeg', 'image/png', 'image/webp', 'image/avif'].includes(file.type) ||
       file.size > 12 * 1024 * 1024
     ) {
-      this.coverUploadError.set('Selecciona una imagen JPEG, PNG, WebP o AVIF de hasta 12 MB.');
+      this.coverUploadError.set(this.i18n.translate('admin.championshipForm.invalidImage'));
       input.value = '';
       return;
     }
@@ -236,21 +268,29 @@ export class AdminChampionshipForm implements OnInit, HasPendingChanges {
             this.form.controls.coverUrl.setValue(asset.publicUrl);
             this.form.controls.coverUrl.markAsDirty();
             this.coverUploadSuccess.set(
-              'Portada subida. Guarda el Candeonato para aplicar el cambio.',
+              this.i18n.translate('admin.championshipForm.coverUploaded'),
             );
           },
           error: (error) => {
             this.coverUploadError.set(
               error?.name === 'TimeoutError'
-                ? 'La subida está tardando demasiado. Optimiza la imagen o inténtalo de nuevo.'
-                : apiErrorMessage(error),
+                ? this.i18n.translate('admin.championshipForm.uploadTimeout')
+                : apiErrorMessage(
+                    error,
+                    this.i18n.translate('admin.common.operationFailed'),
+                    (key) => this.i18n.translate(key),
+                  ),
             );
           },
         });
     } catch (error) {
       this.uploading.set(false);
       input.value = '';
-      this.coverUploadError.set(apiErrorMessage(error));
+      this.coverUploadError.set(
+        apiErrorMessage(error, this.i18n.translate('admin.common.operationFailed'), (key) =>
+          this.i18n.translate(key),
+        ),
+      );
     }
   }
 
@@ -259,7 +299,7 @@ export class AdminChampionshipForm implements OnInit, HasPendingChanges {
     const file = input.files?.[0];
     if (!file) return;
     if (!['video/mp4', 'video/webm'].includes(file.type) || file.size > 80 * 1024 * 1024) {
-      this.errorMessage.set('Selecciona un vídeo MP4 o WebM de hasta 80 MB.');
+      this.errorMessage.set(this.i18n.translate('admin.championshipForm.invalidVideo'));
       focusErrorSummary('championship-form-error');
       return;
     }
@@ -273,13 +313,21 @@ export class AdminChampionshipForm implements OnInit, HasPendingChanges {
           this.form.controls.backgroundVideoMimeType.setValue(asset.mimeType);
         },
         error: (error) => {
-          this.errorMessage.set(apiErrorMessage(error));
+          this.errorMessage.set(
+            apiErrorMessage(error, this.i18n.translate('admin.common.operationFailed'), (key) =>
+              this.i18n.translate(key),
+            ),
+          );
           focusErrorSummary('championship-form-error');
         },
       });
     } catch (error) {
       this.videoUploading.set(false);
-      this.errorMessage.set(apiErrorMessage(error));
+      this.errorMessage.set(
+        apiErrorMessage(error, this.i18n.translate('admin.common.operationFailed'), (key) =>
+          this.i18n.translate(key),
+        ),
+      );
       focusErrorSummary('championship-form-error');
     }
   }
@@ -300,7 +348,12 @@ export class AdminChampionshipForm implements OnInit, HasPendingChanges {
       .pipe(finalize(() => this.correctionsLoading.set(false)))
       .subscribe({
         next: ({ corrections }) => this.corrections.set(corrections),
-        error: (error) => this.correctionError.set(apiErrorMessage(error)),
+        error: (error) =>
+          this.correctionError.set(
+            apiErrorMessage(error, this.i18n.translate('admin.common.operationFailed'), (key) =>
+              this.i18n.translate(key),
+            ),
+          ),
       });
   }
 }
@@ -314,9 +367,12 @@ function toChampionshipForm(championship: ChampionshipContent) {
     subtitle: championship.subtitle ?? '',
     season: championship.season ?? '',
     summary: championship.summary ?? '',
+    summaryEn: championship.summaryEn ?? '',
     description: championship.description ?? '',
+    descriptionEn: championship.descriptionEn ?? '',
     coverUrl: championship.coverUrl ?? '',
     coverAlt: championship.coverAlt ?? '',
+    coverAltEn: championship.coverAltEn ?? '',
     backgroundVideoUrl: championship.backgroundVideoUrl ?? '',
     backgroundVideoMimeType: championship.backgroundVideoMimeType ?? '',
     startAt: localDateValue(championship.startAt),

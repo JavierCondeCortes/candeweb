@@ -1,4 +1,4 @@
-<a class="skip-link" href="#contenido-inicio">Saltar al contenido principal</a>
+<a class="skip-link" href="#contenido-inicio">{{ 'home.skip' | translate }}</a>
 
 <app-home-hero />
 
@@ -7,25 +7,27 @@
   <app-team-showcase />
   <app-experience-gallery />
   <app-event-feature />
+  <app-sponsor-strip />
 </main>
 
-<footer class="home-footer" aria-label="Información de Candemor Racing Team">
+<footer class="home-footer" [attr.aria-label]="'home.footer.label' | translate">
   <div class="home-footer-inner">
     <div class="home-footer-intro">
       <a
         class="home-brand"
-        href="#inicio"
-        aria-label="CND/// — Candemor Racing Team, volver al inicio"
+        routerLink="/"
+        fragment="inicio"
+        [attr.aria-label]="'home.nav.homeLabel' | translate"
       >
-        CND<span>///</span>
+        CANDE<span>WEB</span>
       </a>
-      <p>Una comunidad de simracing que compite, comparte y crea experiencias propias.</p>
+      <p>{{ 'home.footer.description' | translate }}</p>
     </div>
-    <nav aria-label="Navegación secundaria">
-      <a routerLink="/candeonatos">Historial de Candeonatos</a>
+    <nav [attr.aria-label]="'home.footer.secondaryNav' | translate">
+      <a routerLink="/candeonatos">{{ 'home.footer.history' | translate }}</a>
       <a
         [href]="(settings$ | async)?.twitchChannelUrl || 'https://www.twitch.tv/candemorracingteam'"
-        aria-label="Twitch de Candemor (se abre en una pestaña nueva)"
+        [attr.aria-label]="'home.nav.twitchLabel' | translate"
         target="_blank"
         rel="noopener noreferrer"
       >
@@ -34,7 +36,7 @@
       @if ((settings$ | async)?.discordUrl; as discordUrl) {
         <a
           [href]="discordUrl"
-          aria-label="Discord de Candemor (se abre en una pestaña nueva)"
+          [attr.aria-label]="'home.nav.discordLabel' | translate"
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -42,11 +44,11 @@
         </a>
       }
       @if ((settings$ | async)?.contactEmail; as email) {
-        <a [href]="'mailto:' + email">Contacto</a>
+        <a [href]="'mailto:' + email">{{ 'home.footer.contact' | translate }}</a>
       }
     </nav>
   </div>
   <p class="home-footer-bottom">
-    © {{ currentYear }} Candemor Racing Team · Contenido externo sujeto a disponibilidad.
+    {{ 'home.footer.legal' | translate: { year: currentYear } }}
   </p>
 </footer>

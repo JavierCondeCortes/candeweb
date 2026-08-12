@@ -17,6 +17,7 @@ import {
   openDatabase,
   recordAudit,
   settingsFromRow,
+  sponsorFromRow,
 } from './database.mjs';
 import {
   consumeRecoveryCode,
@@ -41,6 +42,7 @@ import {
   validateChampionship,
   validateMember,
   validateSettings,
+  validateSponsor,
 } from './validation.mjs';
 
 const JSON_LIMIT = 1024 * 1024;
@@ -62,6 +64,10 @@ const CHAMPIONSHIP_COLUMNS = `
   registration_url, rules_url, status, is_featured,
   display_order, published_at, last_synced_at, sync_status, sync_error, created_at, updated_at,
   updated_by_name, deleted_at
+`;
+const SPONSOR_COLUMNS = `
+  id, name, description, logo_url, logo_alt, website_url, display_order, status,
+  published_at, created_at, updated_at, updated_by_name, deleted_at
 `;
 
 export function createCandemorApp(options = {}) {
@@ -216,6 +222,18 @@ async function routeRequest(context) {
       )
       .all(featuredOnly ? 1 : 0);
     return sendJson(response, 200, { members: rows.map(memberFromRow).map(publicMember) });
+  }
+
+  if (method === 'GET' && path === '/api/public/sponsors') {
+    const rows = db
+      .prepare(
+        `SELECT ${SPONSOR_COLUMNS} FROM sponsors
+         WHERE status = 'published' AND deleted_at IS NULL
+         ORDER BY display_order ASC, name ASC
+         LIMIT 100`,
+      )
+      .all();
+    return sendJson(response, 200, { sponsors: rows.map(sponsorFromRow).map(publicSponsor) });
   }
 
   if (method === 'GET' && path === '/api/public/championships') {
@@ -417,6 +435,14 @@ async function routeAdmin(context) {
          FROM championships WHERE deleted_at IS NULL`,
       )
       .get();
+    const sponsors = db
+      .prepare(
+        `SELECT COUNT(*) AS total,
+          SUM(status = 'published') AS published,
+          SUM(status = 'draft') AS drafts
+         FROM sponsors WHERE deleted_at IS NULL`,
+      )
+      .get();
     const featured = championshipFromDatabaseRow(
       db,
       db
@@ -429,6 +455,7 @@ async function routeAdmin(context) {
     return sendJson(response, 200, {
       members: numberValues(members),
       championships: numberValues(championships),
+      sponsors: numberValues(sponsors),
       featuredChampionship: featured,
     });
   }
@@ -546,6 +573,131 @@ async function routeAdmin(context) {
       member.id,
     );
     return sendJson(response, 200, { member: findMember(db, member.id) });
+  }
+
+  if (method === 'GET' && path === '/api/admin/sponsors') {
+    const rows = db
+      .prepare(
+        `SELECT ${SPONSOR_COLUMNS} FROM sponsors
+         WHERE deleted_at IS NULL ORDER BY display_order ASC, name ASC`,
+      )
+      .all();
+    return sendJson(response, 200, { sponsors: rows.map(sponsorFromRow) });
+  }
+
+  if (method === 'POST' && path === '/api/admin/sponsors') {
+    const input = await readJson(context.request);
+    const sponsor = validateSponsor(input, { publishing: input.status === 'published' });
+    const id = randomUUID();
+    const timestamp = new Date().toISOString();
+    db.prepare(
+      `INSERT INTO sponsors (
+        id, name, description, logo_url, logo_alt, website_url, display_order, status,
+        published_at, created_at, updated_at, updated_by_name
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ).run(
+      id,
+      sponsor.name,
+      sponsor.description,
+      sponsor.logoUrl,
+      sponsor.logoAlt,
+      sponsor.websiteUrl,
+      sponsor.displayOrder,
+      sponsor.status,
+      sponsor.status === 'published' ? timestamp : null,
+      timestamp,
+      timestamp,
+      session.admin.displayName,
+    );
+    recordAudit(db, session.admin.id, 'sponsor.created', 'sponsor', id, {
+      status: sponsor.status,
+    });
+    return sendJson(response, 201, { sponsor: findSponsor(db, id) });
+  }
+
+  const sponsorMatch = path.match(/^\/api\/admin\/sponsors\/([^/]+)$/);
+  if (sponsorMatch && method === 'GET') {
+    const sponsor = findSponsor(db, sponsorMatch[1]);
+    if (!sponsor) throw new ApiError(404, 'NOT_FOUND', 'No existe ese sponsor.');
+    return sendJson(response, 200, { sponsor });
+  }
+  if (sponsorMatch && method === 'PATCH') {
+    const current = findSponsor(db, sponsorMatch[1]);
+    if (!current) throw new ApiError(404, 'NOT_FOUND', 'No existe ese sponsor.');
+    const input = await readJson(context.request);
+    if (input.updatedAt && input.updatedAt !== current.updatedAt) {
+      throw new ApiError(
+        409,
+        'EDIT_CONFLICT',
+        'Otra persona modificó este sponsor. Recarga antes de guardar.',
+      );
+    }
+    const sponsor = validateSponsor(input, { publishing: input.status === 'published' });
+    const timestamp = new Date().toISOString();
+    db.prepare(
+      `UPDATE sponsors SET name = ?, description = ?, logo_url = ?, logo_alt = ?,
+       website_url = ?, display_order = ?, status = ?,
+       published_at = CASE WHEN ? = 'published' THEN COALESCE(published_at, ?) ELSE published_at END,
+       updated_at = ?, updated_by_name = ? WHERE id = ?`,
+    ).run(
+      sponsor.name,
+      sponsor.description,
+      sponsor.logoUrl,
+      sponsor.logoAlt,
+      sponsor.websiteUrl,
+      sponsor.displayOrder,
+      sponsor.status,
+      sponsor.status,
+      timestamp,
+      timestamp,
+      session.admin.displayName,
+      current.id,
+    );
+    recordAudit(db, session.admin.id, 'sponsor.updated', 'sponsor', current.id, {
+      status: sponsor.status,
+    });
+    return sendJson(response, 200, { sponsor: findSponsor(db, current.id) });
+  }
+  if (sponsorMatch && method === 'DELETE') {
+    requireAdministrator(session);
+    const sponsor = findSponsor(db, sponsorMatch[1]);
+    if (!sponsor) throw new ApiError(404, 'NOT_FOUND', 'No existe ese sponsor.');
+    const timestamp = new Date().toISOString();
+    db.prepare(
+      `UPDATE sponsors SET deleted_at = ?, updated_at = ?, updated_by_name = ? WHERE id = ?`,
+    ).run(timestamp, timestamp, session.admin.displayName, sponsor.id);
+    recordAudit(db, session.admin.id, 'sponsor.deleted', 'sponsor', sponsor.id, {
+      name: sponsor.name,
+    });
+    return sendEmpty(response, 204);
+  }
+
+  const sponsorAction = path.match(/^\/api\/admin\/sponsors\/([^/]+)\/(publish|archive)$/);
+  if (sponsorAction && method === 'POST') {
+    requireAdministrator(session);
+    const sponsor = findSponsor(db, sponsorAction[1]);
+    if (!sponsor) throw new ApiError(404, 'NOT_FOUND', 'No existe ese sponsor.');
+    const action = sponsorAction[2];
+    if (action === 'publish') validateSponsor(sponsor, { publishing: true });
+    const timestamp = new Date().toISOString();
+    db.prepare(
+      `UPDATE sponsors SET status = ?, published_at = COALESCE(published_at, ?),
+       updated_at = ?, updated_by_name = ? WHERE id = ?`,
+    ).run(
+      action === 'publish' ? 'published' : 'archived',
+      timestamp,
+      timestamp,
+      session.admin.displayName,
+      sponsor.id,
+    );
+    recordAudit(
+      db,
+      session.admin.id,
+      action === 'publish' ? 'sponsor.published' : 'sponsor.archived',
+      'sponsor',
+      sponsor.id,
+    );
+    return sendJson(response, 200, { sponsor: findSponsor(db, sponsor.id) });
   }
 
   if (method === 'GET' && path === '/api/admin/championships') {
@@ -1001,6 +1153,14 @@ function findMember(db, id) {
   );
 }
 
+function findSponsor(db, id) {
+  return sponsorFromRow(
+    db
+      .prepare(`SELECT ${SPONSOR_COLUMNS} FROM sponsors WHERE id = ? AND deleted_at IS NULL`)
+      .get(id),
+  );
+}
+
 function findChampionship(db, id) {
   return championshipFromDatabaseRow(
     db,
@@ -1029,17 +1189,29 @@ function findPublicChampionship(db, key) {
 
 function championshipFromDatabaseRow(db, row) {
   const championship = championshipFromRow(row);
+  if (!championship) return null;
+  const english = db
+    .prepare(
+      `SELECT summary, description, cover_alt
+       FROM championship_translations WHERE championship_id = ? AND locale = 'en'`,
+    )
+    .get(championship.id);
+  const translatedChampionship = {
+    ...championship,
+    summaryEn: english?.summary ?? null,
+    descriptionEn: english?.description ?? null,
+    coverAltEn: english?.cover_alt ?? null,
+  };
   if (
-    !championship ||
-    championship.coverMobileUrl ||
-    !championship.coverUrl?.startsWith('/uploads/')
+    translatedChampionship.coverMobileUrl ||
+    !translatedChampionship.coverUrl?.startsWith('/uploads/')
   ) {
-    return championship;
+    return translatedChampionship;
   }
   const media = db
     .prepare('SELECT mobile_public_url FROM media_assets WHERE public_url = ? LIMIT 1')
-    .get(championship.coverUrl);
-  return { ...championship, coverMobileUrl: media?.mobile_public_url ?? null };
+    .get(translatedChampionship.coverUrl);
+  return { ...translatedChampionship, coverMobileUrl: media?.mobile_public_url ?? null };
 }
 
 function runMemberInsert(db, id, member, timestamp, actorName) {
@@ -1142,6 +1314,7 @@ function runChampionshipInsert(db, id, championship, timestamp, actorName) {
     timestamp,
     actorName,
   );
+  saveChampionshipTranslations(db, id, championship);
 }
 
 function runChampionshipUpdate(db, id, championship, actorName) {
@@ -1179,6 +1352,28 @@ function runChampionshipUpdate(db, id, championship, actorName) {
     actorName,
     id,
   );
+  saveChampionshipTranslations(db, id, championship);
+}
+
+function saveChampionshipTranslations(db, id, championship) {
+  const hasEnglish = Boolean(
+    championship.summaryEn || championship.descriptionEn || championship.coverAltEn,
+  );
+  if (!hasEnglish) {
+    db.prepare(
+      `DELETE FROM championship_translations WHERE championship_id = ? AND locale = 'en'`,
+    ).run(id);
+    return;
+  }
+  db.prepare(
+    `INSERT INTO championship_translations
+     (championship_id, locale, summary, description, cover_alt)
+     VALUES (?, 'en', ?, ?, ?)
+     ON CONFLICT(championship_id, locale) DO UPDATE SET
+       summary = excluded.summary,
+       description = excluded.description,
+       cover_alt = excluded.cover_alt`,
+  ).run(id, championship.summaryEn, championship.descriptionEn, championship.coverAltEn);
 }
 
 function featureChampionship(db, id, timestamp, actorName) {
@@ -1335,7 +1530,12 @@ async function saveMedia(context, input) {
     );
   }
   const id = randomUUID();
-  const kind = input.kind === 'championship' ? 'championship' : 'member';
+  const kind =
+    input.kind === 'championship'
+      ? 'championship'
+      : input.kind === 'sponsor'
+        ? 'sponsor'
+        : 'member';
   const altText =
     String(input.altText ?? '')
       .trim()
@@ -1357,13 +1557,22 @@ async function saveMedia(context, input) {
       (width >= 900 && height >= 1200) ||
       (width >= 900 && height >= 900);
     const validMemberPhoto = width >= 720 && height >= 900;
-    if (kind === 'championship' ? !validChampionshipCover : !validMemberPhoto) {
+    const validSponsorLogo = width >= 300 && height >= 100;
+    const mediaIsTooSmall =
+      kind === 'championship'
+        ? !validChampionshipCover
+        : kind === 'sponsor'
+          ? !validSponsorLogo
+          : !validMemberPhoto;
+    if (mediaIsTooSmall) {
       throw new ApiError(
         422,
         'MEDIA_TOO_SMALL',
         kind === 'championship'
           ? 'Usa un cartel de al menos 1200 × 675 px en horizontal, 900 × 1200 px en vertical o 900 × 900 px en formato cuadrado.'
-          : 'La fotografía debe medir al menos 720 × 900 píxeles.',
+          : kind === 'sponsor'
+            ? 'El logotipo debe medir al menos 300 × 100 píxeles.'
+            : 'La fotografía debe medir al menos 720 × 900 píxeles.',
       );
     }
     await writeFile(originalStoragePath, buffer, { flag: 'wx' });
@@ -1375,13 +1584,20 @@ async function saveMedia(context, input) {
             fit: 'inside',
             withoutEnlargement: true,
           }
-        : {
-            width: 720,
-            height: 900,
-            fit: 'cover',
-            position: 'attention',
-            withoutEnlargement: true,
-          };
+        : kind === 'sponsor'
+          ? {
+              width: 1200,
+              height: 600,
+              fit: 'inside',
+              withoutEnlargement: true,
+            }
+          : {
+              width: 720,
+              height: 900,
+              fit: 'cover',
+              position: 'attention',
+              withoutEnlargement: true,
+            };
     const mainTask = sharp(buffer)
       .rotate()
       .resize(mainResize)
@@ -1804,6 +2020,17 @@ function correctionFromRow(row) {
 function publicMember(member) {
   if (!member) return null;
   const { photoConsentConfirmed: _consent, updatedByName: _updatedBy, ...publicFields } = member;
+  return publicFields;
+}
+
+function publicSponsor(sponsor) {
+  if (!sponsor) return null;
+  const {
+    updatedByName: _updatedBy,
+    createdAt: _createdAt,
+    updatedAt: _updatedAt,
+    ...publicFields
+  } = sponsor;
   return publicFields;
 }
 

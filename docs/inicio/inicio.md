@@ -21,8 +21,8 @@ visitante hacia dos acciones principales:
 
 La página debe seguir el sistema visual descrito en `docs/design.md`: estilo Neon Motorsport, base oscura, titulares editoriales, acentos magenta y lima, movimiento controlado y accesibilidad por defecto.
 
-La sustitución de miembros ficticios, la edición destacada y los valores globales se gestionarán
-mediante el panel definido en [Administración de contenidos](../admin/admin.md).
+La sustitución de miembros ficticios, la edición destacada, los sponsors y los valores globales se
+gestionan mediante el panel definido en [Administración de contenidos](../admin/admin.md).
 
 ## Recomendación principal
 
@@ -61,7 +61,7 @@ En la primera versión no es necesario crear todas las rutas. Las secciones pued
 ### Contenido
 
 - Marca o logotipo con enlace al inicio.
-- Enlaces: `Comunidad`, `Equipo`, `Contenido` y `Candeonato`.
+- Enlaces: `Comunidad`, `Equipo`, `Contenido`, `Sponsors` y `Candeonato actual`.
 - Acceso confirmado a Twitch: `https://www.twitch.tv/candemorracingteam`.
 - Indicador `En directo` únicamente cuando exista una emisión activa.
 
@@ -73,6 +73,8 @@ En la primera versión no es necesario crear todas las rutas. Las secciones pued
 - [x] Permitir cerrar el menú móvil con su botón y con `Escape`.
 - [x] Evitar más de seis enlaces principales.
 - [x] Incluir `Saltar al contenido` como primer enlace enfocable.
+- [x] Implementar los destinos internos con `routerLink` y fragmentos para que funcionen también al
+      regresar desde otra ruta; activar el desplazamiento a anclas y reservar margen superior.
 
 ### Recomendación visual
 
@@ -94,6 +96,9 @@ Comunicar en pocos segundos qué es la comunidad y ofrecer la acción más relev
   - Sin directo: `Conocer al equipo` o `Ver último contenido`.
 - Acción secundaria: `Conocer al equipo` o `Explorar contenido`.
 - Estado de Twitch con avatar, canal, categoría y número de espectadores cuando los datos estén disponibles.
+
+El texto `CANDEMOR` del `h1` usa la fuente local `Dog Rough`; el subtítulo `Racing Team` conserva la
+voz monoespaciada de interfaz. La acción `Conocer al equipo` apunta siempre al fragmento `#equipo`.
 
 ### Estados necesarios
 
@@ -271,7 +276,8 @@ a la presentación de Candemor.
 - [x] Mostrar la edición actual seleccionada desde administración; New Era corresponde al torneo
       Fat Cat Race `42` y usa su vídeo de fondo propio.
 - [x] Reutilizar en el evento destacado la composición visual de la vista previa privada del panel:
-      media 16:9, identidad, resumen, estado, temporada, inicio y final de la edición actual.
+      media 16:9, identidad, resumen, estado, temporada e inicio de la edición actual. La fecha final
+      sigue disponible en administración e historial, pero no se muestra en este bloque promocional.
 - [x] Mostrar el cartel por defecto y permitir que cada visitante cambie entre `Ver cartel` y `Ver
 vídeo`; el vídeo solo se carga cuando se solicita.
 - [x] Añadir sobre el cartel seleccionado un control circular para abrirlo en un modal de gran
@@ -299,7 +305,14 @@ Orden recomendado:
 2. Patrocinadores oficiales.
 3. Colaboradores técnicos o de comunidad.
 
-No mostrar esta sección si todavía no existen acuerdos confirmados.
+La sección existe como destino estable de navegación y muestra un mensaje vacío honesto mientras no
+haya acuerdos confirmados. Nunca se crean marcas ficticias. Los sponsors publicados se consultan en
+`GET /api/public/sponsors`, se ordenan desde administración y muestran el logo completo con
+`object-fit: contain`; los enlaces externos indican que abren una pestaña nueva.
+
+- [x] Añadir la sección y su estado de carga, error y vacío.
+- [x] Gestionar alta, edición, publicación, archivo y borrado desde `/admin/sponsors`.
+- [x] Validar nombre, logo, texto alternativo, web HTTPS y orden.
 
 <!-- ## 8. Merchandising
 
@@ -397,7 +410,8 @@ src/app/
 - [x] Añadir galería editorial de experiencias con estado de carga, vacío y error.
 - [x] Integrar el perfil y hasta cuatro clips públicos de Twitch, cargando su reproducción solo
       cuando la persona sigue el enlace al canal.
-- [ ] Añadir patrocinadores confirmados.
+- [x] Añadir infraestructura y sección para patrocinadores confirmados; falta cargar las marcas
+      reales cuando existan acuerdos.
 - [ ] Añadir teaser real de merchandising.
 
 ### Fase 3 — Mejora

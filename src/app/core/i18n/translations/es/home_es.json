@@ -1,0 +1,137 @@
+{
+  "meta": { "title": "Candemor Racing Team · Simracing y comunidad" },
+  "language": { "label": "Seleccionar idioma" },
+  "common": {
+    "newTab": "se abre en una pestaña nueva",
+    "loading": "Cargando…"
+  },
+  "skip": "Saltar al contenido principal",
+  "nav": {
+    "label": "Navegación principal",
+    "open": "Abrir menú",
+    "close": "Cerrar menú",
+    "community": "Comunidad",
+    "team": "Equipo",
+    "content": "Contenido",
+    "sponsors": "Sponsors",
+    "currentEvent": "Candeonato actual",
+    "homeLabel": "CANDEWEB — Candemor Racing Team, volver al inicio",
+    "twitchLabel": "Twitch de Candemor (se abre en una pestaña nueva)",
+    "discordLabel": "Discord de Candemor (se abre en una pestaña nueva)"
+  },
+  "hero": {
+    "eyebrow": "Simracing // Eventos // Comunidad",
+    "lede": "Somos una comunidad de simracing. Competimos, compartimos lo que ocurre en pista y creamos experiencias para disfrutar juntos del motor virtual.",
+    "discover": "Descubrir Candemor",
+    "meetTeam": "Conocer al equipo",
+    "videoDescription": "Vídeo ambiental de simracing. Toda la identidad y las acciones importantes se ofrecen también como texto y controles accesibles."
+  },
+  "stream": {
+    "live": "En directo",
+    "loading": "Consultando directo…",
+    "offline": "Ahora sin emisión",
+    "error": "Estado no disponible",
+    "official": "Canal oficial",
+    "viewers": "{{count}} espectadores",
+    "watchLive": "Ver directo en Twitch",
+    "paddockResting": "El paddock descansa",
+    "offlineText": "{{channel}} no está emitiendo ahora. Puedes visitar el canal en Twitch.",
+    "viewChannel": "Ver canal en Twitch",
+    "unavailableText": "No podemos comprobar el directo ahora, pero el canal oficial sigue disponible.",
+    "openTwitch": "Abrir Twitch",
+    "connecting": "Conectando",
+    "checking": "Consultando la emisión de la comunidad…",
+    "defaultText": "Este es el canal oficial de Candemor. Consulta en Twitch si estamos en directo.",
+    "watchLiveLabel": "Ver directo en Twitch (se abre en una pestaña nueva)",
+    "viewChannelLabel": "Ver canal en Twitch (se abre en una pestaña nueva)",
+    "openTwitchLabel": "Abrir Twitch (se abre en una pestaña nueva)"
+  },
+  "community": {
+    "eyebrow": "La comunidad",
+    "title": "Esto es Candemor",
+    "lede": "Candemor Racing Team es el punto de encuentro para quienes disfrutan del simracing con intensidad, respeto y buen ambiente dentro y fuera de la pista.",
+    "joinDiscord": "Entrar al Discord",
+    "imageAlt": "Silueta lateral de un coche de competición dentro del universo visual de Candemor",
+    "caption": "Candemor Racing Team // Simracing con espíritu de paddock.",
+    "values": {
+      "competeTitle": "Competimos",
+      "competeDescription": "Organizamos carreras y participamos en eventos con mentalidad de equipo.",
+      "shareTitle": "Compartimos",
+      "shareDescription": "El directo, los clips y las conversaciones continúan cuando termina la carrera.",
+      "createTitle": "Creamos",
+      "createDescription": "Diseñamos Candeonatos y experiencias propias para reunir a la comunidad."
+    }
+  },
+  "team": {
+    "eyebrow": "El paddock",
+    "title": "Detrás del volante",
+    "intro": "Conoce a las personas que compiten, retransmiten y hacen posible la comunidad de Candemor.",
+    "loading": "Cargando equipo…",
+    "error": "El equipo no está disponible ahora. Vuelve a intentarlo dentro de unos minutos.",
+    "empty": "Los perfiles oficiales se publicarán próximamente.",
+    "demo": "Contenido de demostración pendiente de sustituir desde el panel de administración.",
+    "listLabel": "Miembros del equipo"
+  },
+  "content": {
+    "eyebrow": "Contenido Candemor",
+    "title": "La pista continúa",
+    "intro": "El directo y los clips públicos del canal prolongan la experiencia más allá de cada carrera. Los vídeos solo se abren después de elegir una pieza.",
+    "loading": "Consultando el contenido de Twitch…",
+    "officialChannel": "Canal oficial",
+    "liveTitle": "Candemor en vivo",
+    "liveFallback": "Carreras, retransmisiones y voces de la comunidad reunidas en un mismo lugar.",
+    "viewChannel": "Ver canal en Twitch",
+    "clipsLabel": "Clips destacados del canal de Twitch",
+    "clip": "Clip de Twitch",
+    "by": "por {{creator}}",
+    "views": "{{count}} visualizaciones",
+    "clipsPreparing": "Clips en preparación",
+    "twitchUnavailable": "Twitch no está disponible temporalmente. El canal oficial sigue accesible.",
+    "noClips": "El canal todavía no devuelve clips públicos para mostrar en esta selección.",
+    "twitchLabel": "Ver Candemor en Twitch (se abre en una pestaña nueva)"
+  },
+  "event": {
+    "eyebrow": "Un evento de Candemor",
+    "title": "Evento destacado",
+    "intro": "Conoce la edición que reúne ahora mismo a la comunidad dentro y fuera de pista.",
+    "currentLabel": "Edición actual: {{name}}",
+    "visualLabel": "Contenido visual del evento",
+    "poster": "Ver cartel",
+    "video": "Ver vídeo",
+    "expandPoster": "Ampliar el cartel a pantalla grande",
+    "pending": "Información editorial pendiente para esta edición.",
+    "fallbackSummary": "Cada cierto tiempo, Candemor organiza el Candeonato: un campeonato con distintas carreras, posiciones y puntos.",
+    "metaLabel": "Datos de la edición actual",
+    "start": "Inicio",
+    "datePending": "Fecha por confirmar",
+    "viewCurrent": "Ver Candeonato actual",
+    "viewAll": "Ver todas las ediciones",
+    "expandedPoster": "Cartel ampliado de {{name}}",
+    "closePoster": "Cerrar cartel ampliado",
+    "posterAlt": "Cartel de {{name}}",
+    "status": {
+      "draft": "Borrador",
+      "registration": "Inscripción abierta",
+      "active": "En curso",
+      "finished": "Finalizado",
+      "archived": "Archivado"
+    }
+  },
+  "sponsors": {
+    "eyebrow": "Quienes hacen posible la pista",
+    "title": "Sponsors y colaboradores",
+    "intro": "Marcas que apoyan la competición, la comunidad y las retransmisiones de Candemor.",
+    "loading": "Cargando colaboradores…",
+    "error": "No podemos mostrar los colaboradores ahora.",
+    "empty": "Estamos preparando este espacio para nuestros próximos colaboradores.",
+    "listLabel": "Sponsors y colaboradores de Candemor"
+  },
+  "footer": {
+    "label": "Información de Candemor Racing Team",
+    "description": "Una comunidad de simracing que compite, comparte y crea experiencias propias.",
+    "secondaryNav": "Navegación secundaria",
+    "history": "Historial de Candeonatos",
+    "contact": "Contacto",
+    "legal": "© {{year}} Candemor Racing Team · Contenido externo sujeto a disponibilidad."
+  }
+}

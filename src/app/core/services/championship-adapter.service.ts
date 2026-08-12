@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import {
   ChampionshipLeader,
+  ChampionshipFormatTag,
   ChampionshipRound,
   ChampionshipRoundGroup,
   ChampionshipViewModel,
@@ -22,17 +23,11 @@ export class ChampionshipAdapterService {
         circuit: round.circuito,
         layout: round.variante,
         date: round.fecha,
-        dateLabel: this.formatDate(round.fecha),
         laps: this.nullableNumber(round.laps),
         sof: this.nullableNumber(round.sof),
         isHeat: round.is_heat === 1,
         isTeamEvent: round.team_event === 1,
-        typeLabel:
-          round.team_event === 1
-            ? 'Carrera por equipos'
-            : round.is_heat === 1
-              ? 'Manga'
-              : 'Carrera',
+        type: round.team_event === 1 ? 'team' : round.is_heat === 1 ? 'heat' : 'race',
         receivedStatus: round.status_label,
       }));
 
@@ -40,7 +35,7 @@ export class ChampionshipAdapterService {
       ? response.namedStandings.map((standing, index) => ({
           position: this.number(standing.position) || index + 1,
           driverId: this.nullableNumber(standing.driverId),
-          driverLabel: standing.driverName || `Piloto ${index + 1}`,
+          driverLabel: standing.driverName || `#${index + 1}`,
           team: standing.team,
           points: this.number(standing.points),
           rounds: this.number(standing.rounds),
@@ -82,7 +77,7 @@ export class ChampionshipAdapterService {
     return {
       position: index + 1,
       driverId: standing.piloto_id,
-      driverLabel: `Piloto #${standing.piloto_id}`,
+      driverLabel: `#${standing.piloto_id}`,
       team: standing.custom_team,
       points: this.number(standing.puntos_totales),
       rounds: this.number(standing.rondas),
@@ -115,11 +110,14 @@ export class ChampionshipAdapterService {
   }
 
   private getLeaders(standings: DriverStanding[]): ChampionshipLeader[] {
-    const metrics: Array<{ label: string; key: keyof DriverStanding; unit: string }> = [
-      { label: 'Más victorias', key: 'wins', unit: 'victorias' },
-      { label: 'Más podios', key: 'podiums', unit: 'podios' },
-      { label: 'Más vueltas rápidas', key: 'fastestLaps', unit: 'vueltas rápidas' },
-      { label: 'Más poles', key: 'poles', unit: 'poles' },
+    const metrics: Array<{
+      metric: ChampionshipLeader['metric'];
+      key: keyof DriverStanding;
+    }> = [
+      { metric: 'wins', key: 'wins' },
+      { metric: 'podiums', key: 'podiums' },
+      { metric: 'fastestLaps', key: 'fastestLaps' },
+      { metric: 'poles', key: 'poles' },
     ];
 
     return metrics.flatMap((metric) => {
@@ -131,11 +129,10 @@ export class ChampionshipAdapterService {
       return leader && value > 0
         ? [
             {
-              label: metric.label,
+              metric: metric.metric,
               driverId: leader.driverId,
               driverLabel: leader.driverLabel,
               value,
-              unit: metric.unit,
             },
           ]
         : [];
@@ -154,7 +151,6 @@ export class ChampionshipAdapterService {
     ) {
       warnings.push({
         code: 'missing-dates',
-        message: 'La fuente no facilita fechas para estas rondas.',
       });
     }
     if (
@@ -164,7 +160,6 @@ export class ChampionshipAdapterService {
     ) {
       warnings.push({
         code: 'missing-driver-names',
-        message: 'La fuente solo facilita el identificador de cada piloto, no su nombre público.',
       });
     }
     if (
@@ -174,37 +169,24 @@ export class ChampionshipAdapterService {
     ) {
       warnings.push({
         code: 'status-conflict',
-        message: 'Las rondas figuran como próximas aunque ya existen puntos acumulados.',
       });
     }
     if (standings.length > 0 && this.number(response.totalInscritos) === 0) {
       warnings.push({
         code: 'total-conflict',
-        message: 'El total de inscritos no coincide con los pilotos presentes en la clasificación.',
       });
     }
 
     return warnings;
   }
 
-  private getFormatTags(response: TournamentApiResponse): string[] {
-    const tags: string[] = [];
-    if (response.torneo.heat_racing === 1) tags.push('Formato con mangas');
-    if (response.torneo.safety === 1) tags.push('Safety activo');
-    if (response.torneo.multiclass === 1) tags.push('Multiclase');
-    if (response.torneo.driver_change === 1) tags.push('Cambio de piloto');
+  private getFormatTags(response: TournamentApiResponse): ChampionshipFormatTag[] {
+    const tags: ChampionshipFormatTag[] = [];
+    if (response.torneo.heat_racing === 1) tags.push('heat');
+    if (response.torneo.safety === 1) tags.push('safety');
+    if (response.torneo.multiclass === 1) tags.push('multiclass');
+    if (response.torneo.driver_change === 1) tags.push('driver-change');
     return tags;
-  }
-
-  private formatDate(value: string | null): string {
-    if (!value) return 'Fecha por confirmar';
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return 'Fecha por confirmar';
-    return new Intl.DateTimeFormat('es-ES', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    }).format(date);
   }
 
   private nullableNumber(value: unknown): number | null {

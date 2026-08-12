@@ -4,7 +4,7 @@ export interface ChampionshipViewModel {
   organizerName: string | null;
   season: string | null;
   titleSponsor: string | null;
-  formatTags: string[];
+  formatTags: ChampionshipFormatTag[];
   rounds: ChampionshipRound[];
   roundGroups: ChampionshipRoundGroup[];
   standings: DriverStanding[];
@@ -21,12 +21,11 @@ export interface ChampionshipRound {
   circuit: string;
   layout: string;
   date: string | null;
-  dateLabel: string;
   laps: number | null;
   sof: number | null;
   isHeat: boolean;
   isTeamEvent: boolean;
-  typeLabel: string;
+  type: 'team' | 'heat' | 'race';
   receivedStatus: string | null;
 }
 
@@ -64,17 +63,17 @@ export interface ChampionshipStats {
 }
 
 export interface ChampionshipLeader {
-  label: string;
+  metric: 'wins' | 'podiums' | 'fastestLaps' | 'poles';
   driverId: number | null;
   driverLabel: string;
   value: number;
-  unit: string;
 }
 
 export interface ChampionshipWarning {
   code: 'missing-dates' | 'missing-driver-names' | 'status-conflict' | 'total-conflict';
-  message: string;
 }
+
+export type ChampionshipFormatTag = 'heat' | 'safety' | 'multiclass' | 'driver-change';
 
 export interface TournamentLoadResult {
   response: import('./championship-api.model').TournamentApiResponse;

@@ -1,4 +1,4 @@
-<a class="skip-link" href="#contenido">Saltar al contenido principal</a>
+<a class="skip-link" href="#contenido">{{ 'candeonato.skip' | translate }}</a>
 
 <app-hero [championship]="featured$ | async"></app-hero>
 
@@ -9,34 +9,41 @@
   <app-form-inscription></app-form-inscription>
 </main>
 
-<footer class="site-footer" aria-label="Información del evento">
+<footer class="site-footer" [attr.aria-label]="'candeonato.footer.label' | translate">
   <div class="footer-inner">
     <a
       class="footer-mark"
       href="#inicio"
       [attr.aria-label]="
-        'CND///' + ((featured$ | async)?.editionNumber ?? '08') + ' — Volver al inicio'
+        'CANDEWEB — Candeonato ' +
+        ((featured$ | async)?.editionNumber ?? '08') +
+        ', volver al inicio'
       "
     >
-      CND<span>///</span>{{ (featured$ | async)?.editionNumber ?? '08' }}
+      CANDE<span>WEB</span>
+      <!-- {{ (featured$ | async)?.editionNumber ?? '08' }} -->
     </a>
     <div>
-      <p class="footer-label">Comunidad</p>
-      <a href="/">Candemor Racing Team</a>
+      <p class="footer-label">{{ 'candeonato.footer.community' | translate }}</p>
+      <a routerLink="/">Candemor Racing Team</a>
     </div>
     <div>
-      <p class="footer-label">Resultados</p>
-      <a [href]="'/candeonatos/' + ((featured$ | async)?.externalTournamentId ?? 42)">
-        Historial deportivo
+      <p class="footer-label">{{ 'candeonato.footer.results' | translate }}</p>
+      <a [routerLink]="['/candeonatos', (featured$ | async)?.externalTournamentId ?? 42]">
+        {{ 'candeonato.footer.standings' | translate }}
       </a>
     </div>
     <div>
-      <p class="footer-label">Contacto</p>
-      <a href="#inscripcion">Formulario de inscripción</a>
+      <p class="footer-label">{{ 'candeonato.footer.archive' | translate }}</p>
+      <a routerLink="/candeonatos">{{ 'candeonato.footer.allEditions' | translate }}</a>
     </div>
     <div>
-      <p class="footer-label">Privacidad</p>
-      <a href="#privacidad">Uso de datos</a>
+      <p class="footer-label">{{ 'candeonato.footer.contact' | translate }}</p>
+      <a href="#inscripcion">{{ 'candeonato.footer.registrationForm' | translate }}</a>
+    </div>
+    <div>
+      <p class="footer-label">{{ 'candeonato.footer.privacy' | translate }}</p>
+      <a href="#privacidad">{{ 'candeonato.footer.dataUse' | translate }}</a>
     </div>
   </div>
   <p class="footer-bottom">

@@ -1,24 +1,20 @@
 <section id="evento" class="section-shell event-section" aria-labelledby="evento-title">
   <div class="section-heading reveal">
-    <p class="eyebrow">01 / Evento</p>
-    <h2 id="evento-title" class="section-title">¿Qué es?</h2>
+    <p class="eyebrow">{{ 'candeonato.about.eyebrow' | translate }}</p>
+    <h2 id="evento-title" class="section-title">{{ 'candeonato.about.title' | translate }}</h2>
   </div>
 
   <div class="event-layout">
     <div class="event-copy">
       <p class="lede">
-        {{
-          championship()?.description ||
-            'El Candeonato es una serie de carreras para disfrutar de iRacing en comunidad, sin convertir cada curva en una guerra.'
-        }}
+        {{ localizedDescription() || ('candeonato.about.introFallback' | translate) }}
       </p>
       <p class="body-copy">
-        Todos competimos con el Mazda MX-5 en circuitos gratuitos y con una configuración fija. La
-        prioridad es correr limpio, aprender juntos y terminar la noche con ganas de repetir.
+        {{ 'candeonato.about.body' | translate }}
       </p>
       <blockquote>
         <span aria-hidden="true">“</span>
-        Competimos en pista. Fuera de ella, somos equipo.
+        {{ 'candeonato.about.quote' | translate }}
       </blockquote>
     </div>
 
@@ -26,7 +22,7 @@
       <div class="car-frame">
         <img
           src="/media/mazda-outline.webp"
-          alt="Ilustración luminosa de perfil del Mazda MX-5 utilizado en el Candeonato"
+          [alt]="'candeonato.about.imageAlt' | translate"
           width="1400"
           height="788"
           loading="lazy"
@@ -35,7 +31,7 @@
       </div>
       <figcaption>
         <span>MX-5 / CUP</span>
-        Un coche para todos. La diferencia la marca cómo compartimos la pista.
+        {{ 'candeonato.about.caption' | translate }}
       </figcaption>
     </figure>
   </div>

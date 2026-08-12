@@ -23,6 +23,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "**/*.json",
+                "input": "src/app/core/i18n/translations",
+                "output": "/i18n"
               }
             ],
             "styles": ["src/styles.css"]

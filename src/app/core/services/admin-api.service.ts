@@ -8,6 +8,7 @@ import {
   DashboardSummary,
   MfaSetup,
   SiteSettings,
+  SponsorContent,
   SportsCorrection,
   TeamMemberContent,
   TournamentSourceSummary,
@@ -30,6 +31,10 @@ type ChampionshipInput = Omit<
   | 'updatedAt'
   | 'updatedByName'
   | 'coverMobileUrl'
+> & { updatedAt?: string };
+type SponsorInput = Omit<
+  SponsorContent,
+  'id' | 'publishedAt' | 'createdAt' | 'updatedAt' | 'updatedByName'
 > & { updatedAt?: string };
 
 @Injectable({ providedIn: 'root' })
@@ -125,6 +130,48 @@ export class AdminApiService {
     return this.http.patch<void>('/api/admin/members/order', { ids }, this.options(true));
   }
 
+  getSponsors() {
+    return this.http.get<{ sponsors: SponsorContent[] }>('/api/admin/sponsors', this.options());
+  }
+
+  getSponsor(id: string) {
+    return this.http.get<{ sponsor: SponsorContent }>(
+      `/api/admin/sponsors/${encodeURIComponent(id)}`,
+      this.options(),
+    );
+  }
+
+  createSponsor(sponsor: SponsorInput) {
+    return this.http.post<{ sponsor: SponsorContent }>(
+      '/api/admin/sponsors',
+      sponsor,
+      this.options(true),
+    );
+  }
+
+  updateSponsor(id: string, sponsor: SponsorInput) {
+    return this.http.patch<{ sponsor: SponsorContent }>(
+      `/api/admin/sponsors/${encodeURIComponent(id)}`,
+      sponsor,
+      this.options(true),
+    );
+  }
+
+  deleteSponsor(id: string) {
+    return this.http.delete<void>(
+      `/api/admin/sponsors/${encodeURIComponent(id)}`,
+      this.options(true),
+    );
+  }
+
+  sponsorAction(id: string, action: 'publish' | 'archive') {
+    return this.http.post<{ sponsor: SponsorContent }>(
+      `/api/admin/sponsors/${encodeURIComponent(id)}/${action}`,
+      {},
+      this.options(true),
+    );
+  }
+
   getChampionships() {
     return this.http.get<{ championships: ChampionshipContent[] }>(
       '/api/admin/championships',
@@ -202,7 +249,7 @@ export class AdminApiService {
     return this.http.get<{ entries: AuditEntry[] }>('/api/admin/audit', this.options());
   }
 
-  async uploadImage(file: File, kind: 'member' | 'championship', altText = '') {
+  async uploadImage(file: File, kind: 'member' | 'championship' | 'sponsor', altText = '') {
     const dataBase64 = await fileToDataUrl(file);
     return this.http.post<{ asset: { publicUrl: string } }>(
       '/api/admin/media',

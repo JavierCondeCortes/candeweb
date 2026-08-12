@@ -1,30 +1,51 @@
-<a class="skip-link" href="#admin-content">Saltar al contenido administrativo</a>
+<a class="skip-link" href="#admin-content">{{ 'admin.shell.skip' | translate }}</a>
 
 <div class="admin-layout">
   <header class="admin-topbar">
-    <a class="admin-brand" routerLink="/admin" aria-label="Administración de Candemor, inicio">
+    <a
+      class="admin-brand"
+      routerLink="/admin"
+      [attr.aria-label]="'admin.shell.homeLabel' | translate"
+    >
       CND<span>///</span> ADMIN
     </a>
     <div class="admin-identity">
       @if (session()?.admin; as admin) {
-        <span>{{ admin.displayName }} · Administrador</span>
+        <span>{{ admin.displayName }} · {{ 'admin.shell.administrator' | translate }}</span>
       }
-      <a routerLink="/" target="_blank" aria-label="Ver web pública (se abre en una pestaña nueva)"
-        >Ver web <span aria-hidden="true">↗</span></a
+      <app-language-switcher />
+      <a
+        routerLink="/"
+        target="_blank"
+        [attr.aria-label]="'admin.shell.viewWebsiteLabel' | translate"
+        >{{ 'admin.shell.viewWebsite' | translate }} <span aria-hidden="true">↗</span></a
       >
-      <button type="button" (click)="logout()">Cerrar sesión</button>
+      <button type="button" (click)="logout()">{{ 'admin.shell.logout' | translate }}</button>
     </div>
   </header>
 
-  <nav class="admin-sidebar" aria-label="Navegación de administración">
+  <nav class="admin-sidebar" [attr.aria-label]="'admin.shell.navLabel' | translate">
     <a routerLink="/admin" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">
-      Resumen
+      {{ 'admin.shell.dashboard' | translate }}
     </a>
-    <a routerLink="/admin/miembros" routerLinkActive="is-active">Miembros</a>
-    <a routerLink="/admin/candeonatos" routerLinkActive="is-active">Candeonatos</a>
-    <a routerLink="/admin/ajustes" routerLinkActive="is-active">Ajustes</a>
-    <a routerLink="/admin/seguridad" routerLinkActive="is-active">Seguridad</a>
-    <a routerLink="/admin/auditoria" routerLinkActive="is-active">Auditoría</a>
+    <a routerLink="/admin/miembros" routerLinkActive="is-active">{{
+      'admin.shell.members' | translate
+    }}</a>
+    <a routerLink="/admin/candeonatos" routerLinkActive="is-active">{{
+      'admin.shell.championships' | translate
+    }}</a>
+    <a routerLink="/admin/sponsors" routerLinkActive="is-active">{{
+      'admin.shell.sponsors' | translate
+    }}</a>
+    <a routerLink="/admin/ajustes" routerLinkActive="is-active">{{
+      'admin.shell.settings' | translate
+    }}</a>
+    <a routerLink="/admin/seguridad" routerLinkActive="is-active">{{
+      'admin.shell.security' | translate
+    }}</a>
+    <a routerLink="/admin/auditoria" routerLinkActive="is-active">{{
+      'admin.shell.audit' | translate
+    }}</a>
   </nav>
 
   <main id="admin-content" class="admin-content" tabindex="-1">

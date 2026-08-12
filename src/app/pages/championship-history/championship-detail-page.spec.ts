@@ -176,6 +176,8 @@ describe('ChampionshipDetailPage', () => {
     const host = fixture.nativeElement as HTMLElement;
 
     expect(host.querySelector('[role="alert"]')).toBeTruthy();
-    expect(host.querySelector('button')?.textContent).toContain('Reintentar');
+    expect(host.querySelector<HTMLButtonElement>('.error-actions button')?.textContent).toContain(
+      'Reintentar',
+    );
   });
 });

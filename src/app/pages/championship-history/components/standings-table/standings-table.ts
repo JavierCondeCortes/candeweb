@@ -1,9 +1,10 @@
 import { Component, computed, input, signal } from '@angular/core';
 import { DriverStanding } from '../../../../core/models/championship.model';
+import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-standings-table',
-  imports: [],
+  imports: [TranslatePipe],
   templateUrl: './standings-table.html',
   styleUrl: './standings-table.css',
 })

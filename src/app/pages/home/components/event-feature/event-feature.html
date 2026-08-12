@@ -2,33 +2,34 @@
   <section class="home-event-section" aria-labelledby="event-feature-title">
     <div class="section-shell home-event-shell">
       <div class="home-event-heading">
-        <p class="eyebrow">Un evento de Candemor</p>
-        <h2 id="event-feature-title" class="section-title">Evento destacado</h2>
-        <p>
-          Esta es la edición que actualmente está seleccionada desde el panel de administración.
-        </p>
+        <p class="eyebrow">{{ 'home.event.eyebrow' | translate }}</p>
+        <h2 id="event-feature-title" class="section-title">{{ 'home.event.title' | translate }}</h2>
+        <p>{{ 'home.event.intro' | translate }}</p>
       </div>
 
-      <article class="home-event-preview" [attr.aria-label]="'Edición actual: ' + event.name">
+      <article
+        class="home-event-preview"
+        [attr.aria-label]="'home.event.currentLabel' | translate: { name: event.name }"
+      >
         @if (event.backgroundVideoUrl) {
           <div
             class="home-event-media-choice"
             role="group"
-            aria-label="Contenido visual del evento"
+            [attr.aria-label]="'home.event.visualLabel' | translate"
           >
             <button
               type="button"
               [attr.aria-pressed]="mediaMode() === 'poster'"
               (click)="selectMedia('poster')"
             >
-              Ver cartel
+              {{ 'home.event.poster' | translate }}
             </button>
             <button
               type="button"
               [attr.aria-pressed]="mediaMode() === 'video'"
               (click)="selectMedia('video')"
             >
-              Ver vídeo
+              {{ 'home.event.video' | translate }}
             </button>
           </div>
         }
@@ -58,7 +59,10 @@
               />
               <img
                 [src]="event.coverUrl || '/media/hero-poster.webp'"
-                [alt]="event.coverAlt || ''"
+                [alt]="
+                  localizedCoverAlt(event) ||
+                  ('home.event.posterAlt' | translate: { name: event.name })
+                "
                 width="1600"
                 height="900"
                 loading="lazy"
@@ -67,8 +71,8 @@
             <button
               class="home-event-poster-expand"
               type="button"
-              aria-label="Ampliar el cartel a pantalla grande"
-              title="Ampliar cartel"
+              [attr.aria-label]="'home.event.expandPoster' | translate"
+              [attr.title]="'home.event.expandPoster' | translate"
               (click)="openPoster()"
             >
               <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none">
@@ -96,34 +100,40 @@
             <p class="home-event-preview-subtitle">{{ event.subtitle }}</p>
           }
           <p class="home-event-preview-summary">
-            {{ event.summary || 'Información editorial pendiente para esta edición.' }}
+            {{
+              localizedSummary(event) ||
+                (event.id === 'fallback'
+                  ? ('home.event.fallbackSummary' | translate)
+                  : ('home.event.pending' | translate))
+            }}
           </p>
 
-          <div class="home-event-preview-meta" aria-label="Datos de la edición actual">
+          <div
+            class="home-event-preview-meta"
+            [attr.aria-label]="'home.event.metaLabel' | translate"
+          >
             <span [attr.data-status]="event.status">{{ statusLabel(event.status) }}</span>
             @if (event.season) {
               <span>{{ event.season }}</span>
             }
             @if (event.startAt) {
               <span>
-                Inicio
-                <time [attr.datetime]="event.startAt">{{ event.startAt | date: 'dd MMM y' }}</time>
+                {{ 'home.event.start' | translate }}
+                <time [attr.datetime]="event.startAt">{{ formattedDate(event.startAt) }}</time>
               </span>
             }
-            @if (event.endAt) {
-              <span>
-                Final
-                <time [attr.datetime]="event.endAt">{{ event.endAt | date: 'dd MMM y' }}</time>
-              </span>
-            }
-            @if (!event.startAt && !event.endAt) {
-              <span>Fechas por confirmar</span>
+            @if (!event.startAt) {
+              <span>{{ 'home.event.datePending' | translate }}</span>
             }
           </div>
 
           <div class="home-event-actions">
-            <a class="button button-primary" routerLink="/candeonato">Descubrir este evento</a>
-            <a class="button button-secondary" routerLink="/candeonatos"> Explorar el historial </a>
+            <a class="button button-primary" routerLink="/candeonato">{{
+              'home.event.viewCurrent' | translate
+            }}</a>
+            <a class="button button-secondary" routerLink="/candeonatos">{{
+              'home.event.viewAll' | translate
+            }}</a>
           </div>
         </div>
       </article>
@@ -131,14 +141,14 @@
       <dialog
         #posterDialog
         class="home-event-poster-dialog"
-        [attr.aria-label]="'Cartel ampliado de ' + event.name"
+        [attr.aria-label]="'home.event.expandedPoster' | translate: { name: event.name }"
         (click)="closePosterFromBackdrop($event)"
       >
         <div class="home-event-poster-dialog-content">
           <button
             class="home-event-poster-dialog-close"
             type="button"
-            aria-label="Cerrar cartel ampliado"
+            [attr.aria-label]="'home.event.closePoster' | translate"
             (click)="closePoster()"
           >
             <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="none">
@@ -152,7 +162,9 @@
           </button>
           <img
             [src]="event.coverUrl || '/media/hero-poster.webp'"
-            [alt]="event.coverAlt || 'Cartel de ' + event.name"
+            [alt]="
+              localizedCoverAlt(event) || ('home.event.posterAlt' | translate: { name: event.name })
+            "
             width="1600"
             height="900"
           />

@@ -362,6 +362,56 @@ test('administra miembros, Candeonatos, medios y datos públicos con una cuenta 
     assert.equal('photoConsentConfirmed' in publicAndrea, false);
     assert.equal('updatedByName' in publicAndrea, false);
 
+    const sponsorDraft = await jsonRequest(baseUrl, '/api/admin/sponsors', {
+      method: 'POST',
+      cookie: adminCookie,
+      csrf: adminCsrf,
+      body: {
+        name: 'Partner Racing',
+        description: 'Colaborador técnico de la comunidad.',
+        websiteUrl: 'https://example.com',
+        displayOrder: 1,
+        status: 'draft',
+      },
+    });
+    assert.equal(sponsorDraft.status, 201);
+    assert.equal(sponsorDraft.data.sponsor.status, 'draft');
+
+    const rejectedSponsorPublish = await jsonRequest(
+      baseUrl,
+      `/api/admin/sponsors/${sponsorDraft.data.sponsor.id}/publish`,
+      { method: 'POST', cookie: adminCookie, csrf: adminCsrf, body: {} },
+    );
+    assert.equal(rejectedSponsorPublish.status, 422);
+    assert.match(rejectedSponsorPublish.data.error.fields.logoUrl, /logotipo/i);
+
+    const completedSponsor = await jsonRequest(
+      baseUrl,
+      `/api/admin/sponsors/${sponsorDraft.data.sponsor.id}`,
+      {
+        method: 'PATCH',
+        cookie: adminCookie,
+        csrf: adminCsrf,
+        body: {
+          ...sponsorDraft.data.sponsor,
+          logoUrl: '/media/hero-poster.webp',
+          logoAlt: 'Logotipo de Partner Racing',
+        },
+      },
+    );
+    assert.equal(completedSponsor.status, 200);
+
+    const publishedSponsor = await jsonRequest(
+      baseUrl,
+      `/api/admin/sponsors/${sponsorDraft.data.sponsor.id}/publish`,
+      { method: 'POST', cookie: adminCookie, csrf: adminCsrf, body: {} },
+    );
+    assert.equal(publishedSponsor.status, 200);
+    const publicSponsors = await jsonRequest(baseUrl, '/api/public/sponsors');
+    assert.equal(publicSponsors.status, 200);
+    assert.equal(publicSponsors.data.sponsors[0].name, 'Partner Racing');
+    assert.equal('updatedByName' in publicSponsors.data.sponsors[0], false);
+
     const championships = await jsonRequest(baseUrl, '/api/admin/championships', {
       cookie: adminCookie,
     });
@@ -369,6 +419,8 @@ test('administra miembros, Candeonatos, medios y datos públicos con una cuenta 
     assert.equal(seededChampionship.status, 'finished');
     assert.equal(seededChampionship.name, 'Candeonato New Era');
     assert.equal(seededChampionship.backgroundVideoMimeType, 'video/mp4');
+    assert.match(seededChampionship.descriptionEn, /simracing competition/i);
+    assert.match(seededChampionship.coverAltEn, /Mazda MX-5/i);
     const sourceValidation = await jsonRequest(
       baseUrl,
       '/api/admin/championships/validate-source',
@@ -409,8 +461,11 @@ test('administra miembros, Candeonatos, medios y datos públicos con una cuenta 
         name: 'Candeonato siguiente',
         slug: 'candeonato-siguiente',
         summary: 'Edición utilizada para comprobar el cambio de edición actual.',
+        summaryEn: 'Edition used to verify the current edition switch.',
+        descriptionEn: 'English editorial description for the next Candeonato.',
         coverUrl: '/media/hero-poster.webp',
         coverAlt: 'Portada del Candeonato siguiente',
+        coverAltEn: 'Cover art for the next Candeonato',
         status: 'finished',
         isFeatured: true,
         displayOrder: 1,
@@ -418,6 +473,14 @@ test('administra miembros, Candeonatos, medios y datos públicos con una cuenta 
     });
     assert.equal(nextChampionship.status, 201);
     assert.equal(nextChampionship.data.championship.isFeatured, true);
+    assert.equal(
+      nextChampionship.data.championship.descriptionEn,
+      'English editorial description for the next Candeonato.',
+    );
+    assert.equal(
+      nextChampionship.data.championship.coverAltEn,
+      'Cover art for the next Candeonato',
+    );
     const settingsWithNextChampionship = await jsonRequest(baseUrl, '/api/public/site-settings');
     assert.equal(
       settingsWithNextChampionship.data.featuredChampionshipId,
@@ -506,6 +569,28 @@ test('administra miembros, Candeonatos, medios y datos públicos con una cuenta 
     await uploadedImage.arrayBuffer();
     assert.equal(upload.data.asset.width, 720);
     assert.equal(upload.data.asset.height, 900);
+
+    const sponsorLogo = await sharp({
+      create: { width: 800, height: 200, channels: 4, background: '#00000000' },
+    })
+      .png()
+      .toBuffer();
+    const sponsorLogoUpload = await jsonRequest(baseUrl, '/api/admin/media', {
+      method: 'POST',
+      cookie: adminCookie,
+      csrf: adminCsrf,
+      body: {
+        fileName: 'partner-logo.png',
+        mimeType: 'image/png',
+        kind: 'sponsor',
+        altText: 'Logotipo de Partner Racing',
+        dataBase64: sponsorLogo.toString('base64'),
+      },
+    });
+    assert.equal(sponsorLogoUpload.status, 201);
+    assert.equal(sponsorLogoUpload.data.asset.width, 800);
+    assert.equal(sponsorLogoUpload.data.asset.height, 200);
+    assert.equal(sponsorLogoUpload.data.asset.mobilePublicUrl, null);
 
     const linkedMedia = await jsonRequest(baseUrl, `/api/admin/members/${created.data.member.id}`, {
       method: 'PATCH',
@@ -673,6 +758,10 @@ test('administra miembros, Candeonatos, medios y datos públicos con una cuenta 
     );
     assert.equal(
       audit.data.entries.some((entry) => entry.action === 'member.deleted'),
+      true,
+    );
+    assert.equal(
+      audit.data.entries.some((entry) => entry.action === 'sponsor.published'),
       true,
     );
 

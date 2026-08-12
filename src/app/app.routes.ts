@@ -5,18 +5,18 @@ import { pendingChangesGuard } from './core/guards/pending-changes.guard';
 export const routes: Routes = [
   {
     path: '',
-    title: 'Candemor Racing Team · Simracing y comunidad',
+    title: 'home.meta.title',
     loadComponent: () => import('./pages/home/home-page').then((module) => module.HomePage),
   },
   {
     path: 'candeonato',
-    title: 'Candeonato #8 · New Era Edition',
+    title: 'candeonato.meta.title',
     loadComponent: () =>
       import('./candeonato/candeonato-page').then((module) => module.CandeonatoPage),
   },
   {
     path: 'candeonatos',
-    title: 'Historial de Candeonatos',
+    title: 'candeonato.meta.historyTitle',
     loadComponent: () =>
       import('./pages/championship-history/championship-history-page').then(
         (module) => module.ChampionshipHistoryPage,
@@ -24,7 +24,7 @@ export const routes: Routes = [
   },
   {
     path: 'candeonatos/:torneoId',
-    title: 'Clasificación · Candeonato',
+    title: 'candeonato.meta.detailTitle',
     loadComponent: () =>
       import('./pages/championship-history/championship-detail-page').then(
         (module) => module.ChampionshipDetailPage,
@@ -32,7 +32,7 @@ export const routes: Routes = [
   },
   {
     path: 'admin/login',
-    title: 'Acceso · Administración Candemor',
+    title: 'admin.meta.login',
     loadComponent: () =>
       import('./pages/admin/admin-login/admin-login').then((module) => module.AdminLogin),
   },
@@ -44,7 +44,7 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        title: 'Resumen · Administración Candemor',
+        title: 'admin.meta.dashboard',
         loadComponent: () =>
           import('./pages/admin/admin-dashboard/admin-dashboard').then(
             (module) => module.AdminDashboard,
@@ -52,13 +52,13 @@ export const routes: Routes = [
       },
       {
         path: 'miembros',
-        title: 'Miembros · Administración Candemor',
+        title: 'admin.meta.members',
         loadComponent: () =>
           import('./pages/admin/admin-members/admin-members').then((module) => module.AdminMembers),
       },
       {
         path: 'miembros/nuevo',
-        title: 'Nuevo miembro · Administración Candemor',
+        title: 'admin.meta.newMember',
         canDeactivate: [pendingChangesGuard],
         loadComponent: () =>
           import('./pages/admin/admin-member-form/admin-member-form').then(
@@ -67,7 +67,7 @@ export const routes: Routes = [
       },
       {
         path: 'miembros/:id',
-        title: 'Editar miembro · Administración Candemor',
+        title: 'admin.meta.editMember',
         canDeactivate: [pendingChangesGuard],
         loadComponent: () =>
           import('./pages/admin/admin-member-form/admin-member-form').then(
@@ -76,15 +76,41 @@ export const routes: Routes = [
       },
       {
         path: 'candeonatos',
-        title: 'Candeonatos · Administración Candemor',
+        title: 'admin.meta.championships',
         loadComponent: () =>
           import('./pages/admin/admin-championships/admin-championships').then(
             (module) => module.AdminChampionships,
           ),
       },
       {
+        path: 'sponsors',
+        title: 'admin.meta.sponsors',
+        loadComponent: () =>
+          import('./pages/admin/admin-sponsors/admin-sponsors').then(
+            (module) => module.AdminSponsors,
+          ),
+      },
+      {
+        path: 'sponsors/nuevo',
+        title: 'admin.meta.newSponsor',
+        canDeactivate: [pendingChangesGuard],
+        loadComponent: () =>
+          import('./pages/admin/admin-sponsor-form/admin-sponsor-form').then(
+            (module) => module.AdminSponsorForm,
+          ),
+      },
+      {
+        path: 'sponsors/:id',
+        title: 'admin.meta.editSponsor',
+        canDeactivate: [pendingChangesGuard],
+        loadComponent: () =>
+          import('./pages/admin/admin-sponsor-form/admin-sponsor-form').then(
+            (module) => module.AdminSponsorForm,
+          ),
+      },
+      {
         path: 'candeonatos/nuevo',
-        title: 'Nuevo Candeonato · Administración Candemor',
+        title: 'admin.meta.newChampionship',
         canDeactivate: [pendingChangesGuard],
         loadComponent: () =>
           import('./pages/admin/admin-championship-form/admin-championship-form').then(
@@ -93,7 +119,7 @@ export const routes: Routes = [
       },
       {
         path: 'candeonatos/:id',
-        title: 'Editar Candeonato · Administración Candemor',
+        title: 'admin.meta.editChampionship',
         canDeactivate: [pendingChangesGuard],
         loadComponent: () =>
           import('./pages/admin/admin-championship-form/admin-championship-form').then(
@@ -102,7 +128,7 @@ export const routes: Routes = [
       },
       {
         path: 'ajustes',
-        title: 'Ajustes · Administración Candemor',
+        title: 'admin.meta.settings',
         loadComponent: () =>
           import('./pages/admin/admin-settings/admin-settings').then(
             (module) => module.AdminSettings,
@@ -110,7 +136,7 @@ export const routes: Routes = [
       },
       {
         path: 'seguridad',
-        title: 'Seguridad · Administración Candemor',
+        title: 'admin.meta.security',
         loadComponent: () =>
           import('./pages/admin/admin-security/admin-security').then(
             (module) => module.AdminSecurity,
@@ -118,7 +144,7 @@ export const routes: Routes = [
       },
       {
         path: 'auditoria',
-        title: 'Auditoría · Administración Candemor',
+        title: 'admin.meta.audit',
         loadComponent: () =>
           import('./pages/admin/admin-audit/admin-audit').then((module) => module.AdminAudit),
       },

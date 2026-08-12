@@ -135,7 +135,6 @@ video {
   letter-spacing: 0.16em;
   text-transform: uppercase;
 }
-
 .display-title,
 .section-title {
   margin: 0;
@@ -148,10 +147,29 @@ video {
   text-transform: uppercase;
 }
 
-.hero .display-title {
+.display-title {
+  position: relative;
+  max-width: 100%;
   font-family: 'Dog Rough', Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  font-size: clamp(4rem, 16vw, 12.5rem);
   font-style: normal;
   font-weight: 400;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: clamp(1px, 0.12vw, 2px) var(--text);
+  text-shadow: 0 0 1.8rem rgba(255, 43, 214, 0.35);
+}
+
+.display-title::after {
+  position: absolute;
+  bottom: 0.02em;
+  left: 0.04em;
+  z-index: -1;
+  color: var(--magenta);
+  content: attr(data-title);
+  opacity: 0.23;
+  transform: translate(0.025em, 0.025em);
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 1px var(--magenta);
 }
 
 .section-title {
@@ -175,6 +193,16 @@ video {
   margin: 0;
   color: var(--text-muted);
   font-size: 1rem;
+}
+
+@media (forced-colors: active) {
+  .display-title,
+  .display-title::after {
+    color: CanvasText;
+    text-shadow: none;
+    -webkit-text-fill-color: CanvasText;
+    -webkit-text-stroke: 0;
+  }
 }
 
 .button {

@@ -1,19 +1,22 @@
-import { AsyncPipe, DatePipe } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { Component, ElementRef, inject, signal, ViewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { catchError, map, of } from 'rxjs';
 import { ChampionshipContent } from '../../../../core/models/content-admin.model';
+import { I18nService } from '../../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 import { PublicContentService } from '../../../../core/services/public-content.service';
 
 @Component({
   selector: 'app-event-feature',
-  imports: [AsyncPipe, DatePipe, RouterLink],
+  imports: [AsyncPipe, RouterLink, TranslatePipe],
   templateUrl: './event-feature.html',
 })
 export class EventFeature {
   @ViewChild('posterDialog') private posterDialog?: ElementRef<HTMLDialogElement>;
 
   private readonly content = inject(PublicContentService);
+  private readonly i18n = inject(I18nService);
   readonly mediaMode = signal<'poster' | 'video'>('poster');
   readonly event$ = this.content.getSiteSettings().pipe(
     map((settings) => settings.featuredChampionship ?? fallbackChampionship),
@@ -21,7 +24,27 @@ export class EventFeature {
   );
 
   statusLabel(status: ChampionshipContent['status']): string {
-    return CHAMPIONSHIP_STATUS_LABELS[status];
+    return this.i18n.translate(`home.event.status.${status}`);
+  }
+
+  localizedDescription(event: ChampionshipContent): string {
+    return this.i18n.localized(event.description, event.descriptionEn);
+  }
+
+  localizedSummary(event: ChampionshipContent): string {
+    return this.i18n.localized(event.summary, event.summaryEn);
+  }
+
+  localizedCoverAlt(event: ChampionshipContent): string {
+    return this.i18n.localized(event.coverAlt, event.coverAltEn);
+  }
+
+  formattedDate(value: string): string {
+    return new Intl.DateTimeFormat(this.i18n.language() === 'en' ? 'en-GB' : 'es-ES', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    }).format(new Date(value));
   }
 
   selectMedia(mode: 'poster' | 'video'): void {
@@ -59,14 +82,6 @@ export class EventFeature {
   }
 }
 
-const CHAMPIONSHIP_STATUS_LABELS: Record<ChampionshipContent['status'], string> = {
-  draft: 'Borrador',
-  registration: 'Inscripciones abiertas',
-  active: 'En curso',
-  finished: 'Finalizado',
-  archived: 'Archivado',
-};
-
 const fallbackChampionship: ChampionshipContent = {
   id: 'fallback',
   externalTournamentId: 42,
@@ -75,12 +90,14 @@ const fallbackChampionship: ChampionshipContent = {
   editionNumber: 8,
   subtitle: 'New Era Edition',
   season: '2026',
-  summary:
-    'Cada cierto tiempo, Candemor organiza el Candeonato: un campeonato con distintas carreras, posiciones y puntos.',
+  summary: null,
   description: null,
+  descriptionEn: null,
+  summaryEn: null,
   coverUrl: '/media/hero-poster.webp',
   coverMobileUrl: '/media/hero-poster-mobile.webp',
-  coverAlt: 'Mazda MX-5 de competición en la presentación del Candeonato',
+  coverAlt: null,
+  coverAltEn: null,
   backgroundVideoUrl: '/media/hero-optimized.mp4',
   backgroundVideoMimeType: 'video/mp4',
   startAt: null,

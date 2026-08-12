@@ -1,34 +1,38 @@
 <header class="admin-page-header">
   <div>
-    <p class="admin-eyebrow">Seguridad</p>
-    <h1>Auditoría</h1>
-    <p>Últimas 200 acciones administrativas registradas.</p>
+    <p class="admin-eyebrow">{{ 'admin.audit.eyebrow' | translate }}</p>
+    <h1>{{ 'admin.audit.title' | translate }}</h1>
+    <p>{{ 'admin.audit.intro' | translate }}</p>
   </div>
 </header>
 
 @if (errorMessage()) {
   <div class="admin-alert is-error" role="alert">{{ errorMessage() }}</div>
 } @else if (entries().length === 0) {
-  <p role="status">Cargando auditoría…</p>
+  <p role="status">{{ 'admin.audit.loading' | translate }}</p>
 } @else {
   <div class="admin-table-wrap">
     <table class="admin-table">
       <caption>
-        Historial administrativo reciente
+        {{
+          'admin.audit.caption' | translate
+        }}
       </caption>
       <thead>
         <tr>
-          <th scope="col">Fecha</th>
-          <th scope="col">Persona</th>
-          <th scope="col">Acción</th>
-          <th scope="col">Entidad</th>
+          <th scope="col">{{ 'admin.audit.date' | translate }}</th>
+          <th scope="col">{{ 'admin.audit.person' | translate }}</th>
+          <th scope="col">{{ 'admin.audit.action' | translate }}</th>
+          <th scope="col">{{ 'admin.audit.entity' | translate }}</th>
         </tr>
       </thead>
       <tbody>
         @for (entry of entries(); track entry.id) {
           <tr>
             <td>{{ entry.createdAt | date: 'short' }}</td>
-            <td>{{ entry.actorName || entry.actorEmail || 'Sistema' }}</td>
+            <td>
+              {{ entry.actorName || entry.actorEmail || ('admin.common.system' | translate) }}
+            </td>
             <td>
               <code>{{ entry.action }}</code>
             </td>

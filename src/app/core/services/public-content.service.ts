@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import {
   ChampionshipContent,
   SiteSettings,
+  SponsorContent,
   TeamMemberContent,
 } from '../models/content-admin.model';
 import { TwitchChannelContent } from '../models/twitch-content.model';
@@ -14,6 +15,10 @@ export class PublicContentService {
   getMembers(featuredOnly = false) {
     const query = featuredOnly ? '?featured=true' : '';
     return this.http.get<{ members: TeamMemberContent[] }>(`/api/public/members${query}`);
+  }
+
+  getSponsors() {
+    return this.http.get<{ sponsors: SponsorContent[] }>('/api/public/sponsors');
   }
 
   getChampionships() {

@@ -3,15 +3,18 @@ import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { ChampionshipContent } from '../../../core/models/content-admin.model';
 import { AdminApiService } from '../../../core/services/admin-api.service';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { apiErrorMessage } from '../admin-form-errors';
 
 @Component({
   selector: 'app-admin-championships',
-  imports: [RouterLink],
+  imports: [RouterLink, TranslatePipe],
   templateUrl: './admin-championships.html',
 })
 export class AdminChampionships implements OnInit {
   private readonly api = inject(AdminApiService);
+  readonly i18n = inject(I18nService);
   readonly championships = signal<ChampionshipContent[]>([]);
   readonly loading = signal(true);
   readonly busyId = signal('');
@@ -20,7 +23,7 @@ export class AdminChampionships implements OnInit {
   readonly query = signal('');
   readonly statusFilter = signal<'all' | ChampionshipContent['status']>('all');
   readonly filteredChampionships = computed(() => {
-    const query = this.query().trim().toLocaleLowerCase('es');
+    const query = this.query().trim().toLocaleLowerCase(this.i18n.language());
     const status = this.statusFilter();
     return this.championships().filter(
       (championship) =>
@@ -28,7 +31,7 @@ export class AdminChampionships implements OnInit {
         (!query ||
           [championship.name, championship.season, championship.subtitle]
             .filter(Boolean)
-            .some((value) => value?.toLocaleLowerCase('es').includes(query))),
+            .some((value) => value?.toLocaleLowerCase(this.i18n.language()).includes(query))),
     );
   });
 
@@ -43,12 +46,16 @@ export class AdminChampionships implements OnInit {
     if (
       action === 'archive' &&
       !window.confirm(
-        `¿Archivar ${championship.name}? Dejará de estar destacada y permanecerá disponible en el historial público.`,
+        this.i18n.translate('admin.championships.confirmArchive', { name: championship.name }),
       )
     )
       return;
     this.busyId.set(championship.id);
-    this.message.set(action === 'sync' ? 'Sincronizando con Fat Cat Race…' : 'Guardando cambio…');
+    this.message.set(
+      this.i18n.translate(
+        action === 'sync' ? 'admin.championships.syncing' : 'admin.championships.savingChange',
+      ),
+    );
     this.errorMessage.set('');
     this.api
       .championshipAction(championship.id, action)
@@ -57,16 +64,20 @@ export class AdminChampionships implements OnInit {
         next: () => {
           this.message.set(
             action === 'sync'
-              ? 'Datos deportivos sincronizados.'
+              ? this.i18n.translate('admin.championships.synced')
               : action === 'feature'
-                ? 'Edición destacada actualizada.'
-                : 'Estado actualizado.',
+                ? this.i18n.translate('admin.championships.featuredUpdated')
+                : this.i18n.translate('admin.championships.statusUpdated'),
           );
           this.load();
         },
         error: (error) => {
           this.message.set('');
-          this.errorMessage.set(apiErrorMessage(error));
+          this.errorMessage.set(
+            apiErrorMessage(error, this.i18n.translate('admin.common.operationFailed'), (key) =>
+              this.i18n.translate(key),
+            ),
+          );
           this.load();
         },
       });
@@ -79,7 +90,23 @@ export class AdminChampionships implements OnInit {
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: ({ championships }) => this.championships.set(championships),
-        error: (error) => this.errorMessage.set(apiErrorMessage(error)),
+        error: (error) =>
+          this.errorMessage.set(
+            apiErrorMessage(error, this.i18n.translate('admin.common.operationFailed'), (key) =>
+              this.i18n.translate(key),
+            ),
+          ),
       });
+  }
+
+  statusLabel(status: ChampionshipContent['status']): string {
+    const keys: Record<ChampionshipContent['status'], string> = {
+      draft: 'admin.championshipForm.statusDraft',
+      registration: 'admin.championshipForm.statusRegistration',
+      active: 'admin.championshipForm.statusActive',
+      finished: 'admin.championshipForm.statusFinished',
+      archived: 'admin.championshipForm.statusArchived',
+    };
+    return this.i18n.translate(keys[status]);
   }
 }

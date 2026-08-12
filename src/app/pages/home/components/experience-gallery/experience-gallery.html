@@ -5,18 +5,17 @@
 >
   <div class="section-heading experiences-heading">
     <div>
-      <p class="eyebrow">Contenido Candemor</p>
-      <h2 id="experiences-title" class="section-title">La pista continúa</h2>
+      <p class="eyebrow">{{ 'home.content.eyebrow' | translate }}</p>
+      <h2 id="experiences-title" class="section-title">{{ 'home.content.title' | translate }}</h2>
     </div>
     <p class="body-copy">
-      El directo y los clips públicos del canal prolongan la experiencia más allá de cada carrera.
-      Los vídeos solo se abren después de elegir una pieza.
+      {{ 'home.content.intro' | translate }}
     </p>
   </div>
 
   @if (state$ | async; as state) {
     @if (state.kind === 'loading') {
-      <p class="experience-message" role="status">Consultando el contenido de Twitch…</p>
+      <p class="experience-message" role="status">{{ 'home.content.loading' | translate }}</p>
     }
 
     <div class="experience-grid">
@@ -37,28 +36,27 @@
           loading="lazy"
         />
         <div class="experience-overlay">
-          <p class="eyebrow">Canal oficial</p>
-          <h3>{{ state.content?.channel?.displayName || 'Candemor en vivo' }}</h3>
+          <p class="eyebrow">{{ 'home.content.officialChannel' | translate }}</p>
+          <h3>
+            {{ state.content?.channel?.displayName || ('home.content.liveTitle' | translate) }}
+          </h3>
           <p>
-            {{
-              state.content?.channel?.description ||
-                'Carreras, retransmisiones y voces de la comunidad reunidas en un mismo lugar.'
-            }}
+            {{ state.content?.channel?.description || ('home.content.liveFallback' | translate) }}
           </p>
           <a
             class="experience-status"
             [href]="state.content?.channel?.url || 'https://www.twitch.tv/candemorracingteam'"
-            aria-label="Ver Candemor en Twitch (se abre en una pestaña nueva)"
+            [attr.aria-label]="'home.content.twitchLabel' | translate"
             target="_blank"
             rel="noopener noreferrer"
           >
-            Ver canal en Twitch <span aria-hidden="true">↗</span>
+            {{ 'home.content.viewChannel' | translate }} <span aria-hidden="true">↗</span>
           </a>
         </div>
       </article>
 
       @if (state.content?.clips?.length) {
-        <ul class="twitch-clips" aria-label="Clips destacados del canal de Twitch">
+        <ul class="twitch-clips" [attr.aria-label]="'home.content.clipsLabel' | translate">
           @for (clip of state.content?.clips; track clip.id) {
             <li>
               @if (clip.url; as clipUrl) {
@@ -77,14 +75,14 @@
                     loading="lazy"
                   />
                   <span class="twitch-clip-copy">
-                    <span class="eyebrow">Clip de Twitch</span>
+                    <span class="eyebrow">{{ 'home.content.clip' | translate }}</span>
                     <strong>{{ clip.title }}</strong>
                     <span class="twitch-clip-meta">
                       @if (clip.creatorName) {
-                        por {{ clip.creatorName }}
+                        {{ 'home.content.by' | translate: { creator: clip.creatorName } }}
                         <span aria-hidden="true">·</span>
                       }
-                      {{ clip.viewCount | number }} visualizaciones
+                      {{ 'home.content.views' | translate: { count: (clip.viewCount | number) } }}
                       <span aria-hidden="true">·</span>
                       {{ clip.durationSeconds | number: '1.0-0' }} s
                     </span>
@@ -102,12 +100,12 @@
           </div>
           <div class="experience-overlay">
             <p class="eyebrow">Twitch</p>
-            <h3>Clips en preparación</h3>
+            <h3>{{ 'home.content.clipsPreparing' | translate }}</h3>
             <p>
               @if (state.kind === 'error') {
-                Twitch no está disponible temporalmente. El canal oficial sigue accesible.
+                {{ 'home.content.twitchUnavailable' | translate }}
               } @else {
-                El canal todavía no devuelve clips públicos para mostrar en esta selección.
+                {{ 'home.content.noClips' | translate }}
               }
             </p>
           </div>

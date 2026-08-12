@@ -32,24 +32,45 @@
 
   <nav
     class="hero-nav"
-    aria-label="Navegación principal"
+    [attr.aria-label]="'candeonato.nav.label' | translate"
+    [class.menu-open]="isMenuOpen()"
     [attr.aria-hidden]="isVideoFocusMode() ? 'true' : null"
     [attr.inert]="isVideoFocusMode() ? '' : null"
   >
     <a
       class="brand"
       href="#inicio"
-      [attr.aria-label]="'CND///' + editionCode() + ' — Candeonato ' + editionNumber() + ', inicio'"
+      [attr.aria-label]="
+        'CANDEWEB' + editionCode() + ' — Candeonato ' + editionNumber() + ', inicio'
+      "
     >
-      CND<span>///</span>{{ editionCode() }}
+      CANDE<span>WEB</span>
+      <!-- {{ editionCode() }} -->
     </a>
-    <div class="nav-links">
-      <a href="#evento">Qué es</a>
-      <a href="#requisitos">Requisitos</a>
-      <a href="#reglas">Reglas</a>
-      <a [href]="historyUrl()">Historial</a>
-      <a href="#inscripcion">Inscripción</a>
+    <button
+      class="hero-menu-button"
+      type="button"
+      aria-controls="candeonato-navigation-links"
+      [attr.aria-expanded]="isMenuOpen()"
+      [attr.aria-label]="
+        isMenuOpen() ? ('candeonato.nav.close' | translate) : ('candeonato.nav.open' | translate)
+      "
+      (click)="toggleMenu()"
+    >
+      <span></span><span></span>
+    </button>
+    <div id="candeonato-navigation-links" class="nav-links">
+      <a href="#evento" (click)="closeMenu()">{{ 'candeonato.nav.about' | translate }}</a>
+      <a href="#requisitos" (click)="closeMenu()">{{
+        'candeonato.nav.requirements' | translate
+      }}</a>
+      <a href="#reglas" (click)="closeMenu()">{{ 'candeonato.nav.rules' | translate }}</a>
+      <a [href]="historyUrl()" (click)="closeMenu()">{{ 'candeonato.nav.history' | translate }}</a>
+      <a href="#inscripcion" (click)="closeMenu()">{{
+        'candeonato.nav.registration' | translate
+      }}</a>
     </div>
+    <app-language-switcher />
   </nav>
 
   @if (backgroundVideoUrl()) {
@@ -70,40 +91,48 @@
     [attr.inert]="isVideoFocusMode() ? '' : null"
   >
     <p class="eyebrow hero-kicker">{{ editionCode() }} / {{ editionSubtitle() }}</p>
-    <h1 class="display-title" aria-label="CANDEONATO">CANDEONATO</h1>
+    <h1 class="display-title" data-title="CANDEONATO" aria-label="CANDEONATO">CANDEONATO</h1>
     <p class="hero-subtitle">{{ heroSubtitle() }}</p>
 
     <div class="hero-meta">
       <time [attr.datetime]="startAt()">{{ dateLabel() }}</time>
       <span aria-hidden="true">//</span>
-      <span>iRacing · Online</span>
+      <span>{{ 'candeonato.hero.online' | translate }}</span>
     </div>
 
-    <div class="countdown" role="timer" [attr.aria-label]="'Cuenta atrás para ' + dateLabel()">
+    <div
+      class="countdown"
+      role="timer"
+      [attr.aria-label]="'candeonato.hero.countdown' | translate: { date: dateLabel() }"
+    >
       <div>
         <strong>{{ countdown().days }}</strong>
-        <span>días</span>
+        <span>{{ 'candeonato.hero.days' | translate }}</span>
       </div>
       <span class="count-separator" aria-hidden="true">:</span>
       <div>
         <strong>{{ countdown().hours }}</strong>
-        <span>horas</span>
+        <span>{{ 'candeonato.hero.hours' | translate }}</span>
       </div>
       <span class="count-separator" aria-hidden="true">:</span>
       <div>
         <strong>{{ countdown().minutes }}</strong>
-        <span>minutos</span>
+        <span>{{ 'candeonato.hero.minutes' | translate }}</span>
       </div>
       <span class="count-separator" aria-hidden="true">:</span>
       <div>
         <strong>{{ countdown().seconds }}</strong>
-        <span>segundos</span>
+        <span>{{ 'candeonato.hero.seconds' | translate }}</span>
       </div>
     </div>
 
     <div class="hero-actions">
-      <a class="button button-primary" [href]="registrationUrl()">Inscribirme</a>
-      <a class="button button-secondary" href="#reglas">Ver reglas</a>
+      <a class="button button-primary" [href]="registrationUrl()">{{
+        'candeonato.hero.register' | translate
+      }}</a>
+      <a class="button button-secondary" href="#reglas">{{
+        'candeonato.hero.viewRules' | translate
+      }}</a>
     </div>
   </div>
 
@@ -113,7 +142,7 @@
     [attr.aria-hidden]="isVideoFocusMode() ? 'true' : null"
     [attr.inert]="isVideoFocusMode() ? '' : null"
   >
-    <span>Descubrir</span>
+    <span>{{ 'candeonato.hero.discover' | translate }}</span>
     <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="none">
       <path
         d="M12 4v15m0 0-5-5m5 5 5-5"
@@ -126,7 +155,6 @@
   </a>
 
   <p id="video-description" class="sr-only">
-    El fondo presenta visualmente esta edición del Candeonato. Toda la información esencial también
-    aparece como texto en esta página.
+    {{ 'candeonato.hero.videoDescription' | translate }}
   </p>
 </header>

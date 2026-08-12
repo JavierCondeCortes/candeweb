@@ -4,51 +4,60 @@
   aria-labelledby="requisitos-title"
 >
   <div class="section-heading reveal">
-    <p class="eyebrow">02 / Requisitos</p>
-    <h2 id="requisitos-title" class="section-title">Ficha técnica</h2>
-    <p class="lede">
-      Lo esencial para entrar en pista. Sin compras sorpresa y sin ventajas ocultas.
-    </p>
+    <p class="eyebrow">{{ 'candeonato.requirements.eyebrow' | translate }}</p>
+    <h2 id="requisitos-title" class="section-title">
+      {{ 'candeonato.requirements.title' | translate }}
+    </h2>
+    <p class="lede">{{ 'candeonato.requirements.intro' | translate }}</p>
   </div>
 
   <dl class="data-grid">
     <div class="data-card reveal">
-      <dt>Simulador</dt>
+      <dt>{{ 'candeonato.requirements.simulator' | translate }}</dt>
       <dd class="data-value">iRacing</dd>
-      <dd class="data-description">Necesitas una cuenta activa y acceso al simulador.</dd>
+      <dd class="data-description">
+        {{ 'candeonato.requirements.simulatorDescription' | translate }}
+      </dd>
     </div>
     <div class="data-card reveal">
-      <dt>Coche</dt>
+      <dt>{{ 'candeonato.requirements.car' | translate }}</dt>
       <dd class="data-value">Mazda MX-5</dd>
-      <dd class="data-description">El vehículo incluido que utilizaremos durante el evento.</dd>
+      <dd class="data-description">{{ 'candeonato.requirements.carDescription' | translate }}</dd>
     </div>
     <div class="data-card reveal">
-      <dt>Configuración</dt>
-      <dd class="data-value">Setup fixed</dd>
-      <dd class="data-description">Todos competimos con los mismos ajustes.</dd>
+      <dt>{{ 'candeonato.requirements.setup' | translate }}</dt>
+      <dd class="data-value">{{ 'candeonato.requirements.fixedSetup' | translate }}</dd>
+      <dd class="data-description">{{ 'candeonato.requirements.setupDescription' | translate }}</dd>
     </div>
     <div class="data-card reveal">
-      <dt>Circuitos</dt>
-      <dd class="data-value">Gratuitos</dd>
-      <dd class="data-description">La selección definitiva se comunicará en Discord.</dd>
+      <dt>{{ 'candeonato.requirements.tracks' | translate }}</dt>
+      <dd class="data-value">{{ 'candeonato.requirements.free' | translate }}</dd>
+      <dd class="data-description">
+        {{ 'candeonato.requirements.tracksDescription' | translate }}
+      </dd>
     </div>
   </dl>
 
   <div class="entry-notes">
     <div>
       <span aria-hidden="true">01</span>
-      <p><strong>Participación gratuita.</strong> No hay cuota de inscripción al Candeonato.</p>
+      <p>
+        <strong>{{ 'candeonato.requirements.freeTitle' | translate }}</strong>
+        {{ 'candeonato.requirements.freeText' | translate }}
+      </p>
     </div>
     <div>
       <span aria-hidden="true">02</span>
       <p>
-        <strong>Plazas por confirmar.</strong> Se asignarán según orden de inscripción y validación.
+        <strong>{{ 'candeonato.requirements.placesTitle' | translate }}</strong>
+        {{ 'candeonato.requirements.placesText' | translate }}
       </p>
     </div>
     <div>
       <span aria-hidden="true">03</span>
       <p>
-        <strong>Confirmación por Discord.</strong> Allí recibirás acceso, circuitos y horario final.
+        <strong>{{ 'candeonato.requirements.discordTitle' | translate }}</strong>
+        {{ 'candeonato.requirements.discordText' | translate }}
       </p>
     </div>
   </div>
@@ -57,19 +66,24 @@
 <section id="calendario" class="section-shell schedule-section" aria-labelledby="calendario-title">
   <div class="schedule-card reveal">
     <div>
-      <p class="eyebrow">Race day / {{ year() }}</p>
+      <p class="eyebrow">{{ 'candeonato.schedule.raceDay' | translate: { year: year() } }}</p>
       <h2 id="calendario-title">{{ longDate() }}</h2>
       <p>
-        Evento online en iRacing. La hora de convocatoria y el briefing se confirmarán a las
-        personas inscritas mediante Discord.
+        {{ 'candeonato.schedule.intro' | translate }}
       </p>
     </div>
-    <ol aria-label="Proceso hasta la carrera">
-      <li><span>Ahora</span><strong>Inscripción abierta</strong></li>
-      <li><span>Antes del evento</span><strong>Confirmación y acceso a Discord</strong></li>
+    <ol [attr.aria-label]="'candeonato.schedule.processLabel' | translate">
+      <li>
+        <span>{{ 'candeonato.schedule.now' | translate }}</span
+        ><strong>{{ 'candeonato.schedule.registrationOpen' | translate }}</strong>
+      </li>
+      <li>
+        <span>{{ 'candeonato.schedule.before' | translate }}</span
+        ><strong>{{ 'candeonato.schedule.confirmation' | translate }}</strong>
+      </li>
       <li>
         <span>{{ shortDate() }}</span
-        ><strong>Briefing y carrera</strong>
+        ><strong>{{ 'candeonato.schedule.briefing' | translate }}</strong>
       </li>
     </ol>
   </div>

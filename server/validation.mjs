@@ -60,6 +60,32 @@ export function validateMember(input, { publishing = false } = {}) {
   return member;
 }
 
+export function validateSponsor(input, { publishing = false } = {}) {
+  const fields = {};
+  const name = cleanText(input.name, 100);
+  const logoUrl = optionalUrlOrPath(input.logoUrl, 'logoUrl', fields);
+  const logoAlt = cleanOptionalText(input.logoAlt, 160);
+
+  if (name.length < 2) fields.name = 'Escribe un nombre de entre 2 y 100 caracteres.';
+  if (publishing && !logoUrl) fields.logoUrl = 'Añade un logotipo antes de publicar.';
+  if (logoUrl && !logoAlt) fields.logoAlt = 'Describe el logotipo antes de publicar.';
+
+  const sponsor = {
+    name,
+    description: cleanOptionalText(input.description, 240),
+    logoUrl,
+    logoAlt,
+    websiteUrl: optionalHttpsUrl(input.websiteUrl, 'websiteUrl', fields),
+    displayOrder: nonNegativeInteger(input.displayOrder, 'displayOrder', fields),
+    status: oneOf(input.status, ['draft', 'published', 'archived'], 'draft'),
+  };
+
+  if (Object.keys(fields).length) {
+    throw new ApiError(422, 'VALIDATION_ERROR', 'Hay campos que necesitan revisión.', fields);
+  }
+  return sponsor;
+}
+
 export function validateChampionship(input, { publishing = false } = {}) {
   const fields = {};
   const name = cleanText(input.name, 100);
@@ -107,9 +133,12 @@ export function validateChampionship(input, { publishing = false } = {}) {
     subtitle: cleanOptionalText(input.subtitle, 100),
     season: cleanOptionalText(input.season, 30),
     summary: cleanOptionalText(input.summary, 320),
+    summaryEn: cleanOptionalText(input.summaryEn, 320),
     description: cleanOptionalText(input.description, 5000),
+    descriptionEn: cleanOptionalText(input.descriptionEn, 5000),
     coverUrl,
     coverAlt,
+    coverAltEn: cleanOptionalText(input.coverAltEn, 160),
     backgroundVideoUrl,
     backgroundVideoMimeType,
     startAt,

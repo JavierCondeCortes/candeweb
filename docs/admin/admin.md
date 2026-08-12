@@ -1,8 +1,8 @@
 # Administración de contenidos de Candemor
 
 > Especificación funcional y técnica para que una persona administradora pueda mantener los datos
-> de la web sin editar componentes de Angular. El alcance prioritario son los miembros del equipo y
-> las ediciones del Candeonato.
+> de la web sin editar componentes de Angular. El alcance incluye miembros, sponsors y ediciones del
+> Candeonato.
 
 ## Objetivo
 
@@ -14,6 +14,7 @@ Crear un panel privado desde el que se pueda:
 4. Sincronizar los resultados deportivos desde la API pública sin reescribirlos manualmente.
 5. Modificar un conjunto pequeño de ajustes globales, como el canal de Twitch y los enlaces de
    contacto.
+6. Crear, editar, ordenar, publicar, archivar y eliminar sponsors y colaboradores.
 
 El panel debe ser la fuente de verdad del **contenido editorial**. La API de Fat Cat Race seguirá
 siendo la fuente de verdad de rondas, posiciones, puntos y estadísticas deportivas.
@@ -25,7 +26,7 @@ La primera versión funcional del panel ya está implementada dentro del reposit
 - API propia en Node y base de datos SQLite con migraciones versionadas.
 - Una única cuenta administradora, con sesión segura mediante cookie, protección CSRF, limitación
   de intentos de acceso y TOTP obligatorio en producción.
-- CRUD completo, orden, publicación y archivo lógico de miembros y Candeonatos. El listado de
+- CRUD completo, orden, publicación y archivo lógico de miembros, sponsors y Candeonatos. El listado de
   miembros ofrece `Añadir`, `Editar` y `Eliminar`; eliminar exige confirmación y conserva un borrado
   lógico en la auditoría.
 - Ajustes globales y auditoría consultables desde `/admin`.
@@ -108,6 +109,9 @@ La web pública nunca debe conectarse con credenciales de administración ni rec
 | `/admin/candeonatos`       | Listado de ediciones y estado de sincronización                  |
 | `/admin/candeonatos/nuevo` | Registro de una edición                                          |
 | `/admin/candeonatos/:id`   | Edición, publicación, sincronización y acceso a la vista pública |
+| `/admin/sponsors`          | Listado, estado y acciones de sponsors                           |
+| `/admin/sponsors/nuevo`    | Alta de un sponsor                                               |
+| `/admin/sponsors/:id`      | Edición, vista previa, publicación y retirada                    |
 | `/admin/ajustes`           | Twitch, contacto, edición destacada y valores globales           |
 | `/admin/seguridad`         | Alta o rotación de segundo factor y códigos de recuperación      |
 | `/admin/auditoria`         | Historial de acciones; puede posponerse visualmente, no en datos |
@@ -136,9 +140,26 @@ de cuentas y solo permite iniciar sesión a la primera cuenta administradora cre
 | Resultados  | Sincronizar, revisar fecha y conservar snapshot                           | API externa    |
 | Portada     | Candeonato destacado, Twitch, correo y enlaces principales                | BBDD           |
 | Multimedia  | Fotografías, portadas y vídeos de fondo por edición                       | Almacenamiento |
+| Sponsors    | Nombre, logo, descripción, web, orden y estado                            | BBDD           |
 
-Patrocinadores, productos, galería y navegación quedan fuera del MVP, aunque podrán utilizar los
-mismos patrones más adelante.
+Productos y una galería manual quedan fuera del MVP. La navegación pública se mantiene en código
+para conservar una arquitectura clara; los sponsors sí forman parte del panel.
+
+## Modelo: sponsor
+
+| Campo           | Tipo           | Obligatorio | Reglas                            |
+| --------------- | -------------- | ----------- | --------------------------------- |
+| `id`            | UUID           | Sí          | Generado por el sistema           |
+| `name`          | Texto          | Sí          | Entre 2 y 100 caracteres          |
+| `description`   | Texto o `null` | No          | Máximo 240 caracteres             |
+| `logo_url`      | URL o `null`   | Condicional | Obligatorio para publicar         |
+| `logo_alt`      | Texto o `null` | Condicional | Obligatorio cuando existe logo    |
+| `website_url`   | URL o `null`   | No          | Solo HTTPS                        |
+| `display_order` | Entero         | Sí          | Igual o mayor que cero            |
+| `status`        | Enum           | Sí          | `draft`, `published` o `archived` |
+
+No se insertan sponsors de demostración: la portada muestra un estado vacío hasta que el
+administrador publique un registro real.
 
 ## Modelo: miembro del equipo
 
@@ -287,6 +308,7 @@ mantenerlo como asset de despliegue por su tamaño y coste de transferencia.
 ```text
 admin_profiles
 team_members
+sponsors
 championships
 championship_snapshots
 sports_corrections
@@ -329,6 +351,7 @@ Los nombres son orientativos, pero la separación entre público y administraci�
 GET /api/public/site-settings
 GET /api/public/twitch-content
 GET /api/public/members?featured=true
+GET /api/public/sponsors
 GET /api/public/championships
 GET /api/public/championships/:slug
 GET /api/public/championships/:slug/sports-data
@@ -348,6 +371,14 @@ DELETE /api/admin/members/:id
 POST   /api/admin/members/:id/publish
 POST   /api/admin/members/:id/archive
 PATCH  /api/admin/members/order
+
+GET    /api/admin/sponsors
+POST   /api/admin/sponsors
+GET    /api/admin/sponsors/:id
+PATCH  /api/admin/sponsors/:id
+DELETE /api/admin/sponsors/:id
+POST   /api/admin/sponsors/:id/publish
+POST   /api/admin/sponsors/:id/archive
 
 GET    /api/admin/championships
 POST   /api/admin/championships
@@ -424,6 +455,12 @@ asociarlo a controles concretos.
 - La implementación genera un derivado WebP de hasta `1600 × 1600` y otro de hasta `900 × 900`
   para móvil. Ambos usan ajuste interior (`contain`) y nunca amplían el archivo original.
 - No reemplazar una URL publicada hasta que el nuevo archivo haya terminado de procesarse.
+
+### Sponsors
+
+- Logotipo mínimo: `300 × 100 px`; máximo de subida: 12 MB.
+- El derivado WebP cabe dentro de `1200 × 600` mediante `contain`, sin recortar ni ampliar el original.
+- Publicar exige logo y texto alternativo. El enlace de la marca, cuando existe, debe ser HTTPS.
 
 Cada asset debe guardar nombre original, tipo, dimensiones, peso, autor de la subida, fecha y texto
 alternativo asociado. Eliminar un registro no debe borrar inmediatamente una imagen todavía usada.

@@ -1,21 +1,27 @@
 import { Component, computed, DestroyRef, inject, input, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ChampionshipRoundGroup } from '../../../../core/models/championship.model';
+import {
+  ChampionshipRound,
+  ChampionshipRoundGroup,
+} from '../../../../core/models/championship.model';
 import { RoundResultsResponse } from '../../../../core/models/round-results.model';
 import { RoundResultsService } from '../../../../core/services/round-results.service';
+import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 type ResultState =
   { kind: 'loading' } | { kind: 'ready'; response: RoundResultsResponse } | { kind: 'error' };
 
 @Component({
   selector: 'app-rounds-list',
-  imports: [],
+  imports: [TranslatePipe],
   templateUrl: './rounds-list.html',
   styleUrl: './rounds-list.css',
 })
 export class RoundsList {
   private readonly resultsService = inject(RoundResultsService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly i18n = inject(I18nService);
 
   readonly groups = input.required<ChampionshipRoundGroup[]>();
   readonly openSessionId = signal<number | null>(null);
@@ -46,6 +52,29 @@ export class RoundsList {
 
   resultState(sessionId: number): ResultState | undefined {
     return this.resultStates().get(sessionId);
+  }
+
+  roundType(round: ChampionshipRound): string {
+    const key =
+      round.type === 'team'
+        ? 'candeonato.sports.teamRace'
+        : round.type === 'heat'
+          ? 'candeonato.sports.heat'
+          : 'candeonato.sports.race';
+    return this.i18n.translate(key);
+  }
+
+  roundDate(value: string | null): string {
+    if (!value) return this.i18n.translate('candeonato.sports.datePending');
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return this.i18n.translate('candeonato.sports.datePending');
+    }
+    return new Intl.DateTimeFormat(this.i18n.language() === 'en' ? 'en-GB' : 'es-ES', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    }).format(date);
   }
 
   private loadResults(sessionId: number): void {

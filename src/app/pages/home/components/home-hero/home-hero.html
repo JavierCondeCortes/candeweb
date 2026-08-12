@@ -37,35 +37,50 @@
 
   <nav
     class="home-nav"
-    aria-label="Navegación principal"
+    [attr.aria-label]="'home.nav.label' | translate"
     [class.menu-open]="isMenuOpen()"
     [attr.aria-hidden]="isVideoFocusMode() ? 'true' : null"
     [attr.inert]="isVideoFocusMode() ? '' : null"
   >
     <a
       class="home-brand"
-      href="#inicio"
-      aria-label="CND/// — Candemor Racing Team, inicio"
+      routerLink="/"
+      fragment="inicio"
+      aria-label="CANDEWEB — Candemor Racing Team, inicio"
       aria-current="page"
     >
-      CND<span>///</span>
+      CANDE<span>WEB</span>
     </a>
     <button
       class="home-menu-button"
       type="button"
       aria-controls="home-navigation-links"
       [attr.aria-expanded]="isMenuOpen()"
-      [attr.aria-label]="isMenuOpen() ? 'Cerrar menú' : 'Abrir menú'"
+      [attr.aria-label]="
+        isMenuOpen() ? ('home.nav.close' | translate) : ('home.nav.open' | translate)
+      "
       (click)="toggleMenu()"
     >
       <span></span><span></span>
     </button>
     <div id="home-navigation-links" class="home-nav-links">
-      <a href="#comunidad" (click)="closeMenu()">Comunidad</a>
-      <a href="#equipo" (click)="closeMenu()">Equipo</a>
-      <a href="#contenido" (click)="closeMenu()">Contenido</a>
-      <a routerLink="/candeonato" (click)="closeMenu()">Candeonato</a>
+      <a routerLink="/" fragment="comunidad" (click)="closeMenu()">{{
+        'home.nav.community' | translate
+      }}</a>
+      <a routerLink="/" fragment="equipo" (click)="closeMenu()">{{
+        'home.nav.team' | translate
+      }}</a>
+      <a routerLink="/" fragment="contenido" (click)="closeMenu()">{{
+        'home.nav.content' | translate
+      }}</a>
+      <a routerLink="/" fragment="sponsors" (click)="closeMenu()">{{
+        'home.nav.sponsors' | translate
+      }}</a>
+      <a routerLink="/candeonato" (click)="closeMenu()">{{
+        'home.nav.currentEvent' | translate
+      }}</a>
     </div>
+    <app-language-switcher />
   </nav>
 
   <app-sound-switch
@@ -83,15 +98,18 @@
     [attr.inert]="isVideoFocusMode() ? '' : null"
   >
     <div class="home-hero-copy">
-      <p class="eyebrow">Simracing // Eventos // Comunidad</p>
-      <h1>CANDEMOR <span>Racing Team</span></h1>
-      <p class="home-hero-lede">
-        Somos una comunidad de simracing. Competimos, compartimos lo que ocurre en pista y creamos
-        experiencias para disfrutar juntos del motor virtual.
-      </p>
+      <p class="eyebrow">{{ 'home.hero.eyebrow' | translate }}</p>
+      <h1 class="display-title" data-title="CANDEMOR" aria-label="CANDEMOR Racing Team">
+        CANDEMOR <span>Racing Team</span>
+      </h1>
+      <p class="home-hero-lede">{{ 'home.hero.lede' | translate }}</p>
       <div class="home-hero-actions">
-        <a class="button button-primary" href="#comunidad">Descubrir Candemor</a>
-        <a class="button button-secondary" href="#equipo">Conocer al equipo</a>
+        <a class="button button-primary" routerLink="/" fragment="comunidad">{{
+          'home.hero.discover' | translate
+        }}</a>
+        <a class="button button-secondary" routerLink="/" fragment="equipo">{{
+          'home.hero.meetTeam' | translate
+        }}</a>
       </div>
     </div>
 
@@ -101,19 +119,19 @@
           <span class="stream-dot" aria-hidden="true"></span>
           @switch (stream.kind) {
             @case ('live') {
-              En directo
+              {{ 'home.stream.live' | translate }}
             }
             @case ('loading') {
-              Consultando directo…
+              {{ 'home.stream.loading' | translate }}
             }
             @case ('offline') {
-              Ahora sin emisión
+              {{ 'home.stream.offline' | translate }}
             }
             @case ('error') {
-              Estado no disponible
+              {{ 'home.stream.error' | translate }}
             }
             @default {
-              Canal oficial
+              {{ 'home.stream.official' | translate }}
             }
           }
         </div>
@@ -125,62 +143,62 @@
             <div class="stream-meta">
               <span>{{ stream.category }}</span>
               @if (stream.viewers !== undefined) {
-                <span>{{ stream.viewers | number }} espectadores</span>
+                <span>{{
+                  'home.stream.viewers' | translate: { count: (stream.viewers | number) }
+                }}</span>
               }
             </div>
             <a
               class="stream-link"
               [href]="stream.channelUrl"
-              aria-label="Ver directo en Twitch (se abre en una pestaña nueva)"
+              [attr.aria-label]="'home.stream.watchLiveLabel' | translate"
               target="_blank"
               rel="noopener noreferrer"
             >
-              Ver directo en Twitch <span aria-hidden="true">↗</span>
+              {{ 'home.stream.watchLive' | translate }} <span aria-hidden="true">↗</span>
             </a>
           }
           @case ('offline') {
-            <h2>El paddock descansa</h2>
-            <p>
-              {{ stream.channelName }} no está emitiendo ahora. Puedes visitar el canal en Twitch.
-            </p>
+            <h2>{{ 'home.stream.paddockResting' | translate }}</h2>
+            <p>{{ 'home.stream.offlineText' | translate: { channel: stream.channelName } }}</p>
             <a
               class="stream-link"
               [href]="stream.channelUrl"
-              aria-label="Ver canal en Twitch (se abre en una pestaña nueva)"
+              [attr.aria-label]="'home.stream.viewChannelLabel' | translate"
               target="_blank"
               rel="noopener noreferrer"
             >
-              Ver canal en Twitch <span aria-hidden="true">↗</span>
+              {{ 'home.stream.viewChannel' | translate }} <span aria-hidden="true">↗</span>
             </a>
           }
           @case ('error') {
             <h2>{{ stream.channelName }}</h2>
-            <p>No podemos comprobar el directo ahora, pero el canal oficial sigue disponible.</p>
+            <p>{{ 'home.stream.unavailableText' | translate }}</p>
             <a
               class="stream-link"
               [href]="stream.channelUrl"
-              aria-label="Abrir Twitch (se abre en una pestaña nueva)"
+              [attr.aria-label]="'home.stream.openTwitchLabel' | translate"
               target="_blank"
               rel="noopener noreferrer"
             >
-              Abrir Twitch <span aria-hidden="true">↗</span>
+              {{ 'home.stream.openTwitch' | translate }} <span aria-hidden="true">↗</span>
             </a>
           }
           @case ('loading') {
-            <h2>Conectando</h2>
-            <p>Consultando la emisión de la comunidad…</p>
+            <h2>{{ 'home.stream.connecting' | translate }}</h2>
+            <p>{{ 'home.stream.checking' | translate }}</p>
           }
           @default {
             <h2>{{ stream.channelName }}</h2>
-            <p>Este es el canal oficial de Candemor. Consulta en Twitch si estamos en directo.</p>
+            <p>{{ 'home.stream.defaultText' | translate }}</p>
             <a
               class="stream-link"
               [href]="stream.channelUrl"
-              aria-label="Ver canal en Twitch (se abre en una pestaña nueva)"
+              [attr.aria-label]="'home.stream.viewChannelLabel' | translate"
               target="_blank"
               rel="noopener noreferrer"
             >
-              Ver canal en Twitch <span aria-hidden="true">↗</span>
+              {{ 'home.stream.viewChannel' | translate }} <span aria-hidden="true">↗</span>
             </a>
           }
         }
@@ -189,7 +207,6 @@
   </div>
 
   <p id="home-video-description" class="sr-only">
-    Vídeo ambiental de simracing. Toda la identidad y las acciones importantes se ofrecen también
-    como texto y controles accesibles.
+    {{ 'home.hero.videoDescription' | translate }}
   </p>
 </header>

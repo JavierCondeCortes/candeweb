@@ -1,10 +1,15 @@
-import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
-import { Title } from '@angular/platform-browser';
+import { Component, computed, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ChampionshipViewModel, EditorialCorrection } from '../../core/models/championship.model';
+import {
+  ChampionshipFormatTag,
+  ChampionshipLeader,
+  ChampionshipViewModel,
+  ChampionshipWarning,
+  EditorialCorrection,
+} from '../../core/models/championship.model';
 import { ChampionshipContent } from '../../core/models/content-admin.model';
 import { ChampionshipAdapterService } from '../../core/services/championship-adapter.service';
 import {
@@ -15,12 +20,22 @@ import { PublicContentService } from '../../core/services/public-content.service
 import { ChampionshipStats } from './components/championship-stats/championship-stats';
 import { RoundsList } from './components/rounds-list/rounds-list';
 import { StandingsTable } from './components/standings-table/standings-table';
+import { I18nService } from '../../core/i18n/i18n.service';
+import { LanguageSwitcher } from '../../core/i18n/language-switcher/language-switcher';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 type PageState = 'loading' | 'ready' | 'error';
 
 @Component({
   selector: 'app-championship-detail-page',
-  imports: [RouterLink, ChampionshipStats, StandingsTable, RoundsList],
+  imports: [
+    RouterLink,
+    ChampionshipStats,
+    StandingsTable,
+    RoundsList,
+    LanguageSwitcher,
+    TranslatePipe,
+  ],
   templateUrl: './championship-detail-page.html',
 })
 export class ChampionshipDetailPage implements OnInit {
@@ -30,7 +45,7 @@ export class ChampionshipDetailPage implements OnInit {
   private readonly adapter = inject(ChampionshipAdapterService);
   private readonly content = inject(PublicContentService);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly title = inject(Title);
+  private readonly i18n = inject(I18nService);
   private loadSubscription?: Subscription;
 
   readonly state = signal<PageState>('loading');
@@ -39,7 +54,15 @@ export class ChampionshipDetailPage implements OnInit {
   readonly isRefreshing = signal(false);
   readonly isStale = signal(false);
   readonly errorMessage = signal('');
-  readonly lastUpdated = signal('');
+  private readonly lastSyncedAt = signal('');
+  readonly lastUpdated = computed(() => {
+    const syncedAt = this.lastSyncedAt();
+    if (!syncedAt) return '';
+    return new Intl.DateTimeFormat(this.i18n.language() === 'en' ? 'en-GB' : 'es-ES', {
+      dateStyle: 'short',
+      timeStyle: 'short',
+    }).format(new Date(syncedAt));
+  });
   readonly dataSource = signal<'snapshot' | 'live' | 'memory'>('snapshot');
   readonly corrections = signal<EditorialCorrection[]>([]);
   readonly editions = signal<ChampionshipContent[]>([]);
@@ -66,7 +89,7 @@ export class ChampionshipDetailPage implements OnInit {
       .subscribe((id) => {
         if (!Number.isInteger(id) || id <= 0) {
           this.championship.set(null);
-          this.errorMessage.set('La edición solicitada no tiene un identificador válido.');
+          this.errorMessage.set(this.i18n.translate('candeonato.detail.invalidEdition'));
           this.state.set('error');
           return;
         }
@@ -115,23 +138,54 @@ export class ChampionshipDetailPage implements OnInit {
           this.isStale.set(isStale);
           this.dataSource.set(source);
           this.corrections.set(corrections ?? []);
-          this.lastUpdated.set(
-            new Intl.DateTimeFormat('es-ES', {
-              dateStyle: 'short',
-              timeStyle: 'short',
-            }).format(new Date(syncedAt)),
-          );
+          this.lastSyncedAt.set(syncedAt);
           this.state.set('ready');
           this.isRefreshing.set(false);
-          this.title.setTitle(`${championship.name} · Clasificación`);
         },
         error: () => {
-          this.errorMessage.set(
-            'No se han podido recuperar los datos de esta edición. Comprueba la conexión y vuelve a intentarlo.',
-          );
+          this.errorMessage.set(this.i18n.translate('candeonato.detail.loadErrorMessage'));
           this.state.set(this.championship() ? 'ready' : 'error');
           this.isRefreshing.set(false);
         },
       });
+  }
+
+  formatTagLabel(tag: ChampionshipFormatTag): string {
+    const keys: Record<ChampionshipFormatTag, string> = {
+      heat: 'candeonato.sports.formatHeat',
+      safety: 'candeonato.sports.formatSafety',
+      multiclass: 'candeonato.sports.formatMulticlass',
+      'driver-change': 'candeonato.sports.formatDriverChange',
+    };
+    return this.i18n.translate(keys[tag]);
+  }
+
+  warningLabel(code: ChampionshipWarning['code']): string {
+    const keys: Record<ChampionshipWarning['code'], string> = {
+      'missing-dates': 'candeonato.sports.warningMissingDates',
+      'missing-driver-names': 'candeonato.sports.warningMissingDriverNames',
+      'status-conflict': 'candeonato.sports.warningStatusConflict',
+      'total-conflict': 'candeonato.sports.warningTotalConflict',
+    };
+    return this.i18n.translate(keys[code]);
+  }
+
+  leaderLabel(metric: ChampionshipLeader['metric']): string {
+    return this.i18n.translate(this.leaderKey(metric, false));
+  }
+
+  leaderUnit(metric: ChampionshipLeader['metric']): string {
+    return this.i18n.translate(this.leaderKey(metric, true));
+  }
+
+  private leaderKey(metric: ChampionshipLeader['metric'], unit: boolean): string {
+    const suffix = unit ? 'Unit' : '';
+    const names: Record<ChampionshipLeader['metric'], string> = {
+      wins: 'Wins',
+      podiums: 'Podiums',
+      fastestLaps: 'FastestLaps',
+      poles: 'Poles',
+    };
+    return `candeonato.sports.leader${names[metric]}${suffix}`;
   }
 }

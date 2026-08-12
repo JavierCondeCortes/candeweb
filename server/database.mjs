@@ -109,6 +109,31 @@ function migrate(db) {
       deleted_at TEXT
     );
 
+    CREATE TABLE IF NOT EXISTS championship_translations (
+      championship_id TEXT NOT NULL REFERENCES championships(id) ON DELETE CASCADE,
+      locale TEXT NOT NULL,
+      summary TEXT,
+      description TEXT,
+      cover_alt TEXT,
+      PRIMARY KEY (championship_id, locale)
+    );
+
+    CREATE TABLE IF NOT EXISTS sponsors (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      description TEXT,
+      logo_url TEXT,
+      logo_alt TEXT,
+      website_url TEXT,
+      display_order INTEGER NOT NULL DEFAULT 0 CHECK (display_order >= 0),
+      status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
+      published_at TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      updated_by_name TEXT,
+      deleted_at TEXT
+    );
+
     CREATE UNIQUE INDEX IF NOT EXISTS championships_one_featured
       ON championships(is_featured)
       WHERE is_featured = 1 AND deleted_at IS NULL;
@@ -181,6 +206,8 @@ function migrate(db) {
       ON team_members(status, is_featured, display_order);
     CREATE INDEX IF NOT EXISTS championships_public_order
       ON championships(status, display_order);
+    CREATE INDEX IF NOT EXISTS sponsors_public_order
+      ON sponsors(status, display_order);
     CREATE INDEX IF NOT EXISTS snapshots_by_championship
       ON championship_snapshots(championship_id, synced_at DESC);
     CREATE INDEX IF NOT EXISTS corrections_by_championship
@@ -408,6 +435,58 @@ function migrate(db) {
     }
     db.prepare('INSERT INTO schema_migrations (version, applied_at) VALUES (14, ?)').run(now());
   }
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS sponsors (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      description TEXT,
+      logo_url TEXT,
+      logo_alt TEXT,
+      website_url TEXT,
+      display_order INTEGER NOT NULL DEFAULT 0 CHECK (display_order >= 0),
+      status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
+      published_at TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      updated_by_name TEXT,
+      deleted_at TEXT
+    );
+    CREATE INDEX IF NOT EXISTS sponsors_public_order
+      ON sponsors(status, display_order);
+  `);
+  db.prepare('INSERT OR IGNORE INTO schema_migrations (version, applied_at) VALUES (15, ?)').run(
+    now(),
+  );
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS championship_translations (
+      championship_id TEXT NOT NULL REFERENCES championships(id) ON DELETE CASCADE,
+      locale TEXT NOT NULL,
+      summary TEXT,
+      description TEXT,
+      cover_alt TEXT,
+      PRIMARY KEY (championship_id, locale)
+    );
+  `);
+  const featuredChampionship = db
+    .prepare('SELECT id FROM championships WHERE external_tournament_id = 42')
+    .get();
+  if (featuredChampionship) {
+    db.prepare(
+      `INSERT OR IGNORE INTO championship_translations
+       (championship_id, locale, summary, description, cover_alt)
+       VALUES (?, 'en', ?, ?, ?)`,
+    ).run(
+      featuredChampionship.id,
+      'A new era of Candeonato: different races, one common standings table and cumulative points.',
+      'A simracing competition organised by Candemor Racing Team and managed through the Fat Cat Race system.',
+      'Racing Mazda MX-5 from the New Era edition of Candeonato',
+    );
+  }
+  db.prepare('INSERT OR IGNORE INTO schema_migrations (version, applied_at) VALUES (16, ?)').run(
+    now(),
+  );
 }
 
 function seed(db) {
@@ -442,6 +521,17 @@ function seed(db) {
       timestamp,
     );
   }
+
+  db.prepare(
+    `INSERT OR IGNORE INTO championship_translations
+     (championship_id, locale, summary, description, cover_alt)
+     VALUES (?, 'en', ?, ?, ?)`,
+  ).run(
+    championshipId,
+    'A new era of Candeonato: different races, one common standings table and cumulative points.',
+    'A simracing competition organised by Candemor Racing Team and managed through the Fat Cat Race system.',
+    'Racing Mazda MX-5 from the New Era edition of Candeonato',
+  );
 
   const historicalChampionships = [
     [46, 'candeonato-its-my-life', "Candeonato it's my life"],
@@ -570,6 +660,24 @@ export function memberFromRow(row) {
     displayOrder: row.display_order,
     isFeatured: asBoolean(row.is_featured),
     isDemo: asBoolean(row.is_demo),
+    status: row.status,
+    publishedAt: row.published_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    updatedByName: row.updated_by_name,
+  };
+}
+
+export function sponsorFromRow(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    logoUrl: row.logo_url,
+    logoAlt: row.logo_alt,
+    websiteUrl: row.website_url,
+    displayOrder: row.display_order,
     status: row.status,
     publishedAt: row.published_at,
     createdAt: row.created_at,

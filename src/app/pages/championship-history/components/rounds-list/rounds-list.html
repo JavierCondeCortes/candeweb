@@ -4,26 +4,29 @@
       <header>
         <p class="track-number" aria-hidden="true">0{{ circuitIndex + 1 }}</p>
         <div>
-          <p class="track-label">Circuito</p>
+          <p class="track-label">{{ 'candeonato.sports.circuit' | translate }}</p>
           <h3>{{ group.circuit }}</h3>
           <p class="track-layout">{{ group.layout }}</p>
         </div>
       </header>
 
-      <ol aria-label="Rondas en {{ group.circuit }}">
+      <ol [attr.aria-label]="'candeonato.sports.roundsAt' | translate: { circuit: group.circuit }">
         @for (round of group.rounds; track round.id) {
           <li>
             <div class="round-title">
-              <span>Ronda {{ round.number.toString().padStart(2, '0') }}</span>
-              <strong>{{ round.typeLabel }}</strong>
+              <span>{{
+                'candeonato.sports.round'
+                  | translate: { number: round.number.toString().padStart(2, '0') }
+              }}</span>
+              <strong>{{ roundType(round) }}</strong>
             </div>
             <dl>
               <div>
-                <dt>Fecha</dt>
-                <dd>{{ round.dateLabel }}</dd>
+                <dt>{{ 'candeonato.sports.date' | translate }}</dt>
+                <dd>{{ roundDate(round.date) }}</dd>
               </div>
               <div>
-                <dt>Vueltas</dt>
+                <dt>{{ 'candeonato.sports.laps' | translate }}</dt>
                 <dd>{{ round.laps ?? '—' }}</dd>
               </div>
               <div>
@@ -40,7 +43,12 @@
                 [attr.aria-controls]="'round-results-' + sessionId"
                 (click)="toggleResults(sessionId)"
               >
-                {{ openSessionId() === sessionId ? 'Ocultar posiciones' : 'Ver posiciones' }}
+                {{
+                  (openSessionId() === sessionId
+                    ? 'candeonato.sports.hidePositions'
+                    : 'candeonato.sports.showPositions'
+                  ) | translate
+                }}
               </button>
             }
           </li>
@@ -48,7 +56,7 @@
       </ol>
     </article>
   } @empty {
-    <p class="empty-state">La fuente todavía no contiene rondas para esta edición.</p>
+    <p class="empty-state">{{ 'candeonato.sports.noRounds' | translate }}</p>
   }
 </div>
 
@@ -61,42 +69,51 @@
     >
       <div class="round-results-heading">
         <div>
-          <p class="track-label">Resultado de sesión</p>
+          <p class="track-label">{{ 'candeonato.sports.sessionResult' | translate }}</p>
           <h3>{{ round.name }}</h3>
         </div>
-        <button type="button" (click)="toggleResults(sessionId)">Cerrar</button>
+        <button type="button" (click)="toggleResults(sessionId)">
+          {{ 'candeonato.sports.close' | translate }}
+        </button>
       </div>
 
       @switch (resultState(sessionId)?.kind) {
         @case ('loading') {
-          <p class="round-results-message" role="status">Cargando posiciones de la carrera…</p>
+          <p class="round-results-message" role="status">
+            {{ 'candeonato.sports.loadingPositions' | translate }}
+          </p>
         }
         @case ('error') {
           <div class="round-results-message" role="alert">
-            <p>No se han podido recuperar las posiciones de esta sesión.</p>
-            <button type="button" (click)="retryResults(sessionId)">Reintentar</button>
+            <p>{{ 'candeonato.sports.positionsError' | translate }}</p>
+            <button type="button" (click)="retryResults(sessionId)">
+              {{ 'candeonato.sports.retry' | translate }}
+            </button>
           </div>
         }
         @case ('ready') {
           @if (resultState(sessionId); as state) {
             @if (state.kind === 'ready') {
               @if (state.response.results.length) {
-                <div class="round-results-scroll" tabindex="0" aria-label="Tabla desplazable">
+                <div
+                  class="round-results-scroll"
+                  tabindex="0"
+                  [attr.aria-label]="'candeonato.sports.scrollableTable' | translate"
+                >
                   <table>
                     <caption>
-                      Posiciones de
                       {{
-                        round.name
-                      }}. La fuente no publica puntos por carrera.
+                        'candeonato.sports.positionsCaption' | translate: { name: round.name }
+                      }}
                     </caption>
                     <thead>
                       <tr>
-                        <th scope="col">Pos.</th>
-                        <th scope="col">Piloto</th>
-                        <th scope="col">Equipo</th>
-                        <th scope="col">Vueltas</th>
-                        <th scope="col">Tiempo total</th>
-                        <th scope="col">Media</th>
+                        <th scope="col">{{ 'candeonato.sports.position' | translate }}</th>
+                        <th scope="col">{{ 'candeonato.sports.driver' | translate }}</th>
+                        <th scope="col">{{ 'candeonato.sports.team' | translate }}</th>
+                        <th scope="col">{{ 'candeonato.sports.laps' | translate }}</th>
+                        <th scope="col">{{ 'candeonato.sports.totalTime' | translate }}</th>
+                        <th scope="col">{{ 'candeonato.sports.average' | translate }}</th>
                         <th scope="col">Inc.</th>
                       </tr>
                     </thead>
@@ -122,18 +139,19 @@
                 </div>
               } @else {
                 <p class="round-results-message">
-                  La fuente no contiene posiciones para esta sesión.
+                  {{ 'candeonato.sports.noPositions' | translate }}
                 </p>
               }
               <div class="round-results-source">
-                <p>Datos recuperados bajo demanda y conservados durante 24 horas.</p>
+                <p>{{ 'candeonato.sports.cacheNote' | translate }}</p>
                 <a
                   [href]="state.response.sourceUrl"
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label="Consultar resultado original en Fat Cat Race (se abre en una pestaña nueva)"
+                  [attr.aria-label]="'candeonato.sports.originalResultLabel' | translate"
                 >
-                  Ver fuente original <span aria-hidden="true">↗</span>
+                  {{ 'candeonato.sports.originalSource' | translate }}
+                  <span aria-hidden="true">↗</span>
                 </a>
               </div>
             }

@@ -1,12 +1,13 @@
 import { Component, ElementRef, ViewChild, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 type FieldName = 'iracingName' | 'discordName' | 'email' | 'mood' | 'consent';
 type FormStatus = 'idle' | 'sending' | 'success' | 'error';
 
 @Component({
   selector: 'app-form-inscription',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './form-inscription.html',
   styleUrl: './form-inscription.css',
 })

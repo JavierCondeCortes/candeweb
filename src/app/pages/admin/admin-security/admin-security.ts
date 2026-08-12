@@ -3,16 +3,19 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { MfaSetup } from '../../../core/models/content-admin.model';
 import { AdminApiService } from '../../../core/services/admin-api.service';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { apiErrorMessage } from '../admin-form-errors';
 
 @Component({
   selector: 'app-admin-security',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './admin-security.html',
 })
 export class AdminSecurity {
   private readonly api = inject(AdminApiService);
   private readonly formBuilder = inject(FormBuilder);
+  private readonly i18n = inject(I18nService);
 
   readonly session = this.api.session;
   readonly setup = signal<MfaSetup | null>(null);
@@ -39,7 +42,12 @@ export class AdminSecurity {
           this.setup.set(setup);
           this.form.reset();
         },
-        error: (error) => this.errorMessage.set(apiErrorMessage(error)),
+        error: (error) =>
+          this.errorMessage.set(
+            apiErrorMessage(error, this.i18n.translate('admin.common.operationFailed'), (key) =>
+              this.i18n.translate(key),
+            ),
+          ),
       });
   }
 
@@ -55,10 +63,15 @@ export class AdminSecurity {
         next: ({ recoveryCodes }) => {
           this.recoveryCodes.set(recoveryCodes);
           this.setup.set(null);
-          this.message.set('Segundo factor activado. Guarda ahora los códigos de recuperación.');
+          this.message.set(this.i18n.translate('admin.security.activatedMessage'));
           this.api.refreshSession().subscribe();
         },
-        error: (error) => this.errorMessage.set(apiErrorMessage(error)),
+        error: (error) =>
+          this.errorMessage.set(
+            apiErrorMessage(error, this.i18n.translate('admin.common.operationFailed'), (key) =>
+              this.i18n.translate(key),
+            ),
+          ),
       });
   }
 
@@ -66,13 +79,13 @@ export class AdminSecurity {
     const secret = this.setup()?.secret;
     if (!secret) return;
     await navigator.clipboard.writeText(secret);
-    this.message.set('Clave copiada.');
+    this.message.set(this.i18n.translate('admin.security.secretCopied'));
   }
 
   async copyRecoveryCodes(): Promise<void> {
     const codes = this.recoveryCodes();
     if (!codes.length) return;
     await navigator.clipboard.writeText(codes.join('\n'));
-    this.message.set('Códigos de recuperación copiados. Guárdalos fuera del navegador.');
+    this.message.set(this.i18n.translate('admin.security.codesCopied'));
   }
 }

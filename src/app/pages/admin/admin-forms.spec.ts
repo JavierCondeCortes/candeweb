@@ -2,9 +2,11 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { AdminApiService } from '../../core/services/admin-api.service';
+import { I18nService } from '../../core/i18n/i18n.service';
 import { AdminChampionshipForm } from './admin-championship-form/admin-championship-form';
 import { AdminMemberForm } from './admin-member-form/admin-member-form';
 import { AdminSecurity } from './admin-security/admin-security';
+import { AdminSponsorForm } from './admin-sponsor-form/admin-sponsor-form';
 import { AdminSettings } from './admin-settings/admin-settings';
 
 describe('Admin reactive forms', () => {
@@ -39,6 +41,22 @@ describe('Admin reactive forms', () => {
     expect(
       fixture.nativeElement.querySelector('input[formControlName="externalTournamentId"]'),
     ).toBeTruthy();
+  });
+
+  it('renders the new sponsor form with publishing and accessible-logo controls', async () => {
+    await TestBed.configureTestingModule({
+      imports: [AdminSponsorForm],
+      providers: [
+        provideRouter([]),
+        { provide: AdminApiService, useValue: { session: () => null } },
+      ],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(AdminSponsorForm);
+    expect(() => fixture.detectChanges()).not.toThrow();
+    expect(fixture.nativeElement.querySelector('input[formControlName="name"]')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('input[formControlName="logoAlt"]')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('select[formControlName="status"]')).toBeTruthy();
   });
 
   it('renders settings after loading their administered values', async () => {
@@ -112,5 +130,12 @@ describe('Admin reactive forms', () => {
     expect(() => fixture.detectChanges()).not.toThrow();
     expect(fixture.nativeElement.textContent).toContain('Configurar ahora');
     expect(fixture.nativeElement.textContent).toContain('cambia cada 30 segundos');
+
+    const i18n = TestBed.inject(I18nService);
+    i18n.setLanguage('en');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Configure now');
+    expect(fixture.nativeElement.textContent).toContain('changes every 30 seconds');
+    i18n.setLanguage('es');
   });
 });

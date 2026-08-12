@@ -71,6 +71,24 @@
   gap: 1rem;
 }
 
+.admin-language-heading {
+  margin: 0.75rem 0 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--lime);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.admin-form-help {
+  margin: -0.5rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
 .admin-form {
   margin-top: 1.5rem;
 }
@@ -440,6 +458,36 @@
   width: 3rem;
   height: 3.75rem;
   object-fit: cover;
+}
+
+.admin-person .admin-sponsor-logo {
+  width: 5rem;
+  height: 3rem;
+  padding: 0.35rem;
+  object-fit: contain;
+  background: #fff;
+}
+
+.admin-sponsor-preview {
+  display: grid;
+  min-height: 10rem;
+  grid-column: 1 / -1;
+  place-items: center;
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  background: #fff;
+}
+
+.admin-sponsor-preview img,
+.admin-sponsor-live-preview > img {
+  width: min(100%, 24rem);
+  height: 8rem;
+  object-fit: contain;
+}
+
+.admin-live-preview.admin-sponsor-live-preview > img {
+  object-fit: contain;
+  background: #fff;
 }
 
 .admin-person span,

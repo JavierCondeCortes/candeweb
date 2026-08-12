@@ -266,10 +266,13 @@ Contenido:
 
 - Encabezado `Historial de Candeonatos`.
 - Resumen de la historia de la competición.
-- Selector o retícula de ediciones.
+- Retícula de ediciones cuya zona visual principal es el cartel completo, no un número decorativo.
 - Estado de cada edición: próxima, activa o finalizada.
 - Ganador, número de rondas y temporada cuando los datos existan.
-- Enlace hacia el detalle de cada edición.
+- Toda la tarjeta enlaza hacia el detalle de la edición y expone un nombre accesible; el número queda
+  como una etiqueta secundaria sobre la portada.
+- Si administración todavía no ha cargado una portada, mostrar un placeholder editorial que diga
+  `Cartel pendiente`; no reutilizar el cartel de otra edición porque induciría a error.
 
 ### Detalle de una edición
 
@@ -291,6 +294,15 @@ Orden recomendado:
 8. Navegación hacia otras ediciones.
 
 La página promocional `/candeonato` puede enlazar a la edición actual del historial sin duplicar toda la tabla deportiva.
+
+### Modelo mental de enlaces
+
+- `/candeonato`: landing promocional del Candeonato actualmente destacado.
+- `/candeonatos`: índice visual de todas las ediciones publicadas.
+- `/candeonatos/{torneoId}`: clasificación, rondas y estadísticas de una edición concreta.
+
+Las etiquetas visibles deben decir `Candeonato actual`, `Todas las ediciones` y `Ver clasificación y
+carreras`; se evita usar `Historial` para enlaces que en realidad llevan a una sola ficha deportiva.
 
 ## Componentes de interfaz
 
@@ -576,6 +588,9 @@ silenciosamente posiciones o puntos recibidos de la fuente deportiva.
 
 - [x] Confirmar en el listado público de Fat Cat Race los IDs `46`, `42`, `38`, `36`, `35` y `34`.
 - [x] Crear el índice `/candeonatos`.
+- [x] Sustituir el número gigante de cada tarjeta por la portada completa de su edición y ampliar el
+      objetivo de enlace a toda la tarjeta.
+- [x] Reordenar y renombrar los enlaces entre landing actual, índice y detalle deportivo.
 - [x] Añadir selector de edición con las ediciones publicadas desde administración.
 - [x] Guardar metadatos editoriales que no entrega la API.
 - [x] Definir y aplicar la estrategia de snapshots para ediciones activas y terminadas.

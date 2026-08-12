@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { PublicContentService } from '../../core/services/public-content.service';
+import { I18nService } from '../../core/i18n/i18n.service';
 import { StreamStatusService } from '../../core/services/stream-status.service';
 import { HomePage } from './home-page';
 
@@ -32,6 +33,24 @@ describe('HomePage', () => {
                   member('3', 'Dani Romero', true),
                   member('4', 'Nora Ruiz', false),
                   member('5', 'Marcos León', true),
+                ],
+              }),
+            getSponsors: () =>
+              of({
+                sponsors: [
+                  {
+                    id: 'sponsor-1',
+                    name: 'Marca de prueba',
+                    description: 'Colaborador de la comunidad',
+                    logoUrl: '/media/sponsor.webp',
+                    logoAlt: 'Logotipo de Marca de prueba',
+                    websiteUrl: 'https://example.com',
+                    displayOrder: 0,
+                    status: 'published',
+                    publishedAt: null,
+                    createdAt: '',
+                    updatedAt: '',
+                  },
                 ],
               }),
             getSiteSettings: () =>
@@ -71,7 +90,7 @@ describe('HomePage', () => {
     }).compileComponents();
   });
 
-  it('renders the MVP sections without unconfirmed sponsors or merchandise', async () => {
+  it('renders the public sections, managed sponsors and no merchandise', async () => {
     const fixture = TestBed.createComponent(HomePage);
     await fixture.whenStable();
     const host = fixture.nativeElement as HTMLElement;
@@ -79,6 +98,7 @@ describe('HomePage', () => {
     expect(host.querySelector('#comunidad')).toBeTruthy();
     expect(host.querySelector('#equipo')).toBeTruthy();
     expect(host.querySelector('#contenido')).toBeTruthy();
+    expect(host.querySelector('#sponsors')).toBeTruthy();
     expect(host.querySelector('#unirse')).toBeFalsy();
     expect(host.querySelectorAll('.team-card')).toHaveLength(5);
     expect(host.querySelectorAll('.team-card a')).toHaveLength(3);
@@ -120,11 +140,14 @@ describe('HomePage', () => {
       host.querySelector('.home-event-preview-meta [data-status="active"]')?.textContent,
     ).toContain('En curso');
     expect(host.querySelector('time[datetime="2026-09-04T18:00:00+02:00"]')).toBeTruthy();
-    expect(host.querySelector('time[datetime="2026-09-06T20:00:00+02:00"]')).toBeTruthy();
+    expect(host.querySelector('time[datetime="2026-09-06T20:00:00+02:00"]')).toBeFalsy();
     expect(host.textContent).toContain('Esto es Candemor');
     expect(host.textContent).toContain('Final del Candeonato');
     expect(host.querySelector('a[href="https://discord.gg/j22XuDEfMk"]')).toBeTruthy();
-    expect(host.textContent).not.toContain('Patrocinadores');
+    expect(host.textContent).toContain('Sponsors y colaboradores');
+    expect(host.querySelector('a[href="https://example.com"] img')?.getAttribute('alt')).toBe(
+      'Logotipo de Marca de prueba',
+    );
     expect(host.textContent).not.toContain('Tienda');
 
     const footerLinks = Array.from(host.querySelectorAll<HTMLAnchorElement>('.home-footer nav a'));
@@ -162,6 +185,27 @@ describe('HomePage', () => {
     for (const brandLink of host.querySelectorAll<HTMLAnchorElement>('a.home-brand')) {
       expect(brandLink.getAttribute('aria-label')).toContain(brandLink.textContent?.trim());
     }
+  });
+
+  it('updates public interface text immediately when English is selected', async () => {
+    const fixture = TestBed.createComponent(HomePage);
+    await fixture.whenStable();
+    const i18n = TestBed.inject(I18nService);
+
+    i18n.setLanguage('en');
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.textContent).toContain('This is Candemor');
+    expect(host.textContent).toContain('Sponsors and partners');
+    expect(
+      host.querySelector('.home-event-preview-meta [data-status="active"]')?.textContent,
+    ).toContain('In progress');
+    expect(
+      host.querySelector<HTMLAnchorElement>('a[target="_blank"]')?.getAttribute('aria-label'),
+    ).toContain('opens in a new tab');
+
+    i18n.setLanguage('es');
   });
 });
 

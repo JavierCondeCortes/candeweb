@@ -1,6 +1,7 @@
 <div class="table-tools">
   <label for="driver-search">{{
-    hasPublicNames() ? 'Buscar piloto' : 'Buscar piloto por identificador'
+    (hasPublicNames() ? 'candeonato.sports.searchDriver' : 'candeonato.sports.searchDriverId')
+      | translate
   }}</label>
   <div class="search-control">
     <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none">
@@ -22,19 +23,24 @@
 <div class="table-frame">
   <table>
     <caption>
-      Clasificación general de
       {{
-        championshipName()
-      }}. La posición conserva el orden facilitado por la fuente.
+        'candeonato.sports.standingsCaption' | translate: { name: championshipName() }
+      }}
     </caption>
     <thead>
       <tr>
-        <th scope="col">Pos.</th>
-        <th scope="col">Piloto</th>
-        <th scope="col" class="numeric points-column">Puntos</th>
-        <th scope="col" class="numeric desktop-stat">Rondas</th>
-        <th scope="col" class="numeric desktop-stat">Victorias</th>
-        <th scope="col" class="numeric desktop-stat">Podios</th>
+        <th scope="col">{{ 'candeonato.sports.position' | translate }}</th>
+        <th scope="col">{{ 'candeonato.sports.driver' | translate }}</th>
+        <th scope="col" class="numeric points-column">
+          {{ 'candeonato.sports.points' | translate }}
+        </th>
+        <th scope="col" class="numeric desktop-stat">
+          {{ 'candeonato.sports.rounds' | translate }}
+        </th>
+        <th scope="col" class="numeric desktop-stat">{{ 'candeonato.sports.wins' | translate }}</th>
+        <th scope="col" class="numeric desktop-stat">
+          {{ 'candeonato.sports.podiums' | translate }}
+        </th>
         <th scope="col" class="numeric desktop-stat">Inc.</th>
       </tr>
     </thead>
@@ -56,27 +62,27 @@
               </summary>
               <dl>
                 <div>
-                  <dt>Rondas</dt>
+                  <dt>{{ 'candeonato.sports.rounds' | translate }}</dt>
                   <dd>{{ standing.rounds }}</dd>
                 </div>
                 <div>
-                  <dt>Victorias</dt>
+                  <dt>{{ 'candeonato.sports.wins' | translate }}</dt>
                   <dd>{{ standing.wins }}</dd>
                 </div>
                 <div>
-                  <dt>Podios</dt>
+                  <dt>{{ 'candeonato.sports.podiums' | translate }}</dt>
                   <dd>{{ standing.podiums }}</dd>
                 </div>
                 <div>
-                  <dt>Incidentes</dt>
+                  <dt>{{ 'candeonato.sports.incidents' | translate }}</dt>
                   <dd>{{ standing.incidents }}</dd>
                 </div>
                 <div>
-                  <dt>Vueltas</dt>
+                  <dt>{{ 'candeonato.sports.laps' | translate }}</dt>
                   <dd>{{ standing.laps }}</dd>
                 </div>
                 <div>
-                  <dt>Poles</dt>
+                  <dt>{{ 'candeonato.sports.poles' | translate }}</dt>
                   <dd>{{ standing.poles }}</dd>
                 </div>
               </dl>
@@ -92,7 +98,9 @@
         </tr>
       } @empty {
         <tr>
-          <td colspan="7" class="no-results">No hay pilotos que coincidan con la búsqueda.</td>
+          <td colspan="7" class="no-results">
+            {{ 'candeonato.sports.noSearchResults' | translate }}
+          </td>
         </tr>
       }
     </tbody>
@@ -108,8 +116,8 @@
   >
     {{
       showAll()
-        ? 'Mostrar solo el top 10'
-        : 'Ver clasificación completa (' + standings().length + ')'
+        ? ('candeonato.sports.topTen' | translate)
+        : ('candeonato.sports.fullStandings' | translate: { count: standings().length })
     }}
   </button>
 }
@@ -117,9 +125,9 @@
 <p class="source-note">
   {{
     hasMatchedIds()
-      ? 'Los nombres y equipos proceden de la clasificación pública de Fat Cat Race. El ID se relaciona únicamente cuando todas las estadísticas publicadas coinciden de forma única.'
+      ? ('candeonato.sports.sourceMatched' | translate)
       : hasPublicNames()
-        ? 'Los nombres y equipos proceden de la clasificación pública de Fat Cat Race.'
-        : 'La fuente no facilita nombres públicos en este momento. Los pilotos se identifican de forma neutral mediante su ID.'
+        ? ('candeonato.sports.sourceNames' | translate)
+        : ('candeonato.sports.sourceIds' | translate)
   }}
 </p>

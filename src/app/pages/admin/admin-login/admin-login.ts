@@ -3,11 +3,14 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AdminApiService } from '../../../core/services/admin-api.service';
+import { LanguageSwitcher } from '../../../core/i18n/language-switcher/language-switcher';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { apiErrorCode, apiErrorMessage } from '../admin-form-errors';
 
 @Component({
   selector: 'app-admin-login',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, LanguageSwitcher, TranslatePipe],
   templateUrl: './admin-login.html',
 })
 export class AdminLogin implements OnInit {
@@ -15,6 +18,7 @@ export class AdminLogin implements OnInit {
   private readonly formBuilder = inject(FormBuilder);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly i18n = inject(I18nService);
 
   readonly loading = signal(true);
   readonly submitting = signal(false);
@@ -39,8 +43,7 @@ export class AdminLogin implements OnInit {
           if (session.authenticated) void this.router.navigate(['/admin']);
           else this.needsSetup.set(session.needsSetup);
         },
-        error: () =>
-          this.errorMessage.set('No se puede conectar con el servidor de administración.'),
+        error: () => this.errorMessage.set(this.i18n.translate('admin.login.connectionError')),
       });
   }
 
@@ -71,7 +74,11 @@ export class AdminLogin implements OnInit {
       },
       error: (error) => {
         if (apiErrorCode(error) === 'MFA_REQUIRED') this.requiresMfa.set(true);
-        this.errorMessage.set(apiErrorMessage(error));
+        this.errorMessage.set(
+          apiErrorMessage(error, this.i18n.translate('admin.common.operationFailed'), (key) =>
+            this.i18n.translate(key),
+          ),
+        );
       },
     });
   }

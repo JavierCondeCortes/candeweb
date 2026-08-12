@@ -8,6 +8,8 @@ import {
   TwitchChannelSetting,
 } from '../../../core/models/content-admin.model';
 import { AdminApiService } from '../../../core/services/admin-api.service';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import {
   apiErrorMessage,
   apiFieldErrors,
@@ -17,12 +19,13 @@ import {
 
 @Component({
   selector: 'app-admin-settings',
-  imports: [DatePipe, ReactiveFormsModule],
+  imports: [DatePipe, ReactiveFormsModule, TranslatePipe],
   templateUrl: './admin-settings.html',
 })
 export class AdminSettings implements OnInit {
   private readonly api = inject(AdminApiService);
   private readonly formBuilder = inject(FormBuilder);
+  private readonly i18n = inject(I18nService);
 
   readonly championships = signal<ChampionshipContent[]>([]);
   readonly current = signal<SiteSettings | null>(null);
@@ -68,7 +71,12 @@ export class AdminSettings implements OnInit {
           });
           this.form.markAsPristine();
         },
-        error: (error) => this.errorMessage.set(apiErrorMessage(error)),
+        error: (error) =>
+          this.errorMessage.set(
+            apiErrorMessage(error, this.i18n.translate('admin.common.operationFailed'), (key) =>
+              this.i18n.translate(key),
+            ),
+          ),
       });
   }
 
@@ -78,13 +86,17 @@ export class AdminSettings implements OnInit {
     this.message.set('');
     this.fieldErrors.set({});
     if (this.form.invalid) {
-      this.errorMessage.set('Revisa los campos señalados antes de guardar.');
+      this.errorMessage.set(this.i18n.translate('admin.common.reviewFields'));
       this.fieldErrors.set(
-        clientFieldErrors(this.form, {
-          twitchChannelLogin: 'El login del canal',
-          twitchChannelUrl: 'La URL del canal',
-          contactEmail: 'El correo',
-        }),
+        clientFieldErrors(
+          this.form,
+          {
+            twitchChannelLogin: this.i18n.translate('admin.settings.channelLogin'),
+            twitchChannelUrl: this.i18n.translate('admin.settings.channelUrl'),
+            contactEmail: this.i18n.translate('admin.settings.email'),
+          },
+          (key, params) => this.i18n.translate(key, params),
+        ),
       );
       focusErrorSummary('settings-form-error');
       return;
@@ -94,9 +106,10 @@ export class AdminSettings implements OnInit {
     const additionalChannels = parseAdditionalTwitchChannels(
       value.twitchChannelsText,
       value.twitchChannelLogin,
+      (key, params) => this.i18n.translate(key, params),
     );
     if (additionalChannels.error) {
-      this.errorMessage.set('Revisa los campos señalados antes de guardar.');
+      this.errorMessage.set(this.i18n.translate('admin.common.reviewFields'));
       this.fieldErrors.set({ twitchChannels: additionalChannels.error });
       focusErrorSummary('settings-form-error');
       return;
@@ -129,10 +142,14 @@ export class AdminSettings implements OnInit {
         next: ({ settings: updated }) => {
           this.current.set(updated);
           this.form.markAsPristine();
-          this.message.set('Ajustes publicados correctamente.');
+          this.message.set(this.i18n.translate('admin.settings.saved'));
         },
         error: (error) => {
-          this.errorMessage.set(apiErrorMessage(error));
+          this.errorMessage.set(
+            apiErrorMessage(error, this.i18n.translate('admin.common.operationFailed'), (key) =>
+              this.i18n.translate(key),
+            ),
+          );
           this.fieldErrors.set(apiFieldErrors(error));
           focusErrorSummary('settings-form-error');
         },
@@ -143,13 +160,14 @@ export class AdminSettings implements OnInit {
 function parseAdditionalTwitchChannels(
   value: string,
   primaryLogin: string,
+  translate: (key: string, params?: Record<string, string>) => string,
 ): { channels: TwitchChannelSetting[]; error: string } {
   const entries = value
     .split(/\r?\n/)
     .map((entry) => entry.trim())
     .filter(Boolean);
   if (entries.length > 5) {
-    return { channels: [], error: 'Añade un máximo de cinco canales adicionales.' };
+    return { channels: [], error: translate('admin.settings.maxChannels') };
   }
 
   const channels: TwitchChannelSetting[] = [];
@@ -163,14 +181,23 @@ function parseAdditionalTwitchChannels(
         if (url.protocol !== 'https:' || hostname !== 'twitch.tv') throw new Error();
         login = url.pathname.split('/').filter(Boolean)[0]?.toLowerCase() ?? '';
       } catch {
-        return { channels: [], error: `«${entry}» no es una URL válida de Twitch.` };
+        return {
+          channels: [],
+          error: translate('admin.settings.invalidTwitchUrl', { entry }),
+        };
       }
     }
     if (!/^[a-z0-9_]{3,25}$/.test(login)) {
-      return { channels: [], error: `«${entry}» no contiene un login válido de Twitch.` };
+      return {
+        channels: [],
+        error: translate('admin.settings.invalidTwitchLogin', { entry }),
+      };
     }
     if (seen.has(login)) {
-      return { channels: [], error: `El canal «${login}» está repetido.` };
+      return {
+        channels: [],
+        error: translate('admin.settings.duplicateChannel', { login }),
+      };
     }
     seen.add(login);
     channels.push({

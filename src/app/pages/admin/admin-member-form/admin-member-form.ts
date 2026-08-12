@@ -6,6 +6,8 @@ import { finalize } from 'rxjs';
 import { HasPendingChanges } from '../../../core/guards/pending-changes.guard';
 import { MemberStatus, TeamMemberContent } from '../../../core/models/content-admin.model';
 import { AdminApiService } from '../../../core/services/admin-api.service';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import {
   apiErrorMessage,
   apiFieldErrors,
@@ -15,7 +17,7 @@ import {
 
 @Component({
   selector: 'app-admin-member-form',
-  imports: [DatePipe, ReactiveFormsModule, RouterLink],
+  imports: [DatePipe, ReactiveFormsModule, RouterLink, TranslatePipe],
   templateUrl: './admin-member-form.html',
 })
 export class AdminMemberForm implements OnInit, HasPendingChanges {
@@ -23,6 +25,7 @@ export class AdminMemberForm implements OnInit, HasPendingChanges {
   private readonly formBuilder = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly i18n = inject(I18nService);
 
   readonly memberId = signal<string | null>(null);
   readonly loading = signal(false);
@@ -68,7 +71,12 @@ export class AdminMemberForm implements OnInit, HasPendingChanges {
           this.form.reset(toMemberForm(member));
           this.form.markAsPristine();
         },
-        error: (error) => this.errorMessage.set(apiErrorMessage(error)),
+        error: (error) =>
+          this.errorMessage.set(
+            apiErrorMessage(error, this.i18n.translate('admin.common.operationFailed'), (key) =>
+              this.i18n.translate(key),
+            ),
+          ),
       });
   }
 
@@ -77,17 +85,21 @@ export class AdminMemberForm implements OnInit, HasPendingChanges {
     this.errorMessage.set('');
     this.fieldErrors.set({});
     if (this.form.invalid) {
-      this.errorMessage.set('Revisa los campos señalados antes de guardar.');
+      this.errorMessage.set(this.i18n.translate('admin.common.reviewFields'));
       this.fieldErrors.set(
-        clientFieldErrors(this.form, {
-          name: 'El nombre',
-          slug: 'El slug',
-          alias: 'El alias',
-          roleLabel: 'El rol',
-          bio: 'La descripción',
-          photoAlt: 'El texto alternativo',
-          displayOrder: 'El orden',
-        }),
+        clientFieldErrors(
+          this.form,
+          {
+            name: this.i18n.translate('admin.memberForm.name').replace(' *', ''),
+            slug: this.i18n.translate('admin.memberForm.slug'),
+            alias: this.i18n.translate('admin.memberForm.alias'),
+            roleLabel: this.i18n.translate('admin.memberForm.role'),
+            bio: this.i18n.translate('admin.memberForm.description'),
+            photoAlt: this.i18n.translate('admin.common.alternativeText'),
+            displayOrder: this.i18n.translate('admin.common.order'),
+          },
+          (key, params) => this.i18n.translate(key, params),
+        ),
       );
       focusErrorSummary('member-form-error');
       return;
@@ -109,7 +121,11 @@ export class AdminMemberForm implements OnInit, HasPendingChanges {
         void this.router.navigate(['/admin/miembros', member.id]);
       },
       error: (error) => {
-        this.errorMessage.set(apiErrorMessage(error));
+        this.errorMessage.set(
+          apiErrorMessage(error, this.i18n.translate('admin.common.operationFailed'), (key) =>
+            this.i18n.translate(key),
+          ),
+        );
         this.fieldErrors.set(apiFieldErrors(error));
         focusErrorSummary('member-form-error');
       },
@@ -124,7 +140,7 @@ export class AdminMemberForm implements OnInit, HasPendingChanges {
       !['image/jpeg', 'image/png', 'image/webp'].includes(file.type) ||
       file.size > 8 * 1024 * 1024
     ) {
-      this.errorMessage.set('Selecciona una imagen JPEG, PNG o WebP de hasta 8 MB.');
+      this.errorMessage.set(this.i18n.translate('admin.memberForm.invalidImage'));
       focusErrorSummary('member-form-error');
       return;
     }
@@ -135,13 +151,21 @@ export class AdminMemberForm implements OnInit, HasPendingChanges {
       request.pipe(finalize(() => this.uploading.set(false))).subscribe({
         next: ({ asset }) => this.form.controls.photoUrl.setValue(asset.publicUrl),
         error: (error) => {
-          this.errorMessage.set(apiErrorMessage(error));
+          this.errorMessage.set(
+            apiErrorMessage(error, this.i18n.translate('admin.common.operationFailed'), (key) =>
+              this.i18n.translate(key),
+            ),
+          );
           focusErrorSummary('member-form-error');
         },
       });
     } catch (error) {
       this.uploading.set(false);
-      this.errorMessage.set(apiErrorMessage(error));
+      this.errorMessage.set(
+        apiErrorMessage(error, this.i18n.translate('admin.common.operationFailed'), (key) =>
+          this.i18n.translate(key),
+        ),
+      );
       focusErrorSummary('member-form-error');
     }
   }

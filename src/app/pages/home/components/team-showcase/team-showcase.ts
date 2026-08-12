@@ -2,10 +2,11 @@ import { AsyncPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { catchError, map, of, startWith } from 'rxjs';
 import { PublicContentService } from '../../../../core/services/public-content.service';
+import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-team-showcase',
-  imports: [AsyncPipe],
+  imports: [AsyncPipe, TranslatePipe],
   templateUrl: './team-showcase.html',
 })
 export class TeamShowcase {

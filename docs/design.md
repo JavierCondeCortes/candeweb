@@ -129,6 +129,19 @@ Uso:
 - Puede utilizar trazo y relleno transparente en títulos cortos.
 - No usar para párrafos, formularios ni textos pequeños.
 
+### 4.1.1. Firma Dog Rough
+
+La fuente local `Dog Rough` se reserva para nombres propios de gran formato ligados a la identidad:
+
+```css
+font-family: 'Dog Rough', Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+font-weight: 400;
+```
+
+Usos confirmados: palabra `CANDEMOR` del hero principal y títulos de marca `Candeonato`. No se usa
+en navegación, botones, párrafos ni nombres de sponsors. Siempre debe existir el fallback display y
+hay que revisar el ajuste visual de línea porque la fuente tiene una caja irregular.
+
 ### 4.2. Interfaz y datos
 
 ```css
@@ -386,6 +399,8 @@ Variantes:
 - Recortar con `object-fit: cover`.
 - Añadir borde fino, dos esquinas técnicas y scanline opcional.
 - El pie de foto combina descripción normal con un identificador monoespaciado en lima.
+- Excepción para carteles y logotipos: usar `object-fit: contain` y un fondo neutro cuando sea
+  importante ver la pieza completa. Nunca recortar carteles de ediciones ni logos de sponsors.
 
 ### 8.7. Footer
 

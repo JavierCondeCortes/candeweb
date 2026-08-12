@@ -5,12 +5,16 @@ import {
   ElementRef,
   HostListener,
   input,
+  inject,
   OnDestroy,
   ViewChild,
   signal,
 } from '@angular/core';
 import { ChampionshipContent } from '../../../core/models/content-admin.model';
 import { SoundSwitch } from '../sound-switch/sound-switch';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { LanguageSwitcher } from '../../../core/i18n/language-switcher/language-switcher';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 type Countdown = {
   days: string;
@@ -21,11 +25,12 @@ type Countdown = {
 
 @Component({
   selector: 'app-hero',
-  imports: [SoundSwitch],
+  imports: [SoundSwitch, LanguageSwitcher, TranslatePipe],
   templateUrl: './hero.html',
   styleUrl: './hero.css',
 })
 export class Hero implements AfterViewInit, OnDestroy {
+  private readonly i18n = inject(I18nService);
   private heroVideo?: ElementRef<HTMLVideoElement>;
 
   @ViewChild('heroVideo')
@@ -39,16 +44,20 @@ export class Hero implements AfterViewInit, OnDestroy {
   readonly isMuted = signal(true);
   readonly isPaused = signal(false);
   readonly isVideoFocusMode = signal(false);
+  readonly isMenuOpen = signal(false);
   readonly countdown = signal<Countdown>({ days: '00', hours: '00', minutes: '00', seconds: '00' });
   readonly editionNumber = computed(() => this.championship()?.editionNumber ?? 8);
   readonly editionCode = computed(() => String(this.editionNumber()).padStart(2, '0'));
   readonly editionSubtitle = computed(
     () => this.championship()?.subtitle ?? this.championship()?.name ?? 'New Era Edition',
   );
-  readonly heroSubtitle = computed(
-    () =>
-      this.championship()?.summary ?? 'Carreras limpias, Mazda MX-5 y buen ambiente en iRacing.',
-  );
+  readonly heroSubtitle = computed(() => {
+    const championship = this.championship();
+    return (
+      this.i18n.localized(championship?.summary, championship?.summaryEn) ||
+      this.i18n.translate('candeonato.hero.fallbackSubtitle')
+    );
+  });
   readonly coverUrl = computed(() => this.championship()?.coverUrl ?? '/media/hero-poster.webp');
   readonly coverMobileUrl = computed(() => {
     const championship = this.championship();
@@ -62,7 +71,11 @@ export class Hero implements AfterViewInit, OnDestroy {
   );
   readonly startAt = computed(() => this.championship()?.startAt ?? '2026-09-04T18:00:00+02:00');
   readonly dateLabel = computed(() =>
-    new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    new Intl.DateTimeFormat(this.i18n.language() === 'en' ? 'en-GB' : 'es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    })
       .format(new Date(this.startAt()))
       .replaceAll('/', ' · '),
   );
@@ -103,11 +116,21 @@ export class Hero implements AfterViewInit, OnDestroy {
   }
 
   toggleVideoFocus(): void {
+    this.isMenuOpen.set(false);
     this.isVideoFocusMode.update((active) => !active);
   }
 
+  toggleMenu(): void {
+    this.isMenuOpen.update((open) => !open);
+  }
+
+  closeMenu(): void {
+    this.isMenuOpen.set(false);
+  }
+
   @HostListener('document:keydown.escape')
-  exitVideoFocus(): void {
+  closeOverlays(): void {
+    this.isMenuOpen.set(false);
     this.isVideoFocusMode.set(false);
   }
 

@@ -3,11 +3,13 @@ import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { catchError, of, shareReplay } from 'rxjs';
 import { PublicContentService } from '../../core/services/public-content.service';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { CommunityIntro } from './components/community-intro/community-intro';
 import { EventFeature } from './components/event-feature/event-feature';
 import { ExperienceGallery } from './components/experience-gallery/experience-gallery';
 import { HomeHero } from './components/home-hero/home-hero';
 import { TeamShowcase } from './components/team-showcase/team-showcase';
+import { SponsorStrip } from './components/sponsor-strip/sponsor-strip';
 
 @Component({
   selector: 'app-home-page',
@@ -19,6 +21,8 @@ import { TeamShowcase } from './components/team-showcase/team-showcase';
     EventFeature,
     TeamShowcase,
     ExperienceGallery,
+    SponsorStrip,
+    TranslatePipe,
   ],
   templateUrl: './home-page.html',
 })

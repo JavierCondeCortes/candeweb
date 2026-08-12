@@ -184,6 +184,12 @@
 .home-nav-links a:hover {
   color: var(--lime);
 }
+
+.home-nav app-language-switcher {
+  position: absolute;
+  right: 3.5rem;
+  z-index: 2;
+}
 .home-hero-content {
   display: grid;
   width: min(calc(100% - 2rem), var(--content-width));
@@ -199,14 +205,78 @@
 
 .home-hero-copy h1 {
   margin: 0.8rem 0 0;
-  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
-  font-size: clamp(4.2rem, 18vw, 12rem);
-  font-style: italic;
-  font-weight: 900;
-  letter-spacing: 0.01em;
-  line-height: 0.72;
-  text-transform: uppercase;
   text-wrap: balance;
+}
+
+.home-hero-copy h1::after {
+  top: 0;
+  bottom: auto;
+}
+
+#inicio,
+#comunidad,
+#equipo,
+#contenido,
+#sponsors {
+  scroll-margin-top: 5rem;
+}
+
+.sponsor-section {
+  padding-block: clamp(4.5rem, 9vw, 8rem);
+  border-top: 1px solid var(--border);
+  background: linear-gradient(135deg, rgba(181, 255, 44, 0.06), transparent 46%), var(--black);
+}
+
+.sponsor-heading {
+  max-width: 52rem;
+}
+
+.sponsor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: 1rem;
+  margin: 2.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sponsor-card {
+  display: grid;
+  min-height: 11rem;
+  place-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  background: rgba(245, 245, 242, 0.035);
+  color: var(--text-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+a.sponsor-card:hover {
+  border-color: var(--lime);
+  transform: translateY(-0.2rem);
+}
+
+.sponsor-card img {
+  width: min(100%, 12rem);
+  height: 5.5rem;
+  object-fit: contain;
+}
+
+.sponsor-note {
+  margin: 2rem 0 0;
+  padding: 1.25rem;
+  border: 1px dashed var(--border);
+  color: var(--text-muted);
 }
 
 .home-hero-copy h1 span {
@@ -218,6 +288,9 @@
   font-style: normal;
   letter-spacing: 0.28em;
   line-height: 1.2;
+  text-shadow: none;
+  -webkit-text-fill-color: var(--lime);
+  -webkit-text-stroke: 0;
 }
 
 .home-hero-lede {
@@ -991,6 +1064,10 @@
   .home-menu-button {
     display: none;
   }
+  .home-nav app-language-switcher {
+    position: static;
+    margin-left: 0.75rem;
+  }
   .home-nav-links {
     position: static;
     inset: auto;
@@ -1017,9 +1094,6 @@
     align-items: end;
     gap: clamp(2rem, 6vw, 6rem);
     padding-bottom: 4rem;
-  }
-  .home-hero-copy h1 {
-    font-size: clamp(6.3rem, 12vw, 11rem);
   }
   .community-section {
     grid-template-columns: minmax(0, 1.05fr) minmax(20rem, 0.95fr);
@@ -1104,6 +1178,10 @@
   .eyebrow,
   .home-event-preview-meta span {
     color: LinkText;
+  }
+
+  .home-hero-copy h1 span {
+    -webkit-text-fill-color: LinkText;
   }
 }
 

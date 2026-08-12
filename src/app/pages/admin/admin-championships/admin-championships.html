@@ -1,10 +1,12 @@
 <header class="admin-page-header">
   <div>
-    <p class="admin-eyebrow">Archivo deportivo</p>
-    <h1>Candeonatos</h1>
-    <p>Gestiona la información editorial y sincroniza los resultados externos de cada edición.</p>
+    <p class="admin-eyebrow">{{ 'admin.championships.eyebrow' | translate }}</p>
+    <h1>{{ 'admin.championships.title' | translate }}</h1>
+    <p>{{ 'admin.championships.intro' | translate }}</p>
   </div>
-  <a class="admin-button is-primary" routerLink="/admin/candeonatos/nuevo">Nueva edición</a>
+  <a class="admin-button is-primary" routerLink="/admin/candeonatos/nuevo">{{
+    'admin.championships.new' | translate
+  }}</a>
 </header>
 
 @if (message()) {
@@ -15,41 +17,43 @@
 }
 
 @if (loading()) {
-  <p role="status">Cargando Candeonatos…</p>
+  <p role="status">{{ 'admin.championships.loading' | translate }}</p>
 } @else if (championships().length === 0) {
   <section class="admin-empty">
-    <h2>No hay ediciones</h2>
-    <p>Crea el primer Candeonato.</p>
+    <h2>{{ 'admin.championships.emptyTitle' | translate }}</h2>
+    <p>{{ 'admin.championships.emptyHelp' | translate }}</p>
   </section>
 } @else {
-  <div class="admin-filter-bar" aria-label="Filtrar Candeonatos">
+  <div class="admin-filter-bar" [attr.aria-label]="'admin.championships.filterLabel' | translate">
     <label>
-      <span>Buscar</span>
+      <span>{{ 'admin.common.search' | translate }}</span>
       <input
         type="search"
-        placeholder="Nombre, temporada o subtítulo"
+        [placeholder]="'admin.championships.searchPlaceholder' | translate"
         [value]="query()"
         (input)="query.set($any($event.target).value)"
       />
     </label>
     <label>
-      <span>Estado</span>
+      <span>{{ 'admin.common.status' | translate }}</span>
       <select [value]="statusFilter()" (change)="statusFilter.set($any($event.target).value)">
-        <option value="all">Todos</option>
-        <option value="draft">Borradores</option>
-        <option value="registration">Inscripciones</option>
-        <option value="active">Activos</option>
-        <option value="finished">Finalizados</option>
-        <option value="archived">Archivados</option>
+        <option value="all">{{ 'admin.common.all' | translate }}</option>
+        <option value="draft">{{ 'admin.common.drafts' | translate }}</option>
+        <option value="registration">{{ 'admin.championships.registration' | translate }}</option>
+        <option value="active">{{ 'admin.championships.active' | translate }}</option>
+        <option value="finished">{{ 'admin.championships.finished' | translate }}</option>
+        <option value="archived">{{ 'admin.common.archivedPlural' | translate }}</option>
       </select>
     </label>
-    <span role="status">{{ filteredChampionships().length }} resultados</span>
+    <span role="status">{{
+      'admin.common.results' | translate: { count: filteredChampionships().length }
+    }}</span>
   </div>
 
   @if (filteredChampionships().length === 0) {
     <section class="admin-empty">
-      <h2>Sin coincidencias</h2>
-      <p>Cambia el texto de búsqueda o el filtro de estado.</p>
+      <h2>{{ 'admin.common.noMatches' | translate }}</h2>
+      <p>{{ 'admin.common.noMatchesHelp' | translate }}</p>
     </section>
   } @else {
     <div class="admin-card-list">
@@ -58,30 +62,47 @@
           <div class="admin-content-card-main">
             <div class="admin-card-meta">
               <span class="admin-status" [attr.data-status]="championship.status">
-                {{ championship.status }}
+                {{ statusLabel(championship.status) }}
               </span>
               @if (championship.isFeatured) {
-                <span>Edición actual</span>
+                <span>{{ 'admin.championships.current' | translate }}</span>
               }
-              <span>ID externo: {{ championship.externalTournamentId ?? 'Sin conectar' }}</span>
+              <span>{{
+                'admin.championships.externalId'
+                  | translate
+                    : {
+                        id:
+                          championship.externalTournamentId ??
+                          ('admin.championships.notConnected' | translate),
+                      }
+              }}</span>
             </div>
             <h2>{{ championship.name }}</h2>
             @if (championship.subtitle) {
               <p class="admin-preview-subtitle">{{ championship.subtitle }}</p>
             }
-            <p>{{ championship.summary || 'Sin resumen editorial.' }}</p>
+            <p>{{ championship.summary || ('admin.championships.noSummary' | translate) }}</p>
             <dl class="admin-inline-data">
               <div>
-                <dt>Sincronización</dt>
+                <dt>{{ 'admin.championships.sync' | translate }}</dt>
                 <dd>{{ championship.syncStatus }}</dd>
               </div>
               <div>
-                <dt>Última consulta</dt>
-                <dd>{{ championship.lastSyncedAt || 'Pendiente' }}</dd>
+                <dt>{{ 'admin.championships.lastCheck' | translate }}</dt>
+                <dd>
+                  {{ championship.lastSyncedAt || ('admin.championships.pending' | translate) }}
+                </dd>
               </div>
               <div>
-                <dt>Fondo</dt>
-                <dd>{{ championship.backgroundVideoUrl ? 'Vídeo propio' : 'Solo portada' }}</dd>
+                <dt>{{ 'admin.championships.background' | translate }}</dt>
+                <dd>
+                  {{
+                    (championship.backgroundVideoUrl
+                      ? 'admin.championships.ownVideo'
+                      : 'admin.championships.coverOnly'
+                    ) | translate
+                  }}
+                </dd>
               </div>
             </dl>
             @if (championship.syncError) {
@@ -89,9 +110,9 @@
             }
           </div>
           <div class="admin-card-actions">
-            <a class="admin-button" [routerLink]="['/admin/candeonatos', championship.id]"
-              >Editar</a
-            >
+            <a class="admin-button" [routerLink]="['/admin/candeonatos', championship.id]">{{
+              'admin.common.edit' | translate
+            }}</a>
             @if (championship.status !== 'draft') {
               <a
                 class="admin-button"
@@ -99,7 +120,7 @@
                   '/candeonatos',
                   championship.externalTournamentId || championship.slug,
                 ]"
-                >Ver página pública</a
+                >{{ 'admin.championships.viewPublic' | translate }}</a
               >
             }
             @if (championship.status === 'draft') {
@@ -109,7 +130,7 @@
                 [disabled]="busyId() === championship.id"
                 (click)="runAction(championship, 'publish')"
               >
-                Publicar
+                {{ 'admin.common.publish' | translate }}
               </button>
             }
             @if (!championship.isFeatured && championship.status !== 'draft') {
@@ -119,7 +140,7 @@
                 [disabled]="busyId() === championship.id"
                 (click)="runAction(championship, 'feature')"
               >
-                Mostrar como actual
+                {{ 'admin.championships.feature' | translate }}
               </button>
             }
             @if (championship.externalTournamentId) {
@@ -129,7 +150,7 @@
                 [disabled]="busyId() === championship.id"
                 (click)="runAction(championship, 'sync')"
               >
-                Sincronizar
+                {{ 'admin.championships.synchronize' | translate }}
               </button>
             }
             @if (championship.status !== 'archived') {
@@ -139,7 +160,7 @@
                 [disabled]="busyId() === championship.id"
                 (click)="runAction(championship, 'archive')"
               >
-                Archivar
+                {{ 'admin.common.archive' | translate }}
               </button>
             }
           </div>

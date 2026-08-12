@@ -1,20 +1,20 @@
 <main class="admin-auth-page">
   <section class="admin-auth-card" aria-labelledby="admin-login-title">
     <a class="admin-brand" routerLink="/">CND<span>///</span> ADMIN</a>
+    <app-language-switcher />
 
     @if (loading()) {
-      <p role="status">Comprobando la administración…</p>
+      <p role="status">{{ 'admin.login.checking' | translate }}</p>
     } @else {
-      <p class="admin-eyebrow">Panel privado</p>
+      <p class="admin-eyebrow">{{ 'admin.login.eyebrow' | translate }}</p>
       <h1 id="admin-login-title">
-        {{ needsSetup() ? 'Crear primera cuenta' : 'Iniciar sesión' }}
+        {{ (needsSetup() ? 'admin.login.setupTitle' : 'admin.login.title') | translate }}
       </h1>
       <p>
         @if (needsSetup()) {
-          Esta cuenta tendrá permisos de administración. Utiliza una contraseña exclusiva de al
-          menos 12 caracteres.
+          {{ 'admin.login.setupIntro' | translate }}
         } @else {
-          Accede para gestionar miembros, Candeonatos y valores de la web.
+          {{ 'admin.login.intro' | translate }}
         }
       </p>
 
@@ -25,23 +25,23 @@
       <form class="admin-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
         @if (needsSetup()) {
           <label>
-            <span>Nombre visible</span>
+            <span>{{ 'admin.login.displayName' | translate }}</span>
             <input type="text" formControlName="displayName" autocomplete="name" maxlength="80" />
           </label>
           <label>
-            <span>Token de configuración</span>
+            <span>{{ 'admin.login.setupToken' | translate }}</span>
             <input type="password" formControlName="setupToken" autocomplete="off" />
-            <small>Solo es obligatorio en producción.</small>
+            <small>{{ 'admin.login.setupTokenHelp' | translate }}</small>
           </label>
         }
 
         <label>
-          <span>Correo electrónico</span>
+          <span>{{ 'admin.login.email' | translate }}</span>
           <input type="email" formControlName="email" autocomplete="username" />
         </label>
 
         <label>
-          <span>Contraseña</span>
+          <span>{{ 'admin.login.password' | translate }}</span>
           <input
             type="password"
             formControlName="password"
@@ -49,26 +49,33 @@
             minlength="12"
             aria-describedby="password-help"
           />
-          <small id="password-help">Mínimo 12 caracteres.</small>
+          <small id="password-help">{{ 'admin.login.passwordHelp' | translate }}</small>
         </label>
 
         @if (!needsSetup() && requiresMfa()) {
           <label>
-            <span>Código de segundo factor</span>
+            <span>{{ 'admin.login.mfaCode' | translate }}</span>
             <input
               type="text"
               formControlName="mfaCode"
               autocomplete="one-time-code"
               inputmode="numeric"
               maxlength="11"
-              placeholder="123456 o código de recuperación"
+              [placeholder]="'admin.login.mfaPlaceholder' | translate"
               autofocus
             />
           </label>
         }
 
         <button class="admin-button is-primary" type="submit" [disabled]="submitting()">
-          {{ submitting() ? 'Procesando…' : needsSetup() ? 'Crear administración' : 'Entrar' }}
+          {{
+            (submitting()
+              ? 'admin.login.processing'
+              : needsSetup()
+                ? 'admin.login.create'
+                : 'admin.login.submit'
+            ) | translate
+          }}
         </button>
       </form>
     }
