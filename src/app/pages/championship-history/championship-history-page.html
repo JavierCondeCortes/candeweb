@@ -23,7 +23,14 @@
 
     <div class="archive-hero-content">
       <p class="eyebrow">{{ 'candeonato.history.eyebrow' | translate }}</p>
-      <h1>{{ 'candeonato.history.title' | translate }}</h1>
+      <h1>
+        <span>{{ 'candeonato.history.titleLead' | translate }}</span>
+        <span
+          class="archive-title-neon"
+          [attr.data-title]="'candeonato.history.titleAccent' | translate"
+          >{{ 'candeonato.history.titleAccent' | translate }}</span
+        >
+      </h1>
       <p>{{ 'candeonato.history.intro' | translate }}</p>
       <a class="button button-primary" routerLink="/candeonato">{{
         'candeonato.history.openCurrent' | translate

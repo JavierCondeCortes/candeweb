@@ -180,6 +180,22 @@ video {
   text-shadow: 0 0 1.5rem rgba(255, 43, 214, 0.18);
 }
 
+@media (max-width: 47.99rem) {
+  .display-title,
+  .section-title,
+  app-championship-history-page .archive-hero h1,
+  app-championship-detail-page .detail-hero h1 {
+    width: calc(100% / 1.04);
+    max-width: calc(100% / 1.04);
+    font-size: clamp(3rem, 13vw, 3.35rem);
+    letter-spacing: 0.025em;
+    line-height: 0.88;
+    text-wrap: balance;
+    transform: scaleX(1.04);
+    transform-origin: left center;
+  }
+}
+
 .lede {
   max-width: 60ch;
   margin: 0;

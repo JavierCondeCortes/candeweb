@@ -69,6 +69,32 @@ app-championship-history-page {
   text-transform: uppercase;
 }
 
+.archive-hero h1 > span {
+  display: block;
+}
+
+.archive-title-neon {
+  position: relative;
+  z-index: 0;
+  color: var(--text);
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: clamp(1px, 0.12vw, 2px) var(--text);
+  text-shadow: 0 0 1.8rem rgba(255, 43, 214, 0.35);
+}
+
+.archive-title-neon::after {
+  position: absolute;
+  bottom: 0.02em;
+  left: 0.04em;
+  z-index: -1;
+  color: var(--magenta);
+  content: attr(data-title);
+  opacity: 0.23;
+  transform: translate(0.025em, 0.025em);
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 1px var(--magenta);
+}
+
 .archive-hero-content > p:not(.eyebrow) {
   max-width: 48ch;
   margin: 1.5rem 0;
@@ -291,5 +317,18 @@ app-championship-history-page {
   .archive-footer {
     grid-template-columns: auto 1fr auto;
     align-items: center;
+  }
+}
+
+@media (forced-colors: active) {
+  .archive-title-neon {
+    color: CanvasText;
+    -webkit-text-fill-color: CanvasText;
+    -webkit-text-stroke: 0;
+    text-shadow: none;
+  }
+
+  .archive-title-neon::after {
+    display: none;
   }
 }

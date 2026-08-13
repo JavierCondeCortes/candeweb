@@ -99,6 +99,9 @@ describe('HomePage', () => {
     expect(host.querySelector('#equipo')).toBeTruthy();
     expect(host.querySelector('#contenido')).toBeTruthy();
     expect(host.querySelector('#sponsors')).toBeTruthy();
+    expect(
+      host.querySelector<HTMLAnchorElement>('.home-nav-links a[href="/candeonatos"]'),
+    ).toBeTruthy();
     expect(host.querySelector('#unirse')).toBeFalsy();
     expect(host.querySelectorAll('.team-card')).toHaveLength(5);
     expect(host.querySelectorAll('.team-card a')).toHaveLength(3);

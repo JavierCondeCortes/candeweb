@@ -32,6 +32,14 @@
   color: var(--magenta);
 }
 
+.candeonato-nav-actions {
+  position: relative;
+  z-index: 22;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
 .candeonato-menu-button {
   position: relative;
   z-index: 22;
@@ -109,10 +117,6 @@
   color: var(--lime);
 }
 
-.language-control {
-  margin-top: 1.25rem;
-}
-
 @media (min-width: 48rem) {
   .candeonato-nav {
     width: min(calc(100% - 5rem), var(--content-width));
@@ -147,8 +151,8 @@
     letter-spacing: 0.08em;
   }
 
-  .language-control {
-    margin-top: 0;
+  .candeonato-nav-actions {
+    margin-left: -0.5rem;
   }
 }
 

@@ -170,6 +170,8 @@
     "all": "Todas las ediciones",
     "eyebrow": "Archivo deportivo // Candemor Racing Team",
     "title": "Historial de Candeonatos",
+    "titleLead": "Historial de",
+    "titleAccent": "Candeonatos",
     "intro": "Cada edición, cada circuito y cada punto. Consulta el recorrido deportivo de la comunidad sin perder de vista la historia detrás de las carreras.",
     "openCurrent": "Abrir el Candeonato actual",
     "available": "Ediciones disponibles",

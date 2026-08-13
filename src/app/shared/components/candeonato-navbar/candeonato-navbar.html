@@ -17,19 +17,6 @@
     CANDE<span>WEB</span>
   </a>
 
-  <button
-    class="candeonato-menu-button hero-menu-button detail-menu-button archive-menu-button"
-    type="button"
-    aria-controls="candeonato-navigation-links"
-    [attr.aria-expanded]="menuOpen()"
-    [attr.aria-label]="
-      menuOpen() ? ('candeonato.nav.close' | translate) : ('candeonato.nav.open' | translate)
-    "
-    (click)="toggleMenu()"
-  >
-    <span></span><span></span>
-  </button>
-
   <div
     id="candeonato-navigation-links"
     class="candeonato-nav-links nav-links detail-nav-links archive-nav-links"
@@ -113,9 +100,23 @@
         >{{ 'candeonato.history.current' | translate }}</a
       >
     }
+  </div>
 
-    <span class="language-control" (click)="closeMenu()">
+  <div class="candeonato-nav-actions">
+    <span class="language-control">
       <app-language-switcher />
     </span>
+    <button
+      class="candeonato-menu-button hero-menu-button detail-menu-button archive-menu-button"
+      type="button"
+      aria-controls="candeonato-navigation-links"
+      [attr.aria-expanded]="menuOpen()"
+      [attr.aria-label]="
+        menuOpen() ? ('candeonato.nav.close' | translate) : ('candeonato.nav.open' | translate)
+      "
+      (click)="toggleMenu()"
+    >
+      <span></span><span></span>
+    </button>
   </div>
 </nav>
