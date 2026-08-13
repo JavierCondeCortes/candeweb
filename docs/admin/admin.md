@@ -229,7 +229,7 @@ debe requerir confirmación y explicar que el perfil desaparecerá de la web pú
 | `background_video_mime_type` | Texto o `null`  | Condicional | `video/mp4` o `video/webm` cuando existe vídeo            |
 | `start_at`                   | Fecha o `null`  | No          | Debe ser anterior a `end_at`                              |
 | `end_at`                     | Fecha o `null`  | No          | Debe ser posterior a `start_at`                           |
-| `registration_url`           | URL o `null`    | No          | HTTPS; solo visible durante inscripciones                 |
+| `registration_url`           | URL o `null`    | No          | Google Forms HTTPS; genera el formulario nativo de la web |
 | `rules_url`                  | URL o `null`    | No          | HTTPS o ruta interna                                      |
 | `status`                     | Enum            | Sí          | `draft`, `registration`, `active`, `finished`, `archived` |
 | `is_featured`                | Booleano        | Sí          | Solo una edición puede estar destacada                    |
@@ -354,6 +354,8 @@ GET /api/public/members?featured=true
 GET /api/public/sponsors
 GET /api/public/championships
 GET /api/public/championships/:slug
+GET /api/public/google-form?url=...
+POST /api/public/google-form-submit
 GET /api/public/championships/:slug/sports-data
 ```
 

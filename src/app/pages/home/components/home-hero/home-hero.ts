@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { AsyncPipe, DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { SoundSwitch } from '../../../../candeonato/components/sound-switch/sound-switch';
+import { SoundSwitch } from '../../../../pages/candeonato/components/sound-switch/sound-switch';
 import { StreamStatusService } from '../../../../core/services/stream-status.service';
 import { LanguageSwitcher } from '../../../../core/i18n/language-switcher/language-switcher';
 import { TranslatePipe } from '../../../../core/i18n/translate.pipe';

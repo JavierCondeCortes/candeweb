@@ -1,5 +1,6 @@
 .event-section {
   position: relative;
+  scroll-margin-top: 2rem;
 }
 
 .event-layout {

@@ -12,7 +12,7 @@ export const routes: Routes = [
     path: 'candeonato',
     title: 'candeonato.meta.title',
     loadComponent: () =>
-      import('./candeonato/candeonato-page').then((module) => module.CandeonatoPage),
+      import('./pages/candeonato/candeonato-page').then((module) => module.CandeonatoPage),
   },
   {
     path: 'candeonatos',

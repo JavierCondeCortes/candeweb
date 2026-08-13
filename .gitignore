@@ -43,9 +43,11 @@ __screenshots__/
 .env
 .env.*
 !.env.example
+!.env.docker.example
 /server/data/
 
 # System files
 .DS_Store
 Thumbs.db
 public/exampleVideo.mp4
+public/video.mp4

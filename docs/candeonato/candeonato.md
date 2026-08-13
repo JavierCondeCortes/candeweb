@@ -153,7 +153,18 @@
 
 - [x] Añadir instrucciones para localizar el ID de iRacing.
 
-- [x] Enviar datos al siguiente formulario de Google: `https://forms.gle/yiH1UGMCCVBtA5mG7`.
+- [x] Leer el Google Form guardado en `registration_url` para la edición actual y convertir sus
+      preguntas, opciones y apartados en controles nativos con el diseño de Candeweb. No se muestra
+      la interfaz ni el `iframe` de Google Forms.
+- [x] Enviar las respuestas desde Candeweb a los campos oficiales `entry.*` de Google Forms a través
+      del backend. Se admiten enlaces cortos `forms.gle` y enlaces completos
+      `docs.google.com/forms`.
+- [x] Conservar un enlace para abrir el formulario en una pestaña nueva y un estado honesto cuando
+      administración todavía no haya configurado ninguno.
+- [x] No copiar manualmente en Angular los IDs ni las preguntas: los cambios realizados en Google
+      Forms aparecen automáticamente tras expirar la caché de cinco minutos.
+- [x] Utilizar el formulario oficial como alternativa segura si Google cambia su formato o incluye
+      un campo no compatible, como una subida de archivos.
 
 - [x] Añadir validación accesible.
 

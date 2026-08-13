@@ -26,38 +26,11 @@ app-championship-detail-page {
   mask-image: linear-gradient(to bottom, black, transparent 90%);
 }
 
-.detail-nav {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  display: flex;
-  width: min(calc(100% - 2rem), var(--content-width));
-  align-items: center;
-  justify-content: space-between;
-  padding-block: 1.25rem;
-  transform: translateX(-50%);
-  border-bottom: 1px solid var(--border);
-}
-
-.detail-brand {
-  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
-  font-size: 1.5rem;
-  font-style: italic;
-  line-height: 1;
-  text-decoration: none;
-}
-
-.detail-brand span {
-  color: var(--magenta);
-}
-
-.detail-nav div,
 .detail-footer nav {
   display: flex;
   gap: 1rem;
 }
 
-.detail-nav div a,
 .detail-footer nav a {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.64rem;
@@ -67,7 +40,18 @@ app-championship-detail-page {
   text-transform: uppercase;
 }
 
-.detail-nav a:hover,
+.detail-footer .detail-brand {
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  font-size: 1.5rem;
+  font-style: italic;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.detail-footer .detail-brand span {
+  color: var(--magenta);
+}
+
 .detail-footer a:hover {
   color: var(--lime);
 }
@@ -443,13 +427,11 @@ app-championship-detail-page {
 }
 
 @media (min-width: 48rem) {
-  .detail-nav,
   .detail-hero-content,
   .detail-footer {
     width: min(calc(100% - 5rem), var(--content-width));
   }
 
-  .detail-nav div,
   .detail-footer nav {
     gap: 2rem;
   }

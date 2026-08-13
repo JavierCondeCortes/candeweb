@@ -758,12 +758,81 @@ a.sponsor-card:hover {
   font-weight: 900;
   line-height: 1;
 }
+.team-carousel {
+  display: grid;
+  gap: 0.85rem;
+}
+.team-carousel-controls {
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: space-between;
+}
+.team-carousel-position {
+  margin: 0;
+  color: var(--text-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+.team-carousel-buttons {
+  display: flex;
+  gap: 0.55rem;
+}
+.team-carousel-buttons button {
+  display: inline-grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  place-items: center;
+  color: var(--text);
+  background: var(--surface);
+  font: inherit;
+  font-size: 1.15rem;
+  cursor: pointer;
+  transition:
+    border-color 180ms ease,
+    color 180ms ease,
+    background-color 180ms ease;
+}
+.team-carousel-buttons button:hover {
+  border-color: var(--lime);
+  color: #050505;
+  background: var(--lime);
+}
+.team-carousel-buttons button:focus-visible {
+  outline: 0.18rem solid var(--lime);
+  outline-offset: 0.2rem;
+}
+.team-carousel-viewport {
+  touch-action: pan-y;
+}
 .team-grid {
   display: grid;
   margin: 0;
   padding: 0;
   gap: 1rem;
   list-style: none;
+}
+.team-grid > li {
+  display: none;
+}
+.team-grid > li.is-active {
+  display: block;
+  animation: team-card-enter 260ms ease-out;
+}
+@keyframes team-card-enter {
+  from {
+    opacity: 0;
+    transform: translateX(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 .team-card {
   position: relative;
@@ -1106,6 +1175,13 @@ a.sponsor-card:hover {
   .team-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+  .team-carousel-controls {
+    display: none;
+  }
+  .team-grid > li {
+    display: block;
+    animation: none;
+  }
   .experience-grid {
     grid-template-columns: minmax(0, 1.4fr) minmax(19rem, 0.6fr);
   }
@@ -1158,9 +1234,13 @@ a.sponsor-card:hover {
   }
   .experience-card > img,
   .team-card img,
+  .team-carousel-buttons button,
   .home-nav-links,
   .home-menu-button span {
     transition: none;
+  }
+  .team-grid > li.is-active {
+    animation: none;
   }
 }
 

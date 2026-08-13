@@ -19,89 +19,135 @@
     } @else if (state.members.length === 0) {
       <p class="team-demo-note">{{ 'home.team.empty' | translate }}</p>
     } @else {
-      @if (state.hasDemo) {
+      <!-- @if (state.hasDemo) {
         <p class="team-demo-note" role="note">
           <span aria-hidden="true">*</span>
           {{ 'home.team.demo' | translate }}
         </p>
-      }
+      } -->
 
-      <ul class="team-grid" [attr.aria-label]="'home.team.listLabel' | translate">
-        @for (member of state.members; track member.id) {
-          <li>
-            <article class="team-card">
-              @if (member.photoUrl) {
-                <img
-                  [src]="member.photoUrl"
-                  [alt]="member.photoAlt || ''"
-                  width="720"
-                  height="900"
-                  loading="lazy"
-                />
-              }
-              <div class="team-card-vignette" aria-hidden="true"></div>
-              <div class="team-card-copy">
-                <h3>{{ member.name }}</h3>
-                @if (member.roleLabel) {
-                  <p>{{ member.roleLabel }}</p>
-                }
-                @if (member.twitchUrl || member.instagramUrl || member.youtubeUrl || member.xUrl) {
-                  <div class="team-card-socials">
-                    @if (member.twitchUrl) {
-                      <a
-                        [href]="member.twitchUrl"
-                        [attr.aria-label]="
-                          'Twitch de ' + member.name + ' (se abre en una pestaña nueva)'
-                        "
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Twitch <span aria-hidden="true">↗</span>
-                      </a>
+      <div
+        class="team-carousel"
+        role="region"
+        [attr.aria-label]="'home.team.carouselLabel' | translate"
+      >
+        @if (state.members.length > 1) {
+          <div class="team-carousel-controls">
+            <p
+              class="team-carousel-position"
+              aria-live="polite"
+              [attr.aria-label]="
+                'home.team.position'
+                  | translate: { current: activeMemberIndex() + 1, total: state.members.length }
+              "
+            >
+              {{ activeMemberIndex() + 1 }} / {{ state.members.length }}
+            </p>
+            <div class="team-carousel-buttons">
+              <button
+                type="button"
+                (click)="showPreviousMember(state.members.length)"
+                [attr.aria-label]="'home.team.previous' | translate"
+              >
+                <span aria-hidden="true">←</span>
+              </button>
+              <button
+                type="button"
+                (click)="showNextMember(state.members.length)"
+                [attr.aria-label]="'home.team.next' | translate"
+              >
+                <span aria-hidden="true">→</span>
+              </button>
+            </div>
+          </div>
+        }
+
+        <div
+          class="team-carousel-viewport"
+          (pointerdown)="startSwipe($event)"
+          (pointerup)="finishSwipe($event, state.members.length)"
+          (pointercancel)="cancelSwipe()"
+        >
+          <ul class="team-grid" [attr.aria-label]="'home.team.listLabel' | translate">
+            @for (member of state.members; track member.id) {
+              <li [class.is-active]="$index === activeMemberIndex()">
+                <article class="team-card">
+                  @if (member.photoUrl) {
+                    <img
+                      [src]="member.photoUrl"
+                      [alt]="member.photoAlt || ''"
+                      width="720"
+                      height="900"
+                      loading="lazy"
+                    />
+                  }
+                  <div class="team-card-vignette" aria-hidden="true"></div>
+                  <div class="team-card-copy">
+                    <h3>{{ member.name }}</h3>
+                    @if (member.roleLabel) {
+                      <p>{{ member.roleLabel }}</p>
                     }
-                    @if (member.instagramUrl) {
-                      <a
-                        [href]="member.instagramUrl"
-                        [attr.aria-label]="
-                          'Instagram de ' + member.name + ' (se abre en una pestaña nueva)'
-                        "
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Instagram <span aria-hidden="true">↗</span>
-                      </a>
-                    }
-                    @if (member.youtubeUrl) {
-                      <a
-                        [href]="member.youtubeUrl"
-                        [attr.aria-label]="
-                          'YouTube de ' + member.name + ' (se abre en una pestaña nueva)'
-                        "
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        YouTube <span aria-hidden="true">↗</span>
-                      </a>
-                    }
-                    @if (member.xUrl) {
-                      <a
-                        [href]="member.xUrl"
-                        [attr.aria-label]="
-                          'X de ' + member.name + ' (se abre en una pestaña nueva)'
-                        "
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        X <span aria-hidden="true">↗</span>
-                      </a>
+                    @if (
+                      member.twitchUrl || member.instagramUrl || member.youtubeUrl || member.xUrl
+                    ) {
+                      <div class="team-card-socials">
+                        @if (member.twitchUrl) {
+                          <a
+                            [href]="member.twitchUrl"
+                            [attr.aria-label]="
+                              'Twitch de ' + member.name + ' (se abre en una pestaña nueva)'
+                            "
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            Twitch <span aria-hidden="true">↗</span>
+                          </a>
+                        }
+                        @if (member.instagramUrl) {
+                          <a
+                            [href]="member.instagramUrl"
+                            [attr.aria-label]="
+                              'Instagram de ' + member.name + ' (se abre en una pestaña nueva)'
+                            "
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            Instagram <span aria-hidden="true">↗</span>
+                          </a>
+                        }
+                        @if (member.youtubeUrl) {
+                          <a
+                            [href]="member.youtubeUrl"
+                            [attr.aria-label]="
+                              'YouTube de ' + member.name + ' (se abre en una pestaña nueva)'
+                            "
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            YouTube <span aria-hidden="true">↗</span>
+                          </a>
+                        }
+                        @if (member.xUrl) {
+                          <a
+                            [href]="member.xUrl"
+                            [attr.aria-label]="
+                              'X de ' + member.name + ' (se abre en una pestaña nueva)'
+                            "
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            X <span aria-hidden="true">↗</span>
+                          </a>
+                        }
+                      </div>
                     }
                   </div>
-                }
-              </div>
-            </article>
-          </li>
-        }
-      </ul>
+                </article>
+              </li>
+            }
+          </ul>
+        </div>
+      </div>
     }
   }
 </section>

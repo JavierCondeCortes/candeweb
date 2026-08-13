@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
-import { PublicContentService } from '../core/services/public-content.service';
+import { PublicContentService } from '../../core/services/public-content.service';
 import { CandeonatoPage } from './candeonato-page';
 
 describe('CandeonatoPage', () => {

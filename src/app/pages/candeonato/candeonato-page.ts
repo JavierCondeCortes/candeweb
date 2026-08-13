@@ -2,13 +2,13 @@ import { AsyncPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { catchError, map, of, shareReplay } from 'rxjs';
-import { PublicContentService } from '../core/services/public-content.service';
+import { PublicContentService } from '../../core/services/public-content.service';
 import { About } from './components/about/about';
 import { FormInscription } from './components/form-inscription/form-inscription';
 import { Hero } from './components/hero/hero';
 import { Requirements } from './components/requirements/requirements';
 import { Rules } from './components/rules/rules';
-import { TranslatePipe } from '../core/i18n/translate.pipe';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-candeonato-page',
@@ -23,7 +23,7 @@ import { TranslatePipe } from '../core/i18n/translate.pipe';
     TranslatePipe,
   ],
   templateUrl: './candeonato-page.html',
-  styleUrl: '../app.css',
+  styleUrl: '../../app.css',
 })
 export class CandeonatoPage {
   private readonly content = inject(PublicContentService);

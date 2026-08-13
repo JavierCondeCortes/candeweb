@@ -49,51 +49,6 @@ app-championship-history-page {
   mask-image: linear-gradient(to bottom, black, transparent 85%);
 }
 
-.archive-nav {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  display: flex;
-  width: min(calc(100% - 2rem), var(--content-width));
-  align-items: center;
-  justify-content: space-between;
-  padding-block: 1.25rem;
-  transform: translateX(-50%);
-  border-bottom: 1px solid var(--border);
-}
-
-.archive-brand {
-  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
-  font-size: 1.5rem;
-  font-style: italic;
-  line-height: 1;
-  text-decoration: none;
-}
-
-.archive-brand span,
-.archive-hero h1 span {
-  color: var(--magenta);
-}
-
-.archive-nav div {
-  display: flex;
-  gap: 1rem;
-}
-
-.archive-nav div a {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.64rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-decoration: none;
-  text-transform: uppercase;
-}
-
-.archive-nav div a:hover,
-.archive-nav div a[aria-current='page'] {
-  color: var(--lime);
-}
-
 .archive-hero-content {
   display: grid;
   width: min(calc(100% - 2rem), var(--content-width));
@@ -292,20 +247,27 @@ app-championship-history-page {
   margin: 0;
 }
 
+.archive-footer .archive-brand {
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  font-size: 1.5rem;
+  font-style: italic;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.archive-footer .archive-brand span {
+  color: var(--magenta);
+}
+
 .archive-footer > a:last-child {
   color: var(--lime);
   text-underline-offset: 0.25rem;
 }
 
 @media (min-width: 48rem) {
-  .archive-nav,
   .archive-hero-content,
   .archive-footer {
     width: min(calc(100% - 5rem), var(--content-width));
-  }
-
-  .archive-nav div {
-    gap: 2rem;
   }
 
   .edition-card {

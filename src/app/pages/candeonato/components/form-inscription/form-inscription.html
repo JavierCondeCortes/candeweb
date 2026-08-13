@@ -1,0 +1,283 @@
+<section
+  id="inscripcion"
+  class="section-shell registration-section"
+  aria-labelledby="inscripcion-title"
+>
+  <div class="section-heading reveal">
+    <p class="eyebrow">{{ 'candeonato.registration.eyebrow' | translate }}</p>
+    <h2 id="inscripcion-title" class="section-title">
+      {{ 'candeonato.registration.title' | translate }}
+    </h2>
+    <p class="lede">{{ 'candeonato.registration.nativeIntro' | translate }}</p>
+  </div>
+
+  @if (loadState() === 'loading') {
+    <div class="registration-status" role="status" aria-live="polite">
+      <span class="status-spinner" aria-hidden="true"></span>
+      <p>{{ 'candeonato.registration.loading' | translate }}</p>
+    </div>
+  } @else if (loadState() === 'ready' && schema(); as form) {
+    <div class="registration-layout">
+      <div class="registration-card">
+        <header class="form-heading">
+          <div class="form-heading-copy">
+            <p class="eyebrow">{{ 'candeonato.registration.formEyebrow' | translate }}</p>
+            <h3>{{ form.title }}</h3>
+            @if (form.description) {
+              <p>{{ form.description }}</p>
+            }
+          </div>
+          <div class="form-heading-meta">
+            <p class="form-source-status">
+              <span aria-hidden="true"></span>
+              {{ 'candeonato.registration.sourceSynced' | translate }}
+            </p>
+            <p class="required-note">{{ 'candeonato.registration.required' | translate }}</p>
+          </div>
+        </header>
+
+        @if (submissionState() === 'success') {
+          <div class="submission-result submission-success" role="status" aria-live="polite">
+            <span aria-hidden="true">✓</span>
+            <div>
+              <h4>{{ 'candeonato.registration.successTitle' | translate }}</h4>
+              <p>{{ 'candeonato.registration.successText' | translate }}</p>
+            </div>
+          </div>
+        } @else {
+          <form class="native-form" novalidate (submit)="submit($event)">
+            @for (field of form.fields; track field.id; let fieldIndex = $index) {
+              @if (field.kind === 'section') {
+                <section class="form-section" [attr.aria-labelledby]="field.id + '-title'">
+                  <p class="eyebrow">{{ 'candeonato.registration.sectionEyebrow' | translate }}</p>
+                  <h4 [id]="field.id + '-title'">{{ field.label }}</h4>
+                  @if (field.description) {
+                    <p>{{ field.description }}</p>
+                  }
+                </section>
+              } @else {
+                <div class="form-field" [class.has-error]="fieldErrors()[field.id]">
+                  <span class="field-number" aria-hidden="true">{{ fieldIndex + 1 }}</span>
+                  @if (field.kind === 'radio' || field.kind === 'checkbox') {
+                    <fieldset>
+                      <legend>
+                        {{ field.label }}
+                        @if (field.required) {
+                          <span aria-hidden="true">*</span>
+                        }
+                      </legend>
+                      @if (field.description) {
+                        <p class="field-help" [id]="field.id + '-help'">
+                          {{ field.description }}
+                        </p>
+                      }
+                      <div class="choice-grid">
+                        @for (option of field.options ?? []; track option) {
+                          <label class="choice-card">
+                            <input
+                              [type]="field.kind === 'radio' ? 'radio' : 'checkbox'"
+                              [name]="'entry.' + field.id"
+                              [value]="option"
+                              [checked]="isChoiceSelected(field.id, option)"
+                              [attr.required]="field.required ? '' : null"
+                              [attr.aria-invalid]="fieldErrors()[field.id] ? 'true' : null"
+                              [attr.aria-describedby]="
+                                fieldErrors()[field.id]
+                                  ? field.id + '-error'
+                                  : field.description
+                                    ? field.id + '-help'
+                                    : null
+                              "
+                              (change)="
+                                field.kind === 'radio'
+                                  ? setValue(field.id, $event)
+                                  : toggleChoice(field.id, option, $event)
+                              "
+                            />
+                            <span class="choice-control" aria-hidden="true"></span>
+                            <span>{{ option }}</span>
+                          </label>
+                        }
+                      </div>
+                    </fieldset>
+                  } @else {
+                    <label [for]="'field-' + field.id">
+                      {{ field.label }}
+                      @if (field.required) {
+                        <span aria-hidden="true">*</span>
+                      }
+                    </label>
+                    @if (field.description) {
+                      <p class="field-help" [id]="field.id + '-help'">
+                        {{ field.description }}
+                      </p>
+                    }
+
+                    @switch (field.kind) {
+                      @case ('textarea') {
+                        <textarea
+                          [id]="'field-' + field.id"
+                          [name]="'entry.' + field.id"
+                          rows="5"
+                          [required]="field.required ?? false"
+                          [attr.aria-invalid]="fieldErrors()[field.id] ? 'true' : null"
+                          [attr.aria-describedby]="
+                            fieldErrors()[field.id]
+                              ? field.id + '-error'
+                              : field.description
+                                ? field.id + '-help'
+                                : null
+                          "
+                          (input)="setValue(field.id, $event)"
+                        ></textarea>
+                      }
+                      @case ('select') {
+                        <select
+                          [id]="'field-' + field.id"
+                          [name]="'entry.' + field.id"
+                          [required]="field.required ?? false"
+                          [attr.aria-invalid]="fieldErrors()[field.id] ? 'true' : null"
+                          [attr.aria-describedby]="
+                            fieldErrors()[field.id] ? field.id + '-error' : null
+                          "
+                          (change)="setValue(field.id, $event)"
+                        >
+                          <option value="">
+                            {{ 'candeonato.registration.chooseOption' | translate }}
+                          </option>
+                          @for (option of field.options ?? []; track option) {
+                            <option [value]="option">{{ option }}</option>
+                          }
+                        </select>
+                      }
+                      @default {
+                        <input
+                          [id]="'field-' + field.id"
+                          [name]="'entry.' + field.id"
+                          [type]="
+                            field.kind === 'date' ? 'date' : field.kind === 'time' ? 'time' : 'text'
+                          "
+                          [required]="field.required ?? false"
+                          autocomplete="off"
+                          [attr.aria-invalid]="fieldErrors()[field.id] ? 'true' : null"
+                          [attr.aria-describedby]="
+                            fieldErrors()[field.id]
+                              ? field.id + '-error'
+                              : field.description
+                                ? field.id + '-help'
+                                : null
+                          "
+                          (input)="setValue(field.id, $event)"
+                        />
+                      }
+                    }
+                  }
+
+                  @if (fieldErrors()[field.id]) {
+                    <p class="field-error" [id]="field.id + '-error'" role="alert">
+                      {{ 'candeonato.registration.fieldError' | translate }}
+                    </p>
+                  }
+                </div>
+              }
+            }
+
+            <div class="form-field consent-field" [class.has-error]="fieldErrors()['privacy']">
+              <label class="consent-check">
+                <input
+                  type="checkbox"
+                  name="privacy"
+                  [checked]="privacyAccepted()"
+                  [attr.aria-invalid]="fieldErrors()['privacy'] ? 'true' : null"
+                  [attr.aria-describedby]="fieldErrors()['privacy'] ? 'privacy-error' : null"
+                  (change)="setPrivacyAccepted($event)"
+                />
+                <span class="choice-control" aria-hidden="true"></span>
+                <span>{{ 'candeonato.registration.consent' | translate }}</span>
+              </label>
+              @if (fieldErrors()['privacy']) {
+                <p id="privacy-error" class="field-error" role="alert">
+                  {{ 'candeonato.registration.consentError' | translate }}
+                </p>
+              }
+            </div>
+
+            @if (submissionState() === 'error') {
+              <div class="submission-error" role="alert">
+                <strong>{{ 'candeonato.registration.errorTitle' | translate }}</strong>
+                <span>{{ 'candeonato.registration.errorText' | translate }}</span>
+                <a [href]="form.viewUrl" target="_blank" rel="noopener noreferrer">
+                  {{ 'candeonato.registration.officialForm' | translate }}
+                </a>
+              </div>
+            }
+
+            <div class="form-actions">
+              <button
+                class="button button-primary submit-button"
+                type="submit"
+                [disabled]="submissionState() === 'sending'"
+              >
+                {{
+                  (submissionState() === 'sending'
+                    ? 'candeonato.registration.sending'
+                    : 'candeonato.registration.submit'
+                  ) | translate
+                }}
+                <span aria-hidden="true">→</span>
+              </button>
+              <p>
+                <span aria-hidden="true">✓</span>
+                {{ 'candeonato.registration.secureSubmit' | translate }}
+              </p>
+            </div>
+          </form>
+        }
+      </div>
+
+      <aside id="privacidad" class="privacy-card" aria-labelledby="privacy-title">
+        <div class="privacy-symbol" aria-hidden="true">
+          <span>✓</span>
+        </div>
+        <p class="eyebrow">{{ 'candeonato.registration.privacyEyebrow' | translate }}</p>
+        <h3 id="privacy-title">{{ 'candeonato.registration.privacyTitle' | translate }}</h3>
+        <p>{{ 'candeonato.registration.privacyText' | translate }}</p>
+        <ul>
+          <li>
+            <span aria-hidden="true">01</span>
+            <span>{{ 'candeonato.registration.privacyNoAds' | translate }}</span>
+          </li>
+          <li>
+            <span aria-hidden="true">02</span>
+            <span>{{ 'candeonato.registration.privacyNoSecrets' | translate }}</span>
+          </li>
+          <li>
+            <span aria-hidden="true">03</span>
+            <span>{{ 'candeonato.registration.privacyRights' | translate }}</span>
+          </li>
+        </ul>
+      </aside>
+    </div>
+  } @else if (registrationUrl()) {
+    <div class="registration-fallback" role="alert">
+      <p class="eyebrow">{{ 'candeonato.registration.fallbackEyebrow' | translate }}</p>
+      <h3>{{ 'candeonato.registration.fallbackTitle' | translate }}</h3>
+      <p>{{ 'candeonato.registration.fallbackText' | translate }}</p>
+      <a
+        class="button button-primary"
+        [href]="registrationUrl()"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {{ 'candeonato.registration.openOfficialForm' | translate }}
+        <span aria-hidden="true">↗</span>
+      </a>
+    </div>
+  } @else {
+    <div class="registration-empty" role="status">
+      <p class="eyebrow">{{ 'candeonato.registration.pendingEyebrow' | translate }}</p>
+      <h3>{{ 'candeonato.registration.pendingTitle' | translate }}</h3>
+      <p>{{ 'candeonato.registration.pendingText' | translate }}</p>
+    </div>
+  }
+</section>

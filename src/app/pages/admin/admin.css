@@ -465,7 +465,18 @@
   height: 3rem;
   padding: 0.35rem;
   object-fit: contain;
-  background: #fff;
+  background-color: #777;
+  background-image:
+    linear-gradient(45deg, #f5f5f2 25%, transparent 25%),
+    linear-gradient(-45deg, #f5f5f2 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #f5f5f2 75%),
+    linear-gradient(-45deg, transparent 75%, #f5f5f2 75%);
+  background-position:
+    0 0,
+    0 0.4rem,
+    0.4rem -0.4rem,
+    -0.4rem 0;
+  background-size: 0.8rem 0.8rem;
 }
 
 .admin-sponsor-preview {
@@ -475,7 +486,18 @@
   place-items: center;
   padding: 1.5rem;
   border: 1px solid var(--border);
-  background: #fff;
+  background-color: #777;
+  background-image:
+    linear-gradient(45deg, #f5f5f2 25%, transparent 25%),
+    linear-gradient(-45deg, #f5f5f2 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #f5f5f2 75%),
+    linear-gradient(-45deg, transparent 75%, #f5f5f2 75%);
+  background-position:
+    0 0,
+    0 1rem,
+    1rem -1rem,
+    -1rem 0;
+  background-size: 2rem 2rem;
 }
 
 .admin-sponsor-preview img,
@@ -487,7 +509,14 @@
 
 .admin-live-preview.admin-sponsor-live-preview > img {
   object-fit: contain;
-  background: #fff;
+  background: #151519;
+}
+
+.admin-upload-success {
+  margin: 0;
+  color: var(--success);
+  font-size: 0.85rem;
+  font-weight: 700;
 }
 
 .admin-person span,

@@ -6,7 +6,7 @@
   <app-about [championship]="featured$ | async"></app-about>
   <app-requirements [championship]="featured$ | async"></app-requirements>
   <app-rules></app-rules>
-  <app-form-inscription></app-form-inscription>
+  <app-form-inscription [registrationUrl]="(featured$ | async)?.registrationUrl ?? null" />
 </main>
 
 <footer class="site-footer" [attr.aria-label]="'candeonato.footer.label' | translate">

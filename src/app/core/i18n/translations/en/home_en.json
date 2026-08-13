@@ -70,7 +70,11 @@
     "error": "The team is unavailable right now. Please try again in a few minutes.",
     "empty": "Official profiles will be published soon.",
     "demo": "Demo content waiting to be replaced from the admin panel.",
-    "listLabel": "Team members"
+    "listLabel": "Team members",
+    "carouselLabel": "Candemor drivers carousel",
+    "previous": "View previous driver",
+    "next": "View next driver",
+    "position": "Driver {{current}} of {{total}}"
   },
   "content": {
     "eyebrow": "Candemor content",

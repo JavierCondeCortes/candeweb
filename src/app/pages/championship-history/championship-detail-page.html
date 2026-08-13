@@ -1,22 +1,14 @@
-<a class="skip-link" href="#contenido-clasificacion">{{ 'candeonato.detail.skip' | translate }}</a>
+<a class="skip-link" [routerLink]="[]" fragment="contenido-clasificacion">{{
+  'candeonato.detail.skip' | translate
+}}</a>
 
 <header class="detail-hero">
   <div class="detail-grid" aria-hidden="true"></div>
-  <nav class="detail-nav" [attr.aria-label]="'candeonato.nav.label' | translate">
-    <a
-      class="detail-brand"
-      routerLink="/"
-      [attr.aria-label]="'candeonato.detail.homeLabel' | translate"
-    >
-      CND<span>///</span>
-    </a>
-    <div>
-      <a routerLink="/">{{ 'candeonato.history.home' | translate }}</a>
-      <a routerLink="/candeonato">{{ 'candeonato.history.current' | translate }}</a>
-      <a routerLink="/candeonatos">{{ 'candeonato.history.all' | translate }}</a>
-      <app-language-switcher />
-    </div>
-  </nav>
+  <app-candeonato-navbar
+    variant="detail"
+    [menuOpen]="isMenuOpen()"
+    (menuOpenChange)="isMenuOpen.set($event)"
+  />
 
   <div class="detail-hero-content">
     <p class="eyebrow">{{ 'candeonato.detail.tournament' | translate: { id: tournamentId() } }}</p>
@@ -40,11 +32,12 @@
                 [value]="edition.externalTournamentId"
                 [selected]="edition.externalTournamentId === tournamentId()"
               >
-                {{ edition.name }} ·
+                {{ edition.name }}
+                <!-- ·
                 {{
                   'candeonato.detail.tournamentOption'
                     | translate: { id: edition.externalTournamentId }
-                }}
+                }} -->
               </option>
             }
           </select>
@@ -243,7 +236,7 @@
 </main>
 
 <footer class="detail-footer">
-  <a class="detail-brand" routerLink="/">CND<span>///</span></a>
+  <a class="detail-brand" routerLink="/">CANDE<span>WEB</span></a>
   <p>{{ 'candeonato.detail.archiveFooter' | translate }}</p>
   <nav [attr.aria-label]="'candeonato.detail.archiveNav' | translate">
     <a routerLink="/candeonatos">{{ 'candeonato.history.all' | translate }}</a>

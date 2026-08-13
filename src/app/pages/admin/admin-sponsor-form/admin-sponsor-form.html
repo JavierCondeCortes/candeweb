@@ -49,6 +49,9 @@
             <img [src]="form.controls.logoUrl.value" [alt]="form.controls.logoAlt.value || ''" />
           </div>
         }
+        @if (uploadMessage()) {
+          <p class="admin-upload-success is-wide" role="status">{{ uploadMessage() }}</p>
+        }
         <label class="is-wide"
           ><span>{{ 'admin.sponsorForm.uploadLogo' | translate }}</span
           ><input

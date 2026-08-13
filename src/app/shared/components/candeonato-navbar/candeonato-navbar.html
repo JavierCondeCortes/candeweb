@@ -1,0 +1,121 @@
+<nav
+  class="candeonato-nav"
+  [class.hero-nav]="variant() === 'landing'"
+  [class.detail-nav]="variant() === 'detail'"
+  [class.archive-nav]="variant() === 'archive'"
+  [class.menu-open]="menuOpen()"
+  [attr.aria-label]="'candeonato.nav.label' | translate"
+  [attr.aria-hidden]="inactive() ? 'true' : null"
+  [attr.inert]="inactive() ? '' : null"
+>
+  <a
+    class="candeonato-brand brand detail-brand archive-brand"
+    [routerLink]="variant() === 'landing' ? '/candeonato' : '/'"
+    [fragment]="variant() === 'landing' ? 'inicio' : undefined"
+    [attr.aria-label]="brandAriaLabel()"
+  >
+    CANDE<span>WEB</span>
+  </a>
+
+  <button
+    class="candeonato-menu-button hero-menu-button detail-menu-button archive-menu-button"
+    type="button"
+    aria-controls="candeonato-navigation-links"
+    [attr.aria-expanded]="menuOpen()"
+    [attr.aria-label]="
+      menuOpen() ? ('candeonato.nav.close' | translate) : ('candeonato.nav.open' | translate)
+    "
+    (click)="toggleMenu()"
+  >
+    <span></span><span></span>
+  </button>
+
+  <div
+    id="candeonato-navigation-links"
+    class="candeonato-nav-links nav-links detail-nav-links archive-nav-links"
+  >
+    @if (variant() === 'landing') {
+      <a
+        routerLink="/"
+        routerLinkActive="is-active"
+        ariaCurrentWhenActive="page"
+        [routerLinkActiveOptions]="exactLinkMatchOptions"
+        (click)="closeMenu()"
+        >{{ 'candeonato.history.home' | translate }}</a
+      >
+      <a
+        routerLink="/candeonato"
+        fragment="evento"
+        routerLinkActive="is-active"
+        ariaCurrentWhenActive="location"
+        [routerLinkActiveOptions]="exactLinkMatchOptions"
+        (click)="closeMenu()"
+        >{{ 'candeonato.nav.about' | translate }}</a
+      >
+      <a
+        routerLink="/candeonato"
+        fragment="requisitos"
+        routerLinkActive="is-active"
+        ariaCurrentWhenActive="location"
+        [routerLinkActiveOptions]="exactLinkMatchOptions"
+        (click)="closeMenu()"
+        >{{ 'candeonato.nav.requirements' | translate }}</a
+      >
+      <a
+        routerLink="/candeonato"
+        fragment="reglas"
+        routerLinkActive="is-active"
+        ariaCurrentWhenActive="location"
+        [routerLinkActiveOptions]="exactLinkMatchOptions"
+        (click)="closeMenu()"
+        >{{ 'candeonato.nav.rules' | translate }}</a
+      >
+      <a
+        routerLink="/candeonato"
+        fragment="inscripcion"
+        routerLinkActive="is-active"
+        ariaCurrentWhenActive="location"
+        [routerLinkActiveOptions]="exactLinkMatchOptions"
+        (click)="closeMenu()"
+        >{{ 'candeonato.nav.registration' | translate }}</a
+      >
+      <a
+        [routerLink]="historyUrl()"
+        routerLinkActive="is-active"
+        ariaCurrentWhenActive="page"
+        [routerLinkActiveOptions]="exactLinkMatchOptions"
+        (click)="closeMenu()"
+        >{{ 'candeonato.nav.history' | translate }}</a
+      >
+    } @else {
+      <a
+        routerLink="/"
+        routerLinkActive="is-active"
+        ariaCurrentWhenActive="page"
+        [routerLinkActiveOptions]="exactLinkMatchOptions"
+        (click)="closeMenu()"
+        >{{ 'candeonato.history.home' | translate }}</a
+      >
+      <a
+        routerLink="/candeonatos"
+        routerLinkActive="is-active"
+        ariaCurrentWhenActive="page"
+        [routerLinkActiveOptions]="exactLinkMatchOptions"
+        (click)="closeMenu()"
+        >{{ 'candeonato.history.all' | translate }}</a
+      >
+      <a
+        routerLink="/candeonato"
+        routerLinkActive="is-active"
+        ariaCurrentWhenActive="page"
+        [routerLinkActiveOptions]="exactLinkMatchOptions"
+        (click)="closeMenu()"
+        >{{ 'candeonato.history.current' | translate }}</a
+      >
+    }
+
+    <span class="language-control" (click)="closeMenu()">
+      <app-language-switcher />
+    </span>
+  </div>
+</nav>

@@ -93,6 +93,22 @@ La especificación, el estado de implementación y las decisiones pendientes est
 
 ## Despliegue
 
+### Docker y Docker Hub
+
+El proyecto incluye una imagen multi-stage de producción, Docker Compose y almacenamiento
+persistente para SQLite y los archivos administrados. Consulta la guía de construcción, migración de
+los datos actuales, publicación y actualización en [`docs/docker.md`](docs/docker.md).
+
+```bash
+cp .env.docker.example .env.docker
+docker compose --env-file .env.docker up --build -d
+```
+
+La aplicación completa queda disponible en `http://localhost:3000`. `.env.docker`, la base de datos
+y las imágenes locales están excluidos de la imagen y del repositorio.
+
+### Render
+
 El repositorio incluye `render.yaml` para desplegar un único servicio Node en Render con región
 Frankfurt, comprobación `/api/health` y un disco persistente montado sobre `server/data/`.
 

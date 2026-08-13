@@ -1,7 +1,7 @@
 import { Component, computed, inject, input } from '@angular/core';
-import { ChampionshipContent } from '../../../core/models/content-admin.model';
-import { I18nService } from '../../../core/i18n/i18n.service';
-import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { ChampionshipContent } from '../../../../core/models/content-admin.model';
+import { I18nService } from '../../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-requirements',

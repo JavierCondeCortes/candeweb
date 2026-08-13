@@ -4,13 +4,14 @@ import { RouterLink } from '@angular/router';
 import { catchError, map, of, startWith } from 'rxjs';
 import { PublicContentService } from '../../core/services/public-content.service';
 import { I18nService } from '../../core/i18n/i18n.service';
-import { LanguageSwitcher } from '../../core/i18n/language-switcher/language-switcher';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { ChampionshipContent } from '../../core/models/content-admin.model';
+import { CandeonatoNavbar } from '../../shared/components/candeonato-navbar/candeonato-navbar';
 
 @Component({
   selector: 'app-championship-history-page',
-  imports: [AsyncPipe, RouterLink, LanguageSwitcher, TranslatePipe],
+  standalone: true,
+  imports: [AsyncPipe, RouterLink, CandeonatoNavbar, TranslatePipe],
   templateUrl: './championship-history-page.html',
 })
 export class ChampionshipHistoryPage {

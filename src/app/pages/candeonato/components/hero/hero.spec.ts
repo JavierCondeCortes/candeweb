@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ChampionshipContent } from '../../../core/models/content-admin.model';
+import { provideRouter } from '@angular/router';
+import { ChampionshipContent } from '../../../../core/models/content-admin.model';
 
 import { Hero } from './hero';
 
@@ -10,6 +11,7 @@ describe('Hero', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Hero],
+      providers: [provideRouter([{ path: 'candeonato', component: Hero }])],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Hero);
@@ -61,7 +63,7 @@ describe('Hero', () => {
     expect(host.querySelector('.hero-nav')?.hasAttribute('inert')).toBe(false);
   });
 
-  it('opens and closes the mobile navigation accessibly', () => {
+  it('opens and closes the mobile navigation accessibly', async () => {
     fixture.detectChanges();
     const host = fixture.nativeElement as HTMLElement;
     const menuButton = host.querySelector<HTMLButtonElement>('.hero-menu-button');
@@ -77,6 +79,7 @@ describe('Hero', () => {
     expect(menuButton?.getAttribute('aria-expanded')).toBe('true');
 
     firstLink?.click();
+    await fixture.whenStable();
     fixture.detectChanges();
 
     expect(component.isMenuOpen()).toBe(false);

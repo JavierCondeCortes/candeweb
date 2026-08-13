@@ -21,19 +21,20 @@ import { ChampionshipStats } from './components/championship-stats/championship-
 import { RoundsList } from './components/rounds-list/rounds-list';
 import { StandingsTable } from './components/standings-table/standings-table';
 import { I18nService } from '../../core/i18n/i18n.service';
-import { LanguageSwitcher } from '../../core/i18n/language-switcher/language-switcher';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { CandeonatoNavbar } from '../../shared/components/candeonato-navbar/candeonato-navbar';
 
 type PageState = 'loading' | 'ready' | 'error';
 
 @Component({
   selector: 'app-championship-detail-page',
+  standalone: true,
   imports: [
     RouterLink,
     ChampionshipStats,
     StandingsTable,
     RoundsList,
-    LanguageSwitcher,
+    CandeonatoNavbar,
     TranslatePipe,
   ],
   templateUrl: './championship-detail-page.html',
@@ -49,6 +50,7 @@ export class ChampionshipDetailPage implements OnInit {
   private loadSubscription?: Subscription;
 
   readonly state = signal<PageState>('loading');
+  readonly isMenuOpen = signal(false);
   readonly championship = signal<ChampionshipViewModel | null>(null);
   readonly tournamentId = signal(42);
   readonly isRefreshing = signal(false);
@@ -104,6 +106,14 @@ export class ChampionshipDetailPage implements OnInit {
 
   refresh(): void {
     this.loadTournament(true);
+  }
+
+  toggleMenu(): void {
+    this.isMenuOpen.update((open) => !open);
+  }
+
+  closeMenu(): void {
+    this.isMenuOpen.set(false);
   }
 
   selectEdition(event: Event): void {

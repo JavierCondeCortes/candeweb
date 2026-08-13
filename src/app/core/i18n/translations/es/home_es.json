@@ -70,7 +70,11 @@
     "error": "El equipo no está disponible ahora. Vuelve a intentarlo dentro de unos minutos.",
     "empty": "Los perfiles oficiales se publicarán próximamente.",
     "demo": "Contenido de demostración pendiente de sustituir desde el panel de administración.",
-    "listLabel": "Miembros del equipo"
+    "listLabel": "Miembros del equipo",
+    "carouselLabel": "Carrusel de pilotos de Candemor",
+    "previous": "Ver piloto anterior",
+    "next": "Ver piloto siguiente",
+    "position": "Piloto {{current}} de {{total}}"
   },
   "content": {
     "eyebrow": "Contenido Candemor",

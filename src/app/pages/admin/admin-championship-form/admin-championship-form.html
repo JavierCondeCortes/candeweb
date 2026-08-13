@@ -328,6 +328,7 @@
               fieldErrors()['registrationUrl'] ? 'championship-registration-error' : null
             "
           />
+          <small>{{ 'admin.championshipForm.registrationHelp' | translate }}</small>
           @if (fieldErrors()['registrationUrl']; as error) {
             <small id="championship-registration-error" class="field-error">{{ error }}</small>
           }

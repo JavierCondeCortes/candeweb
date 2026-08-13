@@ -157,6 +157,25 @@ test('administra miembros, Candeonatos, medios y datos públicos con una cuenta 
         },
       ],
     },
+    googleFormsService: {
+      getSchema: async (url) => ({
+        title: 'Inscripción de prueba',
+        description: 'Formulario dinámico',
+        viewUrl: url,
+        supported: true,
+        fields: [
+          {
+            id: '123456',
+            kind: 'text',
+            label: 'Nombre de piloto',
+            description: '',
+            required: true,
+            options: [],
+          },
+        ],
+      }),
+      submit: async ({ answers }) => ({ ok: answers['123456'] === 'Andrea Real' }),
+    },
   });
   await listen(app.server);
   const address = app.server.address();
@@ -230,6 +249,21 @@ test('administra miembros, Candeonatos, medios y datos públicos con una cuenta 
     );
     assert.equal(invalidPublicRoute.status, 404);
     assert.equal(invalidPublicRoute.data.error.code, 'NOT_FOUND');
+
+    const googleFormUrl = 'https://forms.gle/example';
+    const googleFormSchema = await jsonRequest(
+      baseUrl,
+      `/api/public/google-form?url=${encodeURIComponent(googleFormUrl)}`,
+    );
+    assert.equal(googleFormSchema.status, 200);
+    assert.equal(googleFormSchema.data.title, 'Inscripción de prueba');
+    assert.equal(googleFormSchema.data.fields[0].id, '123456');
+    const googleFormSubmission = await jsonRequest(baseUrl, '/api/public/google-form-submit', {
+      method: 'POST',
+      body: { url: googleFormUrl, answers: { 123456: 'Andrea Real' } },
+    });
+    assert.equal(googleFormSubmission.status, 200);
+    assert.equal(googleFormSubmission.data.ok, true);
 
     const initialSession = await jsonRequest(baseUrl, '/api/admin/session');
     assert.equal(initialSession.status, 200);
@@ -591,6 +625,38 @@ test('administra miembros, Candeonatos, medios y datos públicos con una cuenta 
     assert.equal(sponsorLogoUpload.data.asset.width, 800);
     assert.equal(sponsorLogoUpload.data.asset.height, 200);
     assert.equal(sponsorLogoUpload.data.asset.mobilePublicUrl, null);
+
+    for (const sample of [
+      { name: 'vertical-logo.png', width: 100, height: 300 },
+      { name: 'square-logo.png', width: 128, height: 128 },
+    ]) {
+      const image = await sharp({
+        create: {
+          width: sample.width,
+          height: sample.height,
+          channels: 4,
+          background: '#00000000',
+        },
+      })
+        .png()
+        .toBuffer();
+      const response = await jsonRequest(baseUrl, '/api/admin/media', {
+        method: 'POST',
+        cookie: adminCookie,
+        csrf: adminCsrf,
+        body: {
+          fileName: sample.name,
+          mimeType: 'image/png',
+          kind: 'sponsor',
+          altText: 'Logotipo de prueba',
+          dataBase64: image.toString('base64'),
+        },
+      });
+
+      assert.equal(response.status, 201);
+      assert.equal(response.data.asset.width, sample.width);
+      assert.equal(response.data.asset.height, sample.height);
+    }
 
     const linkedMedia = await jsonRequest(baseUrl, `/api/admin/members/${created.data.member.id}`, {
       method: 'PATCH',

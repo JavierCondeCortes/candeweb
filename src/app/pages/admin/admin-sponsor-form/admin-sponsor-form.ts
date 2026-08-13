@@ -25,6 +25,7 @@ export class AdminSponsorForm implements OnInit, HasPendingChanges {
   readonly loading = signal(false);
   readonly saving = signal(false);
   readonly uploading = signal(false);
+  readonly uploadMessage = signal('');
   readonly saved = signal(false);
   readonly errorMessage = signal('');
   readonly fieldErrors = signal<Record<string, string>>({});
@@ -102,27 +103,44 @@ export class AdminSponsorForm implements OnInit, HasPendingChanges {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
+    this.errorMessage.set('');
+    this.uploadMessage.set('');
     if (
       !['image/jpeg', 'image/png', 'image/webp', 'image/avif'].includes(file.type) ||
       file.size > 12 * 1024 * 1024
     ) {
       this.errorMessage.set(this.i18n.translate('admin.sponsorForm.invalidImage'));
+      input.value = '';
       return;
     }
     this.uploading.set(true);
     try {
       const request = await this.api.uploadImage(file, 'sponsor', this.form.controls.logoAlt.value);
-      request.pipe(finalize(() => this.uploading.set(false))).subscribe({
-        next: ({ asset }) => this.form.controls.logoUrl.setValue(asset.publicUrl),
-        error: (error) =>
-          this.errorMessage.set(
-            apiErrorMessage(error, this.i18n.translate('admin.common.operationFailed'), (key) =>
-              this.i18n.translate(key),
+      request
+        .pipe(
+          finalize(() => {
+            this.uploading.set(false);
+            input.value = '';
+          }),
+        )
+        .subscribe({
+          next: ({ asset }) => {
+            this.form.controls.logoUrl.setValue(asset.publicUrl);
+            this.form.controls.logoUrl.markAsDirty();
+            this.form.markAsDirty();
+            this.fieldErrors.update(({ logoUrl: _logoUrl, ...errors }) => errors);
+            this.uploadMessage.set(this.i18n.translate('admin.sponsorForm.uploadSuccess'));
+          },
+          error: (error) =>
+            this.errorMessage.set(
+              apiErrorMessage(error, this.i18n.translate('admin.common.operationFailed'), (key) =>
+                this.i18n.translate(key),
+              ),
             ),
-          ),
-      });
+        });
     } catch (error) {
       this.uploading.set(false);
+      input.value = '';
       this.errorMessage.set(
         apiErrorMessage(error, this.i18n.translate('admin.common.operationFailed'), (key) =>
           this.i18n.translate(key),

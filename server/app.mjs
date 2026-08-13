@@ -6,6 +6,7 @@ import { dirname, extname, join, normalize, resolve } from 'node:path';
 import { constants as zlibConstants, createBrotliCompress, createGzip } from 'node:zlib';
 import sharp from 'sharp';
 import { createFatcatRoundResultsService } from './fatcat-round-results.mjs';
+import { createGoogleFormsService } from './google-forms.mjs';
 import {
   createFatcatStandingsService,
   reconcileStandingsWithDriverIds,
@@ -79,6 +80,7 @@ export function createCandemorApp(options = {}) {
   const twitchStatusService = options.twitchStatusService ?? createTwitchStatusService();
   const roundResultsService = options.roundResultsService ?? createFatcatRoundResultsService();
   const standingsService = options.standingsService ?? createFatcatStandingsService();
+  const googleFormsService = options.googleFormsService ?? createGoogleFormsService();
   const db = openDatabase(databasePath);
   const loginAttempts = new Map();
   const actionAttempts = new Map();
@@ -98,6 +100,7 @@ export function createCandemorApp(options = {}) {
         twitchStatusService,
         roundResultsService,
         standingsService,
+        googleFormsService,
       });
     } catch (error) {
       sendError(response, error);
@@ -129,6 +132,21 @@ async function routeRequest(context) {
 
   if (method === 'GET' && path === '/api/health') {
     return sendJson(response, 200, { ok: true, database: 'ready' });
+  }
+
+  if (method === 'GET' && path === '/api/public/google-form') {
+    const schema = await context.googleFormsService.getSchema(url.searchParams.get('url'));
+    const { actionUrl: _actionUrl, fbzx: _fbzx, pageCount: _pageCount, ...publicSchema } = schema;
+    return sendJson(response, 200, publicSchema);
+  }
+
+  if (method === 'POST' && path === '/api/public/google-form-submit') {
+    const body = await readJson(request);
+    const result = await context.googleFormsService.submit({
+      url: body.url,
+      answers: body.answers,
+    });
+    return sendJson(response, 200, result);
   }
 
   if (method === 'GET' && path === '/api/public/site-settings') {
@@ -1557,7 +1575,7 @@ async function saveMedia(context, input) {
       (width >= 900 && height >= 1200) ||
       (width >= 900 && height >= 900);
     const validMemberPhoto = width >= 720 && height >= 900;
-    const validSponsorLogo = width >= 300 && height >= 100;
+    const validSponsorLogo = width >= 100 && height >= 100;
     const mediaIsTooSmall =
       kind === 'championship'
         ? !validChampionshipCover
@@ -1571,7 +1589,7 @@ async function saveMedia(context, input) {
         kind === 'championship'
           ? 'Usa un cartel de al menos 1200 × 675 px en horizontal, 900 × 1200 px en vertical o 900 × 900 px en formato cuadrado.'
           : kind === 'sponsor'
-            ? 'El logotipo debe medir al menos 300 × 100 píxeles.'
+            ? 'El logotipo debe medir al menos 100 × 100 píxeles. Se admiten formatos verticales, cuadrados y horizontales.'
             : 'La fotografía debe medir al menos 720 × 900 píxeles.',
       );
     }

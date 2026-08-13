@@ -1,4 +1,6 @@
-<a class="skip-link" href="#contenido-historial">{{ 'candeonato.history.skip' | translate }}</a>
+<a class="skip-link" [routerLink]="[]" fragment="contenido-historial">{{
+  'candeonato.history.skip' | translate
+}}</a>
 
 @if (state$ | async; as state) {
   <header class="archive-hero">
@@ -17,23 +19,7 @@
     <div class="archive-vignette" aria-hidden="true"></div>
     <div class="archive-grid" aria-hidden="true"></div>
 
-    <nav class="archive-nav" [attr.aria-label]="'candeonato.nav.label' | translate">
-      <a
-        class="archive-brand"
-        routerLink="/"
-        [attr.aria-label]="'candeonato.detail.homeLabel' | translate"
-      >
-        CND<span>///</span>
-      </a>
-      <div>
-        <a routerLink="/">{{ 'candeonato.history.home' | translate }}</a>
-        <a routerLink="/candeonato">{{ 'candeonato.history.current' | translate }}</a>
-        <a routerLink="/candeonatos" aria-current="page">{{
-          'candeonato.history.all' | translate
-        }}</a>
-        <app-language-switcher />
-      </div>
-    </nav>
+    <app-candeonato-navbar variant="archive" />
 
     <div class="archive-hero-content">
       <p class="eyebrow">{{ 'candeonato.history.eyebrow' | translate }}</p>
@@ -93,7 +79,7 @@
                   </picture>
                 } @else {
                   <div class="edition-cover-placeholder" aria-hidden="true">
-                    <span>CND///</span>
+                    <span>CANDEWEB</span>
                     <strong>{{ championship.name }}</strong>
                     <small>{{ 'candeonato.history.posterPending' | translate }}</small>
                   </div>
@@ -152,7 +138,7 @@
   </main>
 
   <footer class="archive-footer">
-    <a class="archive-brand" routerLink="/">CND<span>///</span></a>
+    <a class="archive-brand" routerLink="/">CANDE<span>WEB</span></a>
     <p>{{ 'candeonato.history.footer' | translate }}</p>
     <a routerLink="/candeonato">{{ 'candeonato.history.viewCurrent' | translate }}</a>
   </footer>

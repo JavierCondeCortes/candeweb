@@ -10,11 +10,12 @@ import {
   ViewChild,
   signal,
 } from '@angular/core';
-import { ChampionshipContent } from '../../../core/models/content-admin.model';
+import { ChampionshipContent } from '../../../../core/models/content-admin.model';
 import { SoundSwitch } from '../sound-switch/sound-switch';
-import { I18nService } from '../../../core/i18n/i18n.service';
-import { LanguageSwitcher } from '../../../core/i18n/language-switcher/language-switcher';
-import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
+import { RouterLink } from '@angular/router';
+import { CandeonatoNavbar } from '../../../../shared/components/candeonato-navbar/candeonato-navbar';
 
 type Countdown = {
   days: string;
@@ -25,7 +26,8 @@ type Countdown = {
 
 @Component({
   selector: 'app-hero',
-  imports: [SoundSwitch, LanguageSwitcher, TranslatePipe],
+  standalone: true,
+  imports: [SoundSwitch, CandeonatoNavbar, TranslatePipe, RouterLink],
   templateUrl: './hero.html',
   styleUrl: './hero.css',
 })
@@ -79,11 +81,6 @@ export class Hero implements AfterViewInit, OnDestroy {
       .format(new Date(this.startAt()))
       .replaceAll('/', ' · '),
   );
-  readonly historyUrl = computed(
-    () => `/candeonatos/${this.championship()?.externalTournamentId ?? 42}`,
-  );
-  readonly registrationUrl = computed(() => this.championship()?.registrationUrl ?? '#inscripcion');
-
   private countdownTimer?: ReturnType<typeof setInterval>;
   private motionQuery?: MediaQueryList;
 
