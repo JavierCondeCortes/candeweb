@@ -55,6 +55,18 @@
   color: var(--text-muted);
 }
 
+.admin-auth-secondary {
+  margin: 1.5rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+
+.admin-auth-secondary a {
+  color: var(--lime);
+  text-underline-offset: 0.2rem;
+}
+
 .admin-eyebrow {
   margin: 1.5rem 0 0;
   color: var(--lime);
@@ -765,6 +777,53 @@
   letter-spacing: 0.12em;
 }
 
+.admin-totp-qr {
+  display: grid;
+  width: min(100%, 22rem);
+  justify-items: center;
+  gap: 0.7rem;
+  margin: 0 0 1.5rem;
+  padding: 1rem;
+  border: 1px solid var(--magenta);
+  background: var(--text);
+  color: var(--black);
+  text-align: center;
+}
+
+.admin-totp-qr img {
+  width: min(100%, 20rem);
+  height: auto;
+}
+
+.admin-totp-qr figcaption {
+  max-width: 30rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.admin-invitation-identity {
+  display: grid;
+  gap: 0.5rem;
+  margin: 1.25rem 0;
+}
+
+.admin-invitation-identity div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.admin-invitation-identity dt {
+  color: var(--text-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+}
+
+.admin-invitation-identity dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
 .admin-recovery-codes {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -839,6 +898,39 @@
   align-items: flex-start;
 }
 
+.admin-users-panel > div {
+  width: 100%;
+}
+
+.admin-invitation-result {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: clamp(1.2rem, 4vw, 2rem);
+  border: 1px solid var(--magenta);
+  background: rgba(255, 43, 214, 0.07);
+}
+
+.admin-invitation-result h2 {
+  margin: 0.35rem 0;
+  overflow-wrap: anywhere;
+}
+
+.admin-invitation-result label {
+  display: grid;
+  gap: 0.4rem;
+  font-weight: 700;
+}
+
+.admin-invitation-result input {
+  width: 100%;
+  min-height: 2.9rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgba(245, 245, 242, 0.34);
+  background: var(--black);
+  color: var(--text);
+}
+
 .admin-user-list {
   display: grid;
   margin: 1rem 0 0;
@@ -854,6 +946,15 @@
   gap: 1rem;
   padding: 0.75rem 0;
   border-top: 1px solid var(--border);
+}
+
+.admin-user-list li > span:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.admin-user-actions .is-danger {
+  color: var(--danger);
 }
 
 .admin-user-actions {
@@ -899,6 +1000,12 @@
 
   .admin-identity a {
     display: none;
+  }
+
+  .admin-user-list li,
+  .admin-user-actions {
+    align-items: stretch;
+    flex-direction: column;
   }
 }
 

@@ -1,0 +1,142 @@
+<header class="admin-page-header">
+  <div>
+    <p class="admin-eyebrow">{{ 'admin.users.eyebrow' | translate }}</p>
+    <h1>{{ 'admin.users.title' | translate }}</h1>
+    <p>{{ 'admin.users.intro' | translate }}</p>
+  </div>
+</header>
+
+@if (message()) {
+  <p class="admin-alert is-success" role="status">{{ message() }}</p>
+}
+@if (errorMessage()) {
+  <div class="admin-alert is-error" role="alert">{{ errorMessage() }}</div>
+}
+
+@if (invitation(); as currentInvitation) {
+  <section class="admin-invitation-result" aria-labelledby="invitation-result-title">
+    <div>
+      <p class="admin-eyebrow">{{ 'admin.users.invitationReady' | translate }}</p>
+      <h2 id="invitation-result-title">{{ currentInvitation.email }}</h2>
+      <p>{{ 'admin.users.invitationHelp' | translate }}</p>
+    </div>
+    <label>
+      <span>{{ 'admin.users.invitationLink' | translate }}</span>
+      <input [value]="invitationUrl()" readonly />
+    </label>
+    <div class="admin-header-actions">
+      <button class="admin-button is-primary" type="button" (click)="copyInvitation()">
+        {{ 'admin.users.copyLink' | translate }}
+      </button>
+      <a class="admin-button" [href]="invitationMailto()">{{
+        'admin.users.sendEmail' | translate
+      }}</a>
+      <button class="admin-button" type="button" (click)="closeInvitation()">
+        {{ 'admin.users.close' | translate }}
+      </button>
+    </div>
+  </section>
+}
+
+@if (loading()) {
+  <p role="status">{{ 'admin.common.loading' | translate }}</p>
+} @else {
+  <div class="admin-two-columns">
+    <section class="admin-panel admin-users-panel" aria-labelledby="requests-title">
+      <div>
+        <p class="admin-eyebrow">{{ 'admin.users.requestsEyebrow' | translate }}</p>
+        <h2 id="requests-title">{{ 'admin.users.requestsTitle' | translate }}</h2>
+        <p>{{ 'admin.users.requestsHelp' | translate }}</p>
+        @if (requests().length) {
+          <ul class="admin-user-list">
+            @for (request of requests(); track request.id) {
+              <li>
+                <span>
+                  <strong>{{ request.displayName }}</strong>
+                  <small
+                    >{{ request.email }} · {{ requestStatusKey(request.status) | translate }} ·
+                    {{ request.createdAt | date: 'short' }}</small
+                  >
+                </span>
+                <span class="admin-user-actions">
+                  @if (request.status !== 'rejected') {
+                    <button
+                      type="button"
+                      [disabled]="actionId() === request.id"
+                      (click)="approve(request)"
+                    >
+                      {{
+                        (request.status === 'approved'
+                          ? 'admin.users.renewInvitation'
+                          : 'admin.users.approve'
+                        ) | translate
+                      }}
+                    </button>
+                  }
+                  @if (request.status !== 'rejected') {
+                    <button
+                      class="is-danger"
+                      type="button"
+                      [disabled]="actionId() === request.id"
+                      (click)="reject(request)"
+                    >
+                      {{ 'admin.users.reject' | translate }}
+                    </button>
+                  }
+                </span>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p>{{ 'admin.users.noRequests' | translate }}</p>
+        }
+      </div>
+    </section>
+
+    <section class="admin-panel admin-users-panel" aria-labelledby="accounts-title">
+      <div>
+        <p class="admin-eyebrow">{{ 'admin.users.accountsEyebrow' | translate }}</p>
+        <h2 id="accounts-title">{{ 'admin.users.accountsTitle' | translate }}</h2>
+        <p>{{ 'admin.users.accountsHelp' | translate }}</p>
+        <ul class="admin-user-list">
+          @for (user of users(); track user.id) {
+            <li>
+              <span>
+                <strong>{{ user.displayName }}</strong>
+                <small>
+                  {{ user.email }} ·
+                  {{
+                    (user.role === 'owner' ? 'admin.users.owner' : 'admin.users.admin') | translate
+                  }}
+                  ·
+                  {{
+                    (user.mfaEnabled ? 'admin.users.mfaEnabled' : 'admin.users.mfaPending')
+                      | translate
+                  }}
+                </small>
+              </span>
+              @if (user.role !== 'owner') {
+                <span class="admin-user-actions">
+                  <button type="button" [disabled]="actionId() === user.id" (click)="toggle(user)">
+                    {{
+                      (user.active ? 'admin.users.deactivate' : 'admin.users.activate') | translate
+                    }}
+                  </button>
+                  @if (user.active) {
+                    <button
+                      type="button"
+                      [disabled]="actionId() === user.id"
+                      (click)="revokeSessions(user)"
+                    >
+                      {{ 'admin.users.revokeSessions' | translate }}
+                    </button>
+                  }
+                </span>
+              }
+            </li>
+          }
+        </ul>
+      </div>
+    </section>
+  </div>
+}

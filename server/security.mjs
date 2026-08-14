@@ -57,15 +57,11 @@ export function getSession(db, request) {
     .prepare(
       `SELECT
         s.token_hash, s.csrf_token, s.expires_at,
-        a.id AS admin_id, a.email, a.display_name, a.role, a.active, a.totp_enabled,
+        a.id AS admin_id, a.email, a.display_name, a.role, a.is_owner, a.active, a.totp_enabled,
         a.email_verified_at
        FROM admin_sessions s
        JOIN admin_profiles a ON a.id = s.admin_id
-       WHERE s.token_hash = ? AND a.role = 'admin'
-         AND a.id = (
-           SELECT id FROM admin_profiles WHERE role = 'admin'
-           ORDER BY created_at ASC, id ASC LIMIT 1
-         )`,
+       WHERE s.token_hash = ? AND a.role = 'admin'`,
     )
     .get(hashToken(token));
 
@@ -82,7 +78,7 @@ export function getSession(db, request) {
       id: session.admin_id,
       email: session.email,
       displayName: session.display_name,
-      role: session.role,
+      role: session.is_owner === 1 ? 'owner' : 'admin',
       mfaEnabled: session.totp_enabled === 1,
       emailVerified: Boolean(session.email_verified_at),
     },

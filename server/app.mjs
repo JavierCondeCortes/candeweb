@@ -1,9 +1,10 @@
-import { createHash, randomUUID } from 'node:crypto';
+import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { createReadStream, existsSync, mkdirSync, statSync } from 'node:fs';
 import { unlink, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { dirname, extname, join, normalize, resolve } from 'node:path';
 import { constants as zlibConstants, createBrotliCompress, createGzip } from 'node:zlib';
+import QRCode from 'qrcode';
 import sharp from 'sharp';
 import { createFatcatRoundResultsService } from './fatcat-round-results.mjs';
 import { createGoogleFormsService } from './google-forms.mjs';
@@ -39,6 +40,7 @@ import {
 } from './security.mjs';
 import {
   ApiError,
+  validateAccessRequest,
   validateAdminIdentity,
   validateChampionship,
   validateMember,
@@ -343,6 +345,18 @@ async function routeRequest(context) {
     return setupFirstAdmin(context);
   }
 
+  if (method === 'POST' && path === '/api/admin/access-requests') {
+    return requestAdminAccess(context);
+  }
+
+  if (method === 'GET' && path === '/api/admin/invitations/verify') {
+    return verifyAdminInvitation(context, url.searchParams.get('token'));
+  }
+
+  if (method === 'POST' && path === '/api/admin/invitations/accept') {
+    return acceptAdminInvitation(context);
+  }
+
   if (method === 'POST' && path === '/api/admin/login') {
     return login(context);
   }
@@ -364,7 +378,7 @@ async function routeRequest(context) {
       throw new ApiError(403, 'INVALID_CSRF', 'La sesión necesita renovarse antes de guardar.');
     }
     const isMfaRoute = path.startsWith('/api/admin/mfa/');
-    if (process.env.NODE_ENV === 'production' && !session.admin.mfaEnabled && !isMfaRoute) {
+    if (!session.admin.mfaEnabled && !isMfaRoute) {
       throw new ApiError(
         403,
         'MFA_SETUP_REQUIRED',
@@ -389,20 +403,27 @@ async function routeAdmin(context) {
   const { db, response, path, method, session } = context;
   requireAdministrator(session);
 
-  if (path.startsWith('/api/admin/users')) {
-    throw new ApiError(404, 'NOT_FOUND', 'La administración utiliza una única cuenta.');
+  if (path.startsWith('/api/admin/users') || path.startsWith('/api/admin/access-requests/')) {
+    return routeAdminUsers(context);
   }
 
   if (method === 'POST' && path === '/api/admin/mfa/setup') {
     requireAdministrator(session);
     const secret = generateTotpSecret();
+    const otpauthUri = createTotpUri(secret, session.admin.email);
     db.prepare(
       'UPDATE admin_profiles SET totp_pending_secret = ?, updated_at = ? WHERE id = ?',
     ).run(secret, new Date().toISOString(), session.admin.id);
     recordAudit(db, session.admin.id, 'admin.mfa_setup_started', 'admin_profile', session.admin.id);
     return sendJson(response, 200, {
       secret,
-      otpauthUri: createTotpUri(secret, session.admin.email),
+      otpauthUri,
+      qrCodeDataUrl: await QRCode.toDataURL(otpauthUri, {
+        errorCorrectionLevel: 'M',
+        margin: 2,
+        width: 320,
+        color: { dark: '#050505', light: '#f5f5f2' },
+      }),
     });
   }
 
@@ -1038,8 +1059,8 @@ async function setupFirstAdmin(context) {
   const inserted = db
     .prepare(
       `INSERT INTO admin_profiles
-     (id, email, display_name, password_hash, role, active, email_verified_at, created_at, updated_at)
-     SELECT ?, ?, ?, ?, 'admin', 1, ?, ?, ?
+     (id, email, display_name, password_hash, role, is_owner, active, email_verified_at, created_at, updated_at)
+     SELECT ?, ?, ?, ?, 'admin', 1, 1, ?, ?, ?
      WHERE NOT EXISTS (SELECT 1 FROM admin_profiles)`,
     )
     .run(id, identity.email, identity.displayName, passwordHash, timestamp, timestamp, timestamp);
@@ -1051,6 +1072,139 @@ async function setupFirstAdmin(context) {
   response.setHeader('Set-Cookie', sessionCookie(session.token, session.expiresAt, secureCookies));
   return sendJson(response, 201, {
     authenticated: true,
+    needsSetup: false,
+    admin: {
+      id,
+      email: identity.email,
+      displayName: identity.displayName,
+      role: 'owner',
+      mfaEnabled: false,
+      emailVerified: true,
+    },
+    csrfToken: session.csrfToken,
+  });
+}
+
+async function requestAdminAccess(context) {
+  const { db, request, response, actionAttempts } = context;
+  consumeActionLimit(
+    actionAttempts,
+    `access-request:${request.socket.remoteAddress ?? 'local'}`,
+    5,
+    60 * 60 * 1000,
+  );
+  const identity = validateAccessRequest(await readJson(request));
+  const timestamp = new Date().toISOString();
+  const existingAdmin = db
+    .prepare('SELECT 1 FROM admin_profiles WHERE email = ? LIMIT 1')
+    .get(identity.email);
+  if (!existingAdmin) {
+    const existingRequest = db
+      .prepare('SELECT id, status FROM admin_access_requests WHERE email = ?')
+      .get(identity.email);
+    if (!existingRequest) {
+      db.prepare(
+        `INSERT INTO admin_access_requests
+         (id, email, display_name, status, created_at, updated_at)
+         VALUES (?, ?, ?, 'pending', ?, ?)`,
+      ).run(randomUUID(), identity.email, identity.displayName, timestamp, timestamp);
+    } else if (existingRequest.status === 'rejected') {
+      db.prepare(
+        `UPDATE admin_access_requests
+         SET display_name = ?, status = 'pending', updated_at = ?, reviewed_at = NULL,
+             reviewed_by = NULL WHERE id = ?`,
+      ).run(identity.displayName, timestamp, existingRequest.id);
+    }
+  }
+  return sendJson(response, 202, { requested: true });
+}
+
+function verifyAdminInvitation(context, token) {
+  const invitation = findValidInvitation(context.db, token);
+  if (!invitation) {
+    throw new ApiError(404, 'INVALID_INVITATION', 'La invitación no existe o ha caducado.');
+  }
+  return sendJson(context.response, 200, {
+    invitation: {
+      email: invitation.email,
+      displayName: invitation.display_name,
+      expiresAt: invitation.expires_at,
+    },
+  });
+}
+
+async function acceptAdminInvitation(context) {
+  const { db, request, response, secureCookies, actionAttempts } = context;
+  consumeActionLimit(
+    actionAttempts,
+    `accept-invitation:${request.socket.remoteAddress ?? 'local'}`,
+    10,
+    60 * 60 * 1000,
+  );
+  const input = await readJson(request);
+  const invitation = findValidInvitation(db, input.token);
+  if (!invitation) {
+    throw new ApiError(404, 'INVALID_INVITATION', 'La invitación no existe o ha caducado.');
+  }
+  const identity = validateAdminIdentity(
+    {
+      email: invitation.email,
+      displayName: invitation.display_name,
+      password: input.password,
+    },
+    { setup: true },
+  );
+  const id = randomUUID();
+  const timestamp = new Date().toISOString();
+  const passwordHash = await hashPassword(identity.password);
+
+  db.exec('BEGIN');
+  try {
+    const inserted = db
+      .prepare(
+        `INSERT INTO admin_profiles
+         (id, email, display_name, password_hash, role, is_owner, active, email_verified_at,
+          created_at, updated_at)
+         SELECT ?, ?, ?, ?, 'admin', 0, 1, ?, ?, ?
+         WHERE NOT EXISTS (SELECT 1 FROM admin_profiles WHERE email = ?)`,
+      )
+      .run(
+        id,
+        identity.email,
+        identity.displayName,
+        passwordHash,
+        timestamp,
+        timestamp,
+        timestamp,
+        identity.email,
+      );
+    if (inserted.changes === 0) {
+      throw new ApiError(409, 'ACCOUNT_EXISTS', 'Ya existe una cuenta para ese correo.');
+    }
+    db.prepare('UPDATE admin_invitations SET accepted_at = ? WHERE id = ?').run(
+      timestamp,
+      invitation.id,
+    );
+    if (invitation.request_id) {
+      db.prepare(
+        `UPDATE admin_access_requests
+         SET status = 'activated', updated_at = ? WHERE id = ?`,
+      ).run(timestamp, invitation.request_id);
+    }
+    recordAudit(db, id, 'admin.invitation_accepted', 'admin_profile', id, {
+      invitedBy: invitation.created_by,
+    });
+    db.exec('COMMIT');
+  } catch (error) {
+    db.exec('ROLLBACK');
+    throw error;
+  }
+
+  const session = createSession(db, id);
+  response.setHeader('Set-Cookie', sessionCookie(session.token, session.expiresAt, secureCookies));
+  return sendJson(response, 201, {
+    authenticated: true,
+    needsSetup: false,
     admin: {
       id,
       email: identity.email,
@@ -1061,6 +1215,223 @@ async function setupFirstAdmin(context) {
     },
     csrfToken: session.csrfToken,
   });
+}
+
+function findValidInvitation(db, token) {
+  const normalized = String(token ?? '').trim();
+  if (!/^[A-Za-z0-9_-]{40,100}$/.test(normalized)) return null;
+  return db
+    .prepare(
+      `SELECT * FROM admin_invitations
+       WHERE token_hash = ? AND accepted_at IS NULL AND expires_at > ?`,
+    )
+    .get(hashToken(normalized), new Date().toISOString());
+}
+
+async function routeAdminUsers(context) {
+  const { db, response, path, method, session } = context;
+  requireOwner(session);
+
+  if (method === 'GET' && path === '/api/admin/users') {
+    const users = db
+      .prepare(
+        `SELECT id, email, display_name, is_owner, active, totp_enabled,
+                email_verified_at, created_at, updated_at
+         FROM admin_profiles ORDER BY is_owner DESC, created_at ASC`,
+      )
+      .all()
+      .map(adminAccountFromRow);
+    const requests = db
+      .prepare(
+        `SELECT id, email, display_name, status, created_at, updated_at, reviewed_at
+         FROM admin_access_requests
+         WHERE status != 'activated'
+         ORDER BY CASE status WHEN 'pending' THEN 0 WHEN 'approved' THEN 1 ELSE 2 END,
+                  created_at DESC LIMIT 100`,
+      )
+      .all()
+      .map(accessRequestFromRow);
+    return sendJson(response, 200, { users, requests });
+  }
+
+  const approveMatch = path.match(/^\/api\/admin\/access-requests\/([^/]+)\/approve$/);
+  if (method === 'POST' && approveMatch) {
+    const requestId = approveMatch[1];
+    const accessRequest = db
+      .prepare('SELECT * FROM admin_access_requests WHERE id = ?')
+      .get(requestId);
+    if (!accessRequest || accessRequest.status === 'activated') {
+      throw new ApiError(404, 'NOT_FOUND', 'No existe esa solicitud pendiente.');
+    }
+    if (accessRequest.status === 'rejected') {
+      throw new ApiError(409, 'REQUEST_REJECTED', 'La solicitud está rechazada.');
+    }
+    if (db.prepare('SELECT 1 FROM admin_profiles WHERE email = ?').get(accessRequest.email)) {
+      throw new ApiError(409, 'ACCOUNT_EXISTS', 'Ya existe una cuenta para ese correo.');
+    }
+
+    const token = randomBytes(32).toString('base64url');
+    const timestamp = new Date();
+    const expiresAt = new Date(timestamp.getTime() + 24 * 60 * 60 * 1000);
+    db.exec('BEGIN');
+    try {
+      db.prepare('DELETE FROM admin_invitations WHERE request_id = ? AND accepted_at IS NULL').run(
+        requestId,
+      );
+      db.prepare(
+        `INSERT INTO admin_invitations
+         (id, request_id, email, display_name, token_hash, expires_at, created_by, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      ).run(
+        randomUUID(),
+        requestId,
+        accessRequest.email,
+        accessRequest.display_name,
+        hashToken(token),
+        expiresAt.toISOString(),
+        session.admin.id,
+        timestamp.toISOString(),
+      );
+      db.prepare(
+        `UPDATE admin_access_requests
+         SET status = 'approved', updated_at = ?, reviewed_at = ?, reviewed_by = ? WHERE id = ?`,
+      ).run(timestamp.toISOString(), timestamp.toISOString(), session.admin.id, requestId);
+      recordAudit(
+        db,
+        session.admin.id,
+        'admin.request_approved',
+        'admin_access_request',
+        requestId,
+        {
+          email: accessRequest.email,
+        },
+      );
+      db.exec('COMMIT');
+    } catch (error) {
+      db.exec('ROLLBACK');
+      throw error;
+    }
+    return sendJson(response, 201, {
+      invitation: {
+        email: accessRequest.email,
+        path: `/admin/aceptar-invitacion?token=${encodeURIComponent(token)}`,
+        expiresAt: expiresAt.toISOString(),
+      },
+    });
+  }
+
+  const rejectMatch = path.match(/^\/api\/admin\/access-requests\/([^/]+)\/reject$/);
+  if (method === 'POST' && rejectMatch) {
+    const requestId = rejectMatch[1];
+    const accessRequest = db
+      .prepare("SELECT * FROM admin_access_requests WHERE id = ? AND status != 'activated'")
+      .get(requestId);
+    if (!accessRequest) throw new ApiError(404, 'NOT_FOUND', 'No existe esa solicitud.');
+    const timestamp = new Date().toISOString();
+    db.exec('BEGIN');
+    try {
+      db.prepare('DELETE FROM admin_invitations WHERE request_id = ? AND accepted_at IS NULL').run(
+        requestId,
+      );
+      db.prepare(
+        `UPDATE admin_access_requests
+         SET status = 'rejected', updated_at = ?, reviewed_at = ?, reviewed_by = ? WHERE id = ?`,
+      ).run(timestamp, timestamp, session.admin.id, requestId);
+      recordAudit(
+        db,
+        session.admin.id,
+        'admin.request_rejected',
+        'admin_access_request',
+        requestId,
+        {
+          email: accessRequest.email,
+        },
+      );
+      db.exec('COMMIT');
+    } catch (error) {
+      db.exec('ROLLBACK');
+      throw error;
+    }
+    return sendEmpty(response, 204);
+  }
+
+  const revokeMatch = path.match(/^\/api\/admin\/users\/([^/]+)\/revoke-sessions$/);
+  if (method === 'POST' && revokeMatch) {
+    const target = findAdminAccount(db, revokeMatch[1]);
+    if (!target) throw new ApiError(404, 'NOT_FOUND', 'No existe esa cuenta.');
+    if (target.id === session.admin.id) {
+      throw new ApiError(422, 'SELF_ACTION', 'Cierra tu sesión desde la cabecera del panel.');
+    }
+    db.prepare('DELETE FROM admin_sessions WHERE admin_id = ?').run(target.id);
+    recordAudit(db, session.admin.id, 'admin.sessions_revoked', 'admin_profile', target.id);
+    return sendEmpty(response, 204);
+  }
+
+  const userMatch = path.match(/^\/api\/admin\/users\/([^/]+)$/);
+  if (method === 'PATCH' && userMatch) {
+    const target = findAdminAccount(db, userMatch[1]);
+    if (!target) throw new ApiError(404, 'NOT_FOUND', 'No existe esa cuenta.');
+    if (target.is_owner === 1) {
+      throw new ApiError(422, 'OWNER_PROTECTED', 'La cuenta propietaria no se puede desactivar.');
+    }
+    const input = await readJson(context.request);
+    if (typeof input.active !== 'boolean') {
+      throw new ApiError(422, 'VALIDATION_ERROR', 'Indica si la cuenta debe estar activa.');
+    }
+    const timestamp = new Date().toISOString();
+    db.prepare('UPDATE admin_profiles SET active = ?, updated_at = ? WHERE id = ?').run(
+      input.active ? 1 : 0,
+      timestamp,
+      target.id,
+    );
+    if (!input.active) db.prepare('DELETE FROM admin_sessions WHERE admin_id = ?').run(target.id);
+    recordAudit(
+      db,
+      session.admin.id,
+      input.active ? 'admin.activated' : 'admin.deactivated',
+      'admin_profile',
+      target.id,
+    );
+    return sendJson(response, 200, { user: adminAccountFromRow(findAdminAccount(db, target.id)) });
+  }
+
+  throw new ApiError(404, 'NOT_FOUND', 'No existe ese recurso de administradores.');
+}
+
+function findAdminAccount(db, id) {
+  return db
+    .prepare(
+      `SELECT id, email, display_name, is_owner, active, totp_enabled,
+              email_verified_at, created_at, updated_at
+       FROM admin_profiles WHERE id = ?`,
+    )
+    .get(id);
+}
+
+function adminAccountFromRow(row) {
+  return {
+    id: row.id,
+    email: row.email,
+    displayName: row.display_name,
+    role: row.is_owner === 1 ? 'owner' : 'admin',
+    active: row.active === 1,
+    mfaEnabled: row.totp_enabled === 1,
+    emailVerified: Boolean(row.email_verified_at),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function accessRequestFromRow(row) {
+  return {
+    id: row.id,
+    email: row.email,
+    displayName: row.display_name,
+    status: row.status,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    reviewedAt: row.reviewed_at,
+  };
 }
 
 async function login(context) {
@@ -1076,11 +1447,7 @@ async function login(context) {
   const admin = db
     .prepare(
       `SELECT * FROM admin_profiles
-       WHERE email = ? AND active = 1 AND role = 'admin'
-         AND id = (
-           SELECT id FROM admin_profiles WHERE role = 'admin'
-           ORDER BY created_at ASC, id ASC LIMIT 1
-         )`,
+       WHERE email = ? AND active = 1 AND role = 'admin'`,
     )
     .get(email);
   if (!admin || !(await verifyPassword(password, admin.password_hash))) {
@@ -1119,6 +1486,7 @@ async function login(context) {
   recordAudit(db, admin.id, 'admin.login', 'admin_profile', admin.id);
   return sendJson(response, 200, {
     authenticated: true,
+    needsSetup: false,
     admin: adminFromRow(admin),
     csrfToken: session.csrfToken,
   });
@@ -1158,8 +1526,18 @@ function consumeActionLimit(attempts, key, maximum, windowMilliseconds) {
 }
 
 function requireAdministrator(session) {
-  if (session.admin.role !== 'admin') {
+  if (!['owner', 'admin'].includes(session.admin.role)) {
     throw new ApiError(403, 'FORBIDDEN', 'Esta acción requiere permisos de administrador.');
+  }
+}
+
+function requireOwner(session) {
+  if (session.admin.role !== 'owner') {
+    throw new ApiError(
+      403,
+      'OWNER_REQUIRED',
+      'Esta acción solo está disponible para el propietario.',
+    );
   }
 }
 
@@ -2019,7 +2397,7 @@ function adminFromRow(row) {
     id: row.id,
     email: row.email,
     displayName: row.display_name,
-    role: 'admin',
+    role: row.is_owner === 1 ? 'owner' : 'admin',
     mfaEnabled: row.totp_enabled === 1,
     emailVerified: Boolean(row.email_verified_at),
   };

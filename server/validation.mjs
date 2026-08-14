@@ -252,6 +252,22 @@ export function validateAdminIdentity(input, { setup = false, requirePassword = 
   return { email, password, displayName };
 }
 
+export function validateAccessRequest(input) {
+  const fields = {};
+  const email = String(input.email ?? '')
+    .trim()
+    .toLowerCase();
+  const displayName = cleanText(input.displayName, 80);
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) fields.email = 'Introduce un correo válido.';
+  if (displayName.length < 2) fields.displayName = 'Introduce tu nombre.';
+
+  if (Object.keys(fields).length) {
+    throw new ApiError(422, 'VALIDATION_ERROR', 'Hay campos que necesitan revisión.', fields);
+  }
+  return { email, displayName };
+}
+
 function cleanText(value, maxLength) {
   return String(value ?? '')
     .trim()

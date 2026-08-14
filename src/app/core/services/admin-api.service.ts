@@ -3,6 +3,9 @@ import { inject, Injectable, signal } from '@angular/core';
 import { tap } from 'rxjs';
 import {
   AdminSession,
+  AdminAccessRequest,
+  AdminAccount,
+  AdminInvitation,
   AuditEntry,
   ChampionshipContent,
   DashboardSummary,
@@ -60,6 +63,22 @@ export class AdminApiService {
     return this.http
       .post<AdminSession>('/api/admin/login', input, { withCredentials: true })
       .pipe(tap((session) => this.sessionState.set({ ...session, needsSetup: false })));
+  }
+
+  requestAccess(input: { displayName: string; email: string }) {
+    return this.http.post<{ requested: boolean }>('/api/admin/access-requests', input);
+  }
+
+  verifyInvitation(token: string) {
+    return this.http.get<{ invitation: AdminInvitation }>(
+      `/api/admin/invitations/verify?token=${encodeURIComponent(token)}`,
+    );
+  }
+
+  acceptInvitation(input: { token: string; password: string }) {
+    return this.http
+      .post<AdminSession>('/api/admin/invitations/accept', input, { withCredentials: true })
+      .pipe(tap((session) => this.sessionState.set(session)));
   }
 
   startMfaSetup() {
@@ -247,6 +266,45 @@ export class AdminApiService {
 
   getAudit() {
     return this.http.get<{ entries: AuditEntry[] }>('/api/admin/audit', this.options());
+  }
+
+  getAdminUsers() {
+    return this.http.get<{ users: AdminAccount[]; requests: AdminAccessRequest[] }>(
+      '/api/admin/users',
+      this.options(),
+    );
+  }
+
+  approveAccessRequest(id: string) {
+    return this.http.post<{ invitation: AdminInvitation }>(
+      `/api/admin/access-requests/${encodeURIComponent(id)}/approve`,
+      {},
+      this.options(true),
+    );
+  }
+
+  rejectAccessRequest(id: string) {
+    return this.http.post<void>(
+      `/api/admin/access-requests/${encodeURIComponent(id)}/reject`,
+      {},
+      this.options(true),
+    );
+  }
+
+  setAdminActive(id: string, active: boolean) {
+    return this.http.patch<{ user: AdminAccount }>(
+      `/api/admin/users/${encodeURIComponent(id)}`,
+      { active },
+      this.options(true),
+    );
+  }
+
+  revokeAdminSessions(id: string) {
+    return this.http.post<void>(
+      `/api/admin/users/${encodeURIComponent(id)}/revoke-sessions`,
+      {},
+      this.options(true),
+    );
   }
 
   async uploadImage(file: File, kind: 'member' | 'championship' | 'sponsor', altText = '') {

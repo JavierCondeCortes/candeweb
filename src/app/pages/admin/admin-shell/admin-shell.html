@@ -11,7 +11,12 @@
     </a>
     <div class="admin-identity">
       @if (session()?.admin; as admin) {
-        <span>{{ admin.displayName }} · {{ 'admin.shell.administrator' | translate }}</span>
+        <span>
+          {{ admin.displayName }} ·
+          {{
+            (admin.role === 'owner' ? 'admin.shell.owner' : 'admin.shell.administrator') | translate
+          }}
+        </span>
       }
       <app-language-switcher />
       <a
@@ -43,6 +48,11 @@
     <a routerLink="/admin/seguridad" routerLinkActive="is-active">{{
       'admin.shell.security' | translate
     }}</a>
+    @if (session()?.admin?.role === 'owner') {
+      <a routerLink="/admin/administradores" routerLinkActive="is-active">{{
+        'admin.shell.users' | translate
+      }}</a>
+    }
     <a routerLink="/admin/auditoria" routerLinkActive="is-active">{{
       'admin.shell.audit' | translate
     }}</a>

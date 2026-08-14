@@ -7,11 +7,15 @@ export const adminAuthGuard: CanActivateFn = (_route, state) => {
   const api = inject(AdminApiService);
   const router = inject(Router);
   return api.refreshSession().pipe(
-    map((session) =>
-      session.authenticated
-        ? true
-        : router.createUrlTree(['/admin/login'], { queryParams: { returnUrl: state.url } }),
-    ),
+    map((session) => {
+      if (!session.authenticated) {
+        return router.createUrlTree(['/admin/login'], { queryParams: { returnUrl: state.url } });
+      }
+      if (!session.admin?.mfaEnabled && state.url !== '/admin/seguridad') {
+        return router.createUrlTree(['/admin/seguridad']);
+      }
+      return true;
+    }),
     catchError(() => of(router.createUrlTree(['/admin/login']))),
   );
 };

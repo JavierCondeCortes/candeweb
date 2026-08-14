@@ -78,6 +78,13 @@
           }}
         </button>
       </form>
+
+      @if (!needsSetup()) {
+        <p class="admin-auth-secondary">
+          {{ 'admin.login.noAccess' | translate }}
+          <a routerLink="/admin/solicitar-acceso">{{ 'admin.login.requestAccess' | translate }}</a>
+        </p>
+      }
     }
   </section>
 </main>

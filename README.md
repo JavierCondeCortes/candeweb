@@ -17,8 +17,9 @@ npm start
 ```
 
 La web queda disponible en `http://localhost:4200` y el panel en
-`http://localhost:4200/admin/login`. El primer acceso permite crear la cuenta administradora si la
-base de datos está vacía. Los datos locales se guardan en `server/data/` y no se publican en Git.
+`http://localhost:4200/admin/login`. El primer acceso permite crear la cuenta propietaria si la
+base de datos está vacía. Esta cuenta puede revisar solicitudes desde `/admin/administradores`.
+Los datos locales se guardan en `server/data/` y no se publican en Git.
 
 Comandos separados:
 
@@ -34,8 +35,10 @@ aplicación, se detiene con un mensaje claro para que puedas liberarlo.
 ## Variables de entorno
 
 Usa `.env.example` como plantilla. `.env` y sus variantes locales están ignoradas por Git. En
-producción son obligatorios `NODE_ENV=production`, HTTPS, un `ADMIN_SETUP_TOKEN` secreto para crear
-la única cuenta administradora. No existe registro público ni gestión de cuentas adicionales.
+producción son obligatorios `NODE_ENV=production`, HTTPS y un `ADMIN_SETUP_TOKEN` secreto para crear
+la cuenta propietaria inicial. Después, las personas pueden solicitar acceso, pero solo el
+propietario puede aprobarlas y generar una invitación privada de un solo uso. Cada cuenta elige su
+contraseña y configura un TOTP y códigos de recuperación independientes.
 
 El estado básico de Twitch funciona sin credenciales mediante los eventos oficiales del
 reproductor. Para mostrar también título, categoría, espectadores, perfil y hasta cuatro clips

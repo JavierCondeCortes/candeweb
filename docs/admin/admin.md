@@ -24,8 +24,8 @@ siendo la fuente de verdad de rondas, posiciones, puntos y estadísticas deporti
 La primera versión funcional del panel ya está implementada dentro del repositorio:
 
 - API propia en Node y base de datos SQLite con migraciones versionadas.
-- Una única cuenta administradora, con sesión segura mediante cookie, protección CSRF, limitación
-  de intentos de acceso y TOTP obligatorio en producción.
+- Una cuenta propietaria y cuentas administradoras aprobadas por ella, con sesiones independientes,
+  protección CSRF, limitación de intentos y TOTP obligatorio para todas las cuentas.
 - CRUD completo, orden, publicación y archivo lógico de miembros, sponsors y Candeonatos. El listado de
   miembros ofrece `Añadir`, `Editar` y `Eliminar`; eliminar exige confirmación y conserva un borrado
   lógico en la auditoría.
@@ -51,11 +51,11 @@ crece o se despliega en varias instancias.
 - **Base de datos:** SQLite mediante `node:sqlite`, almacenada por defecto en
   `server/data/candemor.db`.
 - **Autenticación:** sesión opaca en cookie `HttpOnly` y contraseñas derivadas con `scrypt`.
-- **Cuenta:** un único administrador creado desde `/admin/login` cuando la base está vacía; no hay
-  registro público, invitaciones, editores ni gestión de usuarios.
+- **Cuentas:** el primer alta desde `/admin/login` crea al propietario. Las demás personas solicitan
+  acceso y solo se registran después de que el propietario genere una invitación privada.
 - **Almacenamiento:** originales privados en `server/data/originals` y derivados WebP servidos desde
   `server/data/uploads` mediante `/uploads`.
-- **API administrativa:** servidor Node que valida autenticación, cuenta única, CSRF y datos en cada
+- **API administrativa:** servidor Node que valida autenticación, rol propietario, TOTP, CSRF y datos en cada
   operación.
 - **Frontend:** rutas Angular lazy-loaded bajo `/admin`.
 
@@ -99,37 +99,45 @@ La web pública nunca debe conectarse con credenciales de administración ni rec
 
 ## Rutas del panel
 
-| Ruta                       | Función                                                          |
-| -------------------------- | ---------------------------------------------------------------- |
-| `/admin/login`             | Inicio de sesión                                                 |
-| `/admin`                   | Resumen, alertas y accesos rápidos                               |
-| `/admin/miembros`          | Listado, orden y estado de los miembros                          |
-| `/admin/miembros/nuevo`    | Alta de un miembro                                               |
-| `/admin/miembros/:id`      | Edición, vista previa y retirada                                 |
-| `/admin/candeonatos`       | Listado de ediciones y estado de sincronización                  |
-| `/admin/candeonatos/nuevo` | Registro de una edición                                          |
-| `/admin/candeonatos/:id`   | Edición, publicación, sincronización y acceso a la vista pública |
-| `/admin/sponsors`          | Listado, estado y acciones de sponsors                           |
-| `/admin/sponsors/nuevo`    | Alta de un sponsor                                               |
-| `/admin/sponsors/:id`      | Edición, vista previa, publicación y retirada                    |
-| `/admin/ajustes`           | Twitch, contacto, edición destacada y valores globales           |
-| `/admin/seguridad`         | Alta o rotación de segundo factor y códigos de recuperación      |
-| `/admin/auditoria`         | Historial de acciones; puede posponerse visualmente, no en datos |
+| Ruta                        | Función                                                          |
+| --------------------------- | ---------------------------------------------------------------- |
+| `/admin/login`              | Inicio de sesión                                                 |
+| `/admin/solicitar-acceso`   | Solicitud pública sujeta a aprobación                            |
+| `/admin/aceptar-invitacion` | Alta mediante enlace privado de un solo uso                      |
+| `/admin`                    | Resumen, alertas y accesos rápidos                               |
+| `/admin/miembros`           | Listado, orden y estado de los miembros                          |
+| `/admin/miembros/nuevo`     | Alta de un miembro                                               |
+| `/admin/miembros/:id`       | Edición, vista previa y retirada                                 |
+| `/admin/candeonatos`        | Listado de ediciones y estado de sincronización                  |
+| `/admin/candeonatos/nuevo`  | Registro de una edición                                          |
+| `/admin/candeonatos/:id`    | Edición, publicación, sincronización y acceso a la vista pública |
+| `/admin/sponsors`           | Listado, estado y acciones de sponsors                           |
+| `/admin/sponsors/nuevo`     | Alta de un sponsor                                               |
+| `/admin/sponsors/:id`       | Edición, vista previa, publicación y retirada                    |
+| `/admin/ajustes`            | Twitch, contacto, edición destacada y valores globales           |
+| `/admin/seguridad`          | Alta o rotación de segundo factor y códigos de recuperación      |
+| `/admin/administradores`    | Solicitudes, invitaciones y cuentas; solo para el propietario    |
+| `/admin/auditoria`          | Historial de acciones; puede posponerse visualmente, no en datos |
 
 Las rutas públicas continúan siendo `/`, `/candeonato`, `/candeonatos` y
 `/candeonatos/:torneoId`.
 
 ## Cuenta y permisos
 
-### Administrador único
+### Propietario y administradores
 
-- Puede crear, editar, publicar, archivar y retirar contenido.
-- Puede cambiar la edición destacada.
-- Puede solicitar una sincronización con la API externa.
-- Puede consultar el historial de cambios.
+- El propietario puede hacer todo lo que hace un administrador y además aceptar o rechazar
+  solicitudes, renovar invitaciones, desactivar cuentas y revocar sus sesiones.
+- Los administradores pueden mantener contenido, cambiar la edición destacada, sincronizar la API
+  externa y consultar el historial.
+- Cada cuenta tiene correo, contraseña derivada con `scrypt`, secreto TOTP, códigos de recuperación
+  y sesiones propios.
+- El propietario no puede desactivarse desde el panel y ningún administrador puede gestionar
+  cuentas.
 
-No hay rol de editor, invitaciones ni pantalla de usuarios. El servidor rechaza las rutas de gestión
-de cuentas y solo permite iniciar sesión a la primera cuenta administradora creada.
+No existe alta administrativa directa. Una solicitud no concede acceso: el enlace generado al
+aprobarla caduca en 24 horas, solo se muestra al propietario y deja de servir al utilizarse o
+renovarse. El envío se hace manualmente con el botón de correo para no exigir un proveedor externo.
 
 ## Contenido administrable
 
@@ -315,6 +323,8 @@ sports_corrections
 site_settings
 media_assets
 audit_log
+admin_access_requests
+admin_invitations
 ```
 
 ### Relaciones
@@ -323,6 +333,8 @@ audit_log
 - `site_settings.featured_championship_id` → `championships.id` es cero o uno.
 - `media_assets.id` puede relacionarse con la foto de un miembro o la portada de un Candeonato.
 - `audit_log.actor_id` identifica la cuenta administradora que realizó cada cambio.
+- `admin_invitations.request_id` enlaza la aprobación con su solicitud y conserva solo el hash del
+  token privado.
 - `sports_corrections.championship_id` conserva aclaraciones separadas del resultado importado.
 
 ### Snapshots deportivos
@@ -421,10 +433,12 @@ asociarlo a controles concretos.
 
 ## Autenticación y seguridad
 
-- No incluir registro público de administradores.
-- Permitir crear una sola cuenta cuando la base de datos está vacía; en producción, proteger el alta
+- No permitir registro público directo: el formulario público solo crea una solicitud pendiente.
+- Permitir crear una cuenta propietaria cuando la base está vacía; en producción, proteger el alta
   inicial con `ADMIN_SETUP_TOKEN`.
-- Exigir segundo factor TOTP al administrador en producción.
+- Reservar aprobación, desactivación y revocación de sesiones al propietario.
+- Guardar únicamente el hash del token de invitación y hacerlo caducar en 24 horas.
+- Exigir segundo factor TOTP a todas las cuentas antes de administrar contenido.
 - Explicar en la propia pantalla que TOTP es un código de seis cifras que cambia cada 30 segundos y
   se genera en una aplicación autenticadora; la clave inicial y los códigos de recuperación nunca
   deben enviarse por chat ni guardarse en Git.
@@ -547,7 +561,8 @@ La interfaz debe indicar cuándo muestra datos en caché y la fecha de la últim
 
 - [x] Elegir proveedor y preparar el entorno de despliegue de producción.
 - [x] Crear base de datos y migraciones versionadas.
-- [x] Implementar autenticación de administrador único y sesión.
+- [x] Implementar autenticación con propietario, administradores y sesiones independientes.
+- [x] Añadir solicitudes, aprobación, invitaciones de un solo uso y gestión de cuentas.
 - [x] Crear políticas de lectura pública y escritura administrativa.
 - [x] Añadir auditoría mínima.
 
@@ -598,12 +613,14 @@ La interfaz debe indicar cuándo muestra datos en caché y la fecha de la últim
 ### Seguridad y calidad
 
 - [x] Una persona no autenticada no puede leer rutas ni datos privados del panel.
-- [x] No existen registro público, invitaciones ni gestión de cuentas adicionales.
+- [x] El formulario público solo crea solicitudes; ninguna cuenta nace sin aprobación del propietario.
+- [x] Las invitaciones son de un solo uso, caducan y almacenan únicamente el hash del token.
 - [x] Ningún secreto aparece en el bundle de Angular o en Git.
 - [x] Toda acción sensible queda asociada a usuario y fecha.
 - [x] Los formularios funcionan con teclado y comunican errores de forma accesible.
 - [x] Existen pruebas de permisos, validaciones, publicación, sincronización y estados de error.
-- [x] Un segundo intento de alta devuelve conflicto y las rutas de usuarios no están disponibles.
+- [x] Un segundo alta inicial devuelve conflicto y las rutas de cuentas exigen rol propietario.
+- [x] Cada cuenta configura un QR, secreto TOTP y códigos de recuperación diferentes.
 
 ## Uso local del panel implementado
 
@@ -624,12 +641,13 @@ npm start
 API.
 
 1. Abrir `http://localhost:4200/admin/login`.
-2. Si la base está vacía, la propia pantalla permite crear la primera cuenta administradora.
+2. Si la base está vacía, la propia pantalla permite crear la cuenta propietaria.
 3. En producción se debe definir un `ADMIN_SETUP_TOKEN` robusto antes de crear esa cuenta.
 4. Tras crearla, abrir `Seguridad`, vincular una aplicación TOTP y guardar los ocho códigos de
    recuperación de un solo uso.
-5. Administrar miembros, Candeonatos y ajustes desde la navegación lateral; no se pueden crear otras
-   cuentas.
+5. Revisar solicitudes desde `Administradores`; al aceptar se genera un enlace válido durante 24
+   horas que puede copiarse o abrirse en el cliente de correo.
+6. La persona invitada elige su contraseña y configura su propio QR TOTP antes de acceder al panel.
 
 Los datos se conservan en `server/data/`, que está ignorado por Git. Para generar una copia SQLite
 consistente se utiliza:
@@ -643,8 +661,9 @@ documentadas en `.env.example`.
 
 ### Estado local comprobado — 11 de agosto de 2026
 
-- La API y SQLite responden correctamente. Existe exactamente una cuenta administradora activa;
-  `/api/admin/session` devuelve `needsSetup: false` sin revelar su identidad a una sesión anónima.
+- La API y SQLite responden correctamente. La primera cuenta existente se migra automáticamente a
+  propietaria; `/api/admin/session` devuelve `needsSetup: false` sin revelar su identidad a una
+  sesión anónima.
 - El segundo factor TOTP está confirmado, no existe ninguna clave pendiente, los códigos de
   recuperación están generados y la auditoría contiene la activación correspondiente. Ningún
   secreto se incluyó en esta comprobación.

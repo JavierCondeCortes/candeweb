@@ -44,7 +44,48 @@ test('las migraciones respetan los cambios editoriales al volver a abrir la base
   }
 });
 
-test('administra miembros, Candeonatos, medios y datos públicos con una cuenta única', async () => {
+test('las migraciones conservan activas varias cuentas después de reiniciar', async () => {
+  const temporaryRoot = await mkdtemp(join(tmpdir(), 'candemor-multi-admin-migrations-'));
+  const databasePath = join(temporaryRoot, 'data', 'test.db');
+  const timestamp = new Date().toISOString();
+  try {
+    const db = openDatabase(databasePath);
+    const insert = db.prepare(
+      `INSERT INTO admin_profiles
+       (id, email, display_name, password_hash, role, is_owner, active, email_verified_at,
+        created_at, updated_at)
+       VALUES (?, ?, ?, 'scrypt:test:test', 'admin', ?, 1, ?, ?, ?)`,
+    );
+    insert.run('owner', 'owner@candemor.test', 'Propietario', 1, timestamp, timestamp, timestamp);
+    insert.run(
+      'admin',
+      'admin@candemor.test',
+      'Administración',
+      0,
+      timestamp,
+      timestamp,
+      timestamp,
+    );
+    db.close();
+
+    const reopened = openDatabase(databasePath);
+    assert.equal(
+      reopened.prepare('SELECT COUNT(*) AS count FROM admin_profiles WHERE active = 1').get().count,
+      2,
+    );
+    assert.equal(
+      reopened
+        .prepare("SELECT COUNT(*) AS count FROM sqlite_master WHERE type = 'index' AND name = ?")
+        .get('admin_one_active').count,
+      0,
+    );
+    reopened.close();
+  } finally {
+    await rm(temporaryRoot, { recursive: true, force: true });
+  }
+});
+
+test('administra contenidos y cuentas con propietario, invitación y TOTP independiente', async () => {
   const temporaryRoot = await mkdtemp(join(tmpdir(), 'candemor-admin-'));
   const sportsServer = createServer((request, response) => {
     response.writeHead(200, { 'Content-Type': 'application/json' });
@@ -278,8 +319,25 @@ test('administra miembros, Candeonatos, medios y datos públicos con una cuenta 
       },
     });
     assert.equal(setup.status, 201);
+    assert.equal(setup.data.admin.role, 'owner');
     const adminCookie = sessionCookieFrom(setup.response);
     const adminCsrf = setup.data.csrfToken;
+
+    const initialOwnerMfaSetup = await jsonRequest(baseUrl, '/api/admin/mfa/setup', {
+      method: 'POST',
+      cookie: adminCookie,
+      csrf: adminCsrf,
+      body: {},
+    });
+    assert.equal(initialOwnerMfaSetup.status, 200);
+    assert.match(initialOwnerMfaSetup.data.qrCodeDataUrl, /^data:image\/png;base64,/);
+    const initialOwnerMfaConfirm = await jsonRequest(baseUrl, '/api/admin/mfa/confirm', {
+      method: 'POST',
+      cookie: adminCookie,
+      csrf: adminCsrf,
+      body: { code: totpCode(initialOwnerMfaSetup.data.secret) },
+    });
+    assert.equal(initialOwnerMfaConfirm.status, 200);
 
     const initialSettings = await jsonRequest(baseUrl, '/api/admin/settings', {
       cookie: adminCookie,
@@ -800,11 +858,89 @@ test('administra miembros, Candeonatos, medios y datos públicos con una cuenta 
       false,
     );
 
-    const usersEndpoint = await jsonRequest(baseUrl, '/api/admin/users', {
+    const accessRequest = await jsonRequest(baseUrl, '/api/admin/access-requests', {
+      method: 'POST',
+      body: { displayName: 'Segunda Administración', email: 'segunda@candemor.test' },
+    });
+    assert.equal(accessRequest.status, 202);
+
+    const usersEndpoint = await jsonRequest(baseUrl, '/api/admin/users', { cookie: adminCookie });
+    assert.equal(usersEndpoint.status, 200);
+    assert.equal(usersEndpoint.data.users[0].role, 'owner');
+    assert.equal(usersEndpoint.data.requests[0].status, 'pending');
+
+    const approved = await jsonRequest(
+      baseUrl,
+      `/api/admin/access-requests/${usersEndpoint.data.requests[0].id}/approve`,
+      { method: 'POST', cookie: adminCookie, csrf: adminCsrf, body: {} },
+    );
+    assert.equal(approved.status, 201);
+    const invitationToken = new URL(approved.data.invitation.path, baseUrl).searchParams.get(
+      'token',
+    );
+    assert(invitationToken);
+    const verifiedInvitation = await jsonRequest(
+      baseUrl,
+      `/api/admin/invitations/verify?token=${encodeURIComponent(invitationToken)}`,
+    );
+    assert.equal(verifiedInvitation.status, 200);
+    assert.equal(verifiedInvitation.data.invitation.email, 'segunda@candemor.test');
+
+    const accepted = await jsonRequest(baseUrl, '/api/admin/invitations/accept', {
+      method: 'POST',
+      body: { token: invitationToken, password: 'password-segunda-cuenta-123' },
+    });
+    assert.equal(accepted.status, 201);
+    assert.equal(accepted.data.admin.role, 'admin');
+    const secondCookie = sessionCookieFrom(accepted.response);
+    const secondCsrf = accepted.data.csrfToken;
+    const blockedSecondAdmin = await jsonRequest(baseUrl, '/api/admin/dashboard', {
+      cookie: secondCookie,
+    });
+    assert.equal(blockedSecondAdmin.status, 403);
+    assert.equal(blockedSecondAdmin.data.error.code, 'MFA_SETUP_REQUIRED');
+
+    const secondMfaSetup = await jsonRequest(baseUrl, '/api/admin/mfa/setup', {
+      method: 'POST',
+      cookie: secondCookie,
+      csrf: secondCsrf,
+      body: {},
+    });
+    assert.notEqual(secondMfaSetup.data.secret, initialOwnerMfaSetup.data.secret);
+    assert.match(secondMfaSetup.data.qrCodeDataUrl, /^data:image\/png;base64,/);
+    const secondMfaConfirm = await jsonRequest(baseUrl, '/api/admin/mfa/confirm', {
+      method: 'POST',
+      cookie: secondCookie,
+      csrf: secondCsrf,
+      body: { code: totpCode(secondMfaSetup.data.secret) },
+    });
+    assert.equal(secondMfaConfirm.status, 200);
+    const ownerOnlyEndpoint = await jsonRequest(baseUrl, '/api/admin/users', {
+      cookie: secondCookie,
+    });
+    assert.equal(ownerOnlyEndpoint.status, 403);
+    assert.equal(ownerOnlyEndpoint.data.error.code, 'OWNER_REQUIRED');
+
+    const accountsAfterInvitation = await jsonRequest(baseUrl, '/api/admin/users', {
       cookie: adminCookie,
     });
-    assert.equal(usersEndpoint.status, 404);
-    assert.match(usersEndpoint.data.error.message, /única cuenta/i);
+    const secondAccount = accountsAfterInvitation.data.users.find(
+      (user) => user.email === 'segunda@candemor.test',
+    );
+    assert(secondAccount);
+    assert.equal(secondAccount.mfaEnabled, true);
+    const deactivated = await jsonRequest(baseUrl, `/api/admin/users/${secondAccount.id}`, {
+      method: 'PATCH',
+      cookie: adminCookie,
+      csrf: adminCsrf,
+      body: { active: false },
+    });
+    assert.equal(deactivated.status, 200);
+    assert.equal(deactivated.data.user.active, false);
+    const revokedSecondSession = await jsonRequest(baseUrl, '/api/admin/dashboard', {
+      cookie: secondCookie,
+    });
+    assert.equal(revokedSecondSession.status, 401);
 
     const secondSetup = await jsonRequest(baseUrl, '/api/admin/setup', {
       method: 'POST',
@@ -839,6 +975,7 @@ test('administra miembros, Candeonatos, medios y datos públicos con una cuenta 
     });
     assert.equal(mfaSetup.status, 200);
     assert.match(mfaSetup.data.otpauthUri, /^otpauth:\/\/totp\//);
+    assert.match(mfaSetup.data.qrCodeDataUrl, /^data:image\/png;base64,/);
 
     const mfaConfirm = await jsonRequest(baseUrl, '/api/admin/mfa/confirm', {
       method: 'POST',
@@ -953,7 +1090,8 @@ test('exige configurar TOTP al primer administrador en producción', async () =>
     assert.equal(dashboard.status, 200);
 
     const usersEndpoint = await jsonRequest(baseUrl, '/api/admin/users', { cookie });
-    assert.equal(usersEndpoint.status, 404);
+    assert.equal(usersEndpoint.status, 200);
+    assert.equal(usersEndpoint.data.users[0].role, 'owner');
   } finally {
     if (previousNodeEnv === undefined) delete process.env.NODE_ENV;
     else process.env.NODE_ENV = previousNodeEnv;

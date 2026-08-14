@@ -53,6 +53,15 @@
       <p>{{ 'admin.security.linkHelp' | translate }}</p>
     </div>
     <div>
+      <figure class="admin-totp-qr">
+        <img
+          [src]="configuration.qrCodeDataUrl"
+          [alt]="'admin.security.qrAlt' | translate"
+          width="320"
+          height="320"
+        />
+        <figcaption>{{ 'admin.security.scanQr' | translate }}</figcaption>
+      </figure>
       <ol class="admin-security-steps">
         <li>{{ 'admin.security.stepOne' | translate }}</li>
         <li>{{ 'admin.security.stepTwo' | translate }}</li>

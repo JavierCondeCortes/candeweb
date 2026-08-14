@@ -115,7 +115,7 @@ export interface AdminIdentity {
   id: string;
   email: string;
   displayName: string;
-  role: 'admin';
+  role: 'owner' | 'admin';
   mfaEnabled?: boolean;
   emailVerified?: boolean;
 }
@@ -156,4 +156,30 @@ export interface ApiProblem {
 export interface MfaSetup {
   secret: string;
   otpauthUri: string;
+  qrCodeDataUrl: string;
+}
+
+export interface AdminAccount extends AdminIdentity {
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type AdminAccessRequestStatus = 'pending' | 'approved' | 'rejected';
+
+export interface AdminAccessRequest {
+  id: string;
+  email: string;
+  displayName: string;
+  status: AdminAccessRequestStatus;
+  createdAt: string;
+  updatedAt: string;
+  reviewedAt: string | null;
+}
+
+export interface AdminInvitation {
+  email: string;
+  displayName?: string;
+  path?: string;
+  expiresAt: string;
 }

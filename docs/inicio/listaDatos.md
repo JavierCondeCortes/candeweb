@@ -11,7 +11,7 @@ despliegue.
 - [x] Vídeo fuente de la portada: `public/exampleVideo.mp4` y derivados optimizados.
 - [x] Campeonato destacado actual: `Candeonato Bandido`, torneo Fat Cat Race `42`.
 - [x] Historial público detectado: torneos `46`, `42`, `38`, `36`, `35` y `34`.
-- [x] Administración limitada a una única cuenta.
+- [x] Administración con propietario y altas adicionales aprobadas mediante invitación.
 
 ## 1. Identidad y mensaje
 

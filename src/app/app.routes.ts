@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { adminAuthGuard } from './core/guards/admin-auth.guard';
+import { adminOwnerGuard } from './core/guards/admin-owner.guard';
 import { pendingChangesGuard } from './core/guards/pending-changes.guard';
 
 export const routes: Routes = [
@@ -35,6 +36,22 @@ export const routes: Routes = [
     title: 'admin.meta.login',
     loadComponent: () =>
       import('./pages/admin/admin-login/admin-login').then((module) => module.AdminLogin),
+  },
+  {
+    path: 'admin/solicitar-acceso',
+    title: 'admin.meta.requestAccess',
+    loadComponent: () =>
+      import('./pages/admin/admin-access-request/admin-access-request').then(
+        (module) => module.AdminAccessRequestPage,
+      ),
+  },
+  {
+    path: 'admin/aceptar-invitacion',
+    title: 'admin.meta.acceptInvitation',
+    loadComponent: () =>
+      import('./pages/admin/admin-accept-invitation/admin-accept-invitation').then(
+        (module) => module.AdminAcceptInvitation,
+      ),
   },
   {
     path: 'admin',
@@ -141,6 +158,13 @@ export const routes: Routes = [
           import('./pages/admin/admin-security/admin-security').then(
             (module) => module.AdminSecurity,
           ),
+      },
+      {
+        path: 'administradores',
+        title: 'admin.meta.users',
+        canActivate: [adminOwnerGuard],
+        loadComponent: () =>
+          import('./pages/admin/admin-users/admin-users').then((module) => module.AdminUsers),
       },
       {
         path: 'auditoria',

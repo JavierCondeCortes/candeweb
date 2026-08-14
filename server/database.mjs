@@ -31,6 +31,7 @@ function migrate(db) {
       display_name TEXT NOT NULL,
       password_hash TEXT NOT NULL,
       role TEXT NOT NULL CHECK (role = 'admin'),
+      is_owner INTEGER NOT NULL DEFAULT 0 CHECK (is_owner IN (0, 1)),
       active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0, 1)),
       totp_secret TEXT,
       totp_pending_secret TEXT,
@@ -308,24 +309,25 @@ function migrate(db) {
   db.prepare('INSERT OR IGNORE INTO schema_migrations (version, applied_at) VALUES (8, ?)').run(
     now(),
   );
-  db.exec(`
-    DELETE FROM admin_sessions
-    WHERE admin_id NOT IN (
-      SELECT id FROM admin_profiles WHERE role = 'admin'
-      ORDER BY created_at ASC, id ASC LIMIT 1
-    );
-    UPDATE admin_profiles SET active = 0
-    WHERE id NOT IN (
-      SELECT id FROM admin_profiles WHERE role = 'admin'
-      ORDER BY created_at ASC, id ASC LIMIT 1
-    );
-    DROP TABLE IF EXISTS admin_invitations;
-    CREATE UNIQUE INDEX IF NOT EXISTS admin_one_active
-      ON admin_profiles(active) WHERE active = 1;
-  `);
-  db.prepare('INSERT OR IGNORE INTO schema_migrations (version, applied_at) VALUES (9, ?)').run(
-    now(),
-  );
+  const migration9Applied = db.prepare('SELECT 1 FROM schema_migrations WHERE version = 9').get();
+  if (!migration9Applied) {
+    db.exec(`
+      DELETE FROM admin_sessions
+      WHERE admin_id NOT IN (
+        SELECT id FROM admin_profiles WHERE role = 'admin'
+        ORDER BY created_at ASC, id ASC LIMIT 1
+      );
+      UPDATE admin_profiles SET active = 0
+      WHERE id NOT IN (
+        SELECT id FROM admin_profiles WHERE role = 'admin'
+        ORDER BY created_at ASC, id ASC LIMIT 1
+      );
+      DROP TABLE IF EXISTS admin_invitations;
+      CREATE UNIQUE INDEX IF NOT EXISTS admin_one_active
+        ON admin_profiles(active) WHERE active = 1;
+    `);
+    db.prepare('INSERT INTO schema_migrations (version, applied_at) VALUES (9, ?)').run(now());
+  }
   const twitchSettingsColumns = db.prepare('PRAGMA table_info(site_settings)').all();
   if (!twitchSettingsColumns.some((column) => column.name === 'twitch_channels_json')) {
     db.exec('ALTER TABLE site_settings ADD COLUMN twitch_channels_json TEXT;');
@@ -485,6 +487,60 @@ function migrate(db) {
     );
   }
   db.prepare('INSERT OR IGNORE INTO schema_migrations (version, applied_at) VALUES (16, ?)').run(
+    now(),
+  );
+
+  const multiAdminColumns = db.prepare('PRAGMA table_info(admin_profiles)').all();
+  if (!multiAdminColumns.some((column) => column.name === 'is_owner')) {
+    db.exec(
+      'ALTER TABLE admin_profiles ADD COLUMN is_owner INTEGER NOT NULL DEFAULT 0 CHECK (is_owner IN (0, 1));',
+    );
+  }
+  db.exec(`
+    DROP INDEX IF EXISTS admin_one_active;
+
+    UPDATE admin_profiles SET is_owner = 1
+    WHERE id = (
+      SELECT id FROM admin_profiles
+      ORDER BY created_at ASC, id ASC LIMIT 1
+    ) AND NOT EXISTS (
+      SELECT 1 FROM admin_profiles WHERE is_owner = 1
+    );
+
+    CREATE UNIQUE INDEX IF NOT EXISTS admin_one_owner
+      ON admin_profiles(is_owner) WHERE is_owner = 1;
+
+    CREATE TABLE IF NOT EXISTS admin_access_requests (
+      id TEXT PRIMARY KEY,
+      email TEXT NOT NULL COLLATE NOCASE UNIQUE,
+      display_name TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending' CHECK (
+        status IN ('pending', 'approved', 'rejected', 'activated')
+      ),
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      reviewed_at TEXT,
+      reviewed_by TEXT REFERENCES admin_profiles(id) ON DELETE SET NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS admin_invitations (
+      id TEXT PRIMARY KEY,
+      request_id TEXT REFERENCES admin_access_requests(id) ON DELETE SET NULL,
+      email TEXT NOT NULL COLLATE NOCASE,
+      display_name TEXT NOT NULL,
+      token_hash TEXT NOT NULL UNIQUE,
+      expires_at TEXT NOT NULL,
+      accepted_at TEXT,
+      created_by TEXT NOT NULL REFERENCES admin_profiles(id),
+      created_at TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS admin_access_requests_status
+      ON admin_access_requests(status, created_at DESC);
+    CREATE INDEX IF NOT EXISTS admin_invitations_email
+      ON admin_invitations(email, created_at DESC);
+  `);
+  db.prepare('INSERT OR IGNORE INTO schema_migrations (version, applied_at) VALUES (17, ?)').run(
     now(),
   );
 }
