@@ -308,26 +308,28 @@ export class AdminApiService {
   }
 
   async uploadImage(file: File, kind: 'member' | 'championship' | 'sponsor', altText = '') {
-    const dataBase64 = await fileToDataUrl(file);
-    return this.http.post<{ asset: { publicUrl: string } }>(
-      '/api/admin/media',
-      { fileName: file.name, mimeType: file.type, dataBase64, kind, altText },
-      this.options(true),
-    );
+    return this.uploadMedia<{ publicUrl: string }>(file, kind, altText);
   }
 
   async uploadVideo(file: File) {
-    const dataBase64 = await fileToDataUrl(file);
-    return this.http.post<{ asset: { publicUrl: string; mimeType: string } }>(
-      '/api/admin/media',
-      {
-        fileName: file.name,
-        mimeType: file.type,
-        dataBase64,
-        kind: 'championship-video',
-      },
-      this.options(true),
+    return this.uploadMedia<{ publicUrl: string; mimeType: string }>(file, 'championship-video');
+  }
+
+  private uploadMedia<T>(file: File, kind: string, altText = '') {
+    const query = new URLSearchParams({
+      fileName: file.name,
+      kind,
+      altText,
+    });
+    const options = this.options(true);
+    const headers = (options.headers ?? new HttpHeaders()).set(
+      'Content-Type',
+      file.type || 'application/octet-stream',
     );
+    return this.http.post<{ asset: T }>(`/api/admin/media?${query.toString()}`, file, {
+      ...options,
+      headers,
+    });
   }
 
   private options(mutating = false) {
@@ -336,15 +338,4 @@ export class AdminApiService {
       mutating && csrfToken ? new HttpHeaders({ 'X-CSRF-Token': csrfToken }) : undefined;
     return { withCredentials: true, headers };
   }
-}
-
-function fileToDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.addEventListener('load', () => resolve(String(reader.result)));
-    reader.addEventListener('error', () =>
-      reject(reader.error ?? new Error('No se pudo leer el archivo.')),
-    );
-    reader.readAsDataURL(file);
-  });
 }

@@ -65,4 +65,34 @@ describe('AdminApiService', () => {
     expect(logout.request.headers.get('X-CSRF-Token')).toBe('csrf-value');
     logout.flush(null);
   });
+
+  it('uploads media as its original binary file instead of Base64 JSON', async () => {
+    service.refreshSession().subscribe();
+    http.expectOne('/api/admin/session').flush({
+      authenticated: true,
+      needsSetup: false,
+      admin: {
+        id: 'admin-1',
+        email: 'admin@candemor.test',
+        displayName: 'Candemor',
+        role: 'admin',
+      },
+      csrfToken: 'csrf-value',
+    });
+    const video = new File([new Uint8Array([0, 1, 2, 3])], 'new era.mp4', {
+      type: 'video/mp4',
+    });
+
+    const upload = await service.uploadVideo(video);
+    upload.subscribe();
+
+    const request = http.expectOne(
+      '/api/admin/media?fileName=new+era.mp4&kind=championship-video&altText=',
+    );
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toBe(video);
+    expect(request.request.headers.get('Content-Type')).toBe('video/mp4');
+    expect(request.request.headers.get('X-CSRF-Token')).toBe('csrf-value');
+    request.flush({ asset: { publicUrl: '/uploads/video.mp4', mimeType: 'video/mp4' } });
+  });
 });

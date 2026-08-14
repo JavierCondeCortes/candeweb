@@ -798,17 +798,17 @@ test('administra contenidos y cuentas con propietario, invitación y TOTP indepe
       0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x6d, 0x00, 0x00, 0x00,
       0x00,
     ]);
-    const videoUpload = await jsonRequest(baseUrl, '/api/admin/media', {
-      method: 'POST',
-      cookie: adminCookie,
-      csrf: adminCsrf,
-      body: {
-        fileName: 'new-era.mp4',
-        mimeType: 'video/mp4',
-        kind: 'championship-video',
-        dataBase64: sampleVideo.toString('base64'),
+    const videoUpload = await binaryRequest(
+      baseUrl,
+      '/api/admin/media?fileName=new-era.mp4&kind=championship-video',
+      {
+        method: 'POST',
+        cookie: adminCookie,
+        csrf: adminCsrf,
+        contentType: 'video/mp4',
+        body: sampleVideo,
       },
-    });
+    );
     assert.equal(videoUpload.status, 201);
     assert.equal(videoUpload.data.asset.mimeType, 'video/mp4');
     const videoRangeUpload = await fetch(`${baseUrl}${videoUpload.data.asset.publicUrl}`, {
@@ -1124,6 +1124,22 @@ async function jsonRequest(baseUrl, path, options = {}) {
     method: options.method ?? 'GET',
     headers,
     body: options.body === undefined ? undefined : JSON.stringify(options.body),
+  });
+  const text = await response.text();
+  return { response, status: response.status, data: text ? JSON.parse(text) : null };
+}
+
+async function binaryRequest(baseUrl, path, options = {}) {
+  const headers = {
+    Accept: 'application/json',
+    'Content-Type': options.contentType ?? 'application/octet-stream',
+  };
+  if (options.cookie) headers.Cookie = options.cookie;
+  if (options.csrf) headers['X-CSRF-Token'] = options.csrf;
+  const response = await fetch(`${baseUrl}${path}`, {
+    method: options.method ?? 'POST',
+    headers,
+    body: options.body,
   });
   const text = await response.text();
   return { response, status: response.status, data: text ? JSON.parse(text) : null };

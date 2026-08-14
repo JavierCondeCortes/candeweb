@@ -1004,7 +1004,20 @@ async function routeAdmin(context) {
 
   if (method === 'POST' && path === '/api/admin/media') {
     consumeActionLimit(context.actionAttempts, `media:${session.admin.id}`, 20, 10 * 60 * 1000);
-    const input = await readJson(context.request, MEDIA_LIMIT);
+    const requestContentType = String(context.request.headers['content-type'] ?? '')
+      .split(';', 1)[0]
+      .trim()
+      .toLowerCase();
+    const input =
+      requestContentType === 'application/json'
+        ? await readJson(context.request, MEDIA_LIMIT)
+        : {
+            fileName: context.url.searchParams.get('fileName'),
+            mimeType: requestContentType,
+            kind: context.url.searchParams.get('kind'),
+            altText: context.url.searchParams.get('altText'),
+            buffer: await readBuffer(context.request, MEDIA_LIMIT),
+          };
     const asset = await saveMedia(context, input);
     return sendJson(response, 201, { asset });
   }
@@ -1909,8 +1922,9 @@ async function saveMedia(context, input) {
   const { db, uploadDir, session } = context;
   const mimeType = String(input.mimeType ?? '').toLowerCase();
   const originalName = String(input.fileName ?? 'archivo').slice(0, 180);
-  const base64 = String(input.dataBase64 ?? '').replace(/^data:[^;]+;base64,/, '');
-  const buffer = Buffer.from(base64, 'base64');
+  const buffer = Buffer.isBuffer(input.buffer)
+    ? input.buffer
+    : Buffer.from(String(input.dataBase64 ?? '').replace(/^data:[^;]+;base64,/, ''), 'base64');
   if (input.kind === 'championship-video') {
     return saveVideoMedia({ db, uploadDir, session, mimeType, originalName, buffer });
   }
@@ -2201,6 +2215,23 @@ async function readJson(request, limit = JSON_LIMIT) {
   } catch {
     throw new ApiError(400, 'INVALID_JSON', 'El cuerpo JSON no es válido.');
   }
+}
+
+async function readBuffer(request, limit) {
+  const declaredSize = Number(request.headers['content-length'] ?? 0);
+  if (Number.isFinite(declaredSize) && declaredSize > limit) {
+    throw new ApiError(413, 'PAYLOAD_TOO_LARGE', 'La solicitud es demasiado grande.');
+  }
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of request) {
+    size += chunk.length;
+    if (size > limit) {
+      throw new ApiError(413, 'PAYLOAD_TOO_LARGE', 'La solicitud es demasiado grande.');
+    }
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks, size);
 }
 
 function serveUpload(request, response, path, uploadDir) {

@@ -460,6 +460,9 @@ asociarlo a controles concretos.
 
 - Formatos aceptados: JPEG, PNG, WebP y AVIF.
 - Tamaño máximo de subida para imágenes: 12 MB.
+- El panel envía imágenes y vídeos como cuerpo binario, sin codificarlos en Base64. Así el tamaño
+  que atraviesa el proxy se mantiene próximo al archivo original y un vídeo válido de 80 MB no
+  supera el límite de 100 MB de Cloudflare por el sobrecoste de la codificación.
 - Generar derivados WebP o AVIF para la web.
 - Derivado principal: mínimo `720 × 900`, relación `4:5`.
 - Conservar el original fuera de la entrega pública si se necesita recortar de nuevo.
