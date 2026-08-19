@@ -9,12 +9,14 @@ import { Hero } from './components/hero/hero';
 import { Requirements } from './components/requirements/requirements';
 import { Rules } from './components/rules/rules';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { Footer } from '../../shared/components/footer/footer';
 
 @Component({
   selector: 'app-candeonato-page',
   imports: [
     AsyncPipe,
     RouterLink,
+    Footer,
     Hero,
     About,
     Requirements,

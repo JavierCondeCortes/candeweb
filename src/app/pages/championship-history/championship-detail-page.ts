@@ -3,6 +3,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Footer } from '../../shared/components/footer/footer';
 import {
   ChampionshipFormatTag,
   ChampionshipLeader,
@@ -30,6 +31,7 @@ type PageState = 'loading' | 'ready' | 'error';
   selector: 'app-championship-detail-page',
   standalone: true,
   imports: [
+    Footer,
     RouterLink,
     ChampionshipStats,
     StandingsTable,

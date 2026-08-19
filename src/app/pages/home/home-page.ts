@@ -1,6 +1,5 @@
 import { AsyncPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { catchError, of, shareReplay } from 'rxjs';
 import { PublicContentService } from '../../core/services/public-content.service';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
@@ -10,12 +9,13 @@ import { ExperienceGallery } from './components/experience-gallery/experience-ga
 import { HomeHero } from './components/home-hero/home-hero';
 import { TeamShowcase } from './components/team-showcase/team-showcase';
 import { SponsorStrip } from './components/sponsor-strip/sponsor-strip';
+import { Footer } from '../../shared/components/footer/footer';
 
 @Component({
   selector: 'app-home-page',
   imports: [
     AsyncPipe,
-    RouterLink,
+    Footer,
     HomeHero,
     CommunityIntro,
     EventFeature,

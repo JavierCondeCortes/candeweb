@@ -235,11 +235,4 @@
   }
 </main>
 
-<footer class="detail-footer">
-  <a class="detail-brand" routerLink="/">CANDE<span>WEB</span></a>
-  <p>{{ 'candeonato.detail.archiveFooter' | translate }}</p>
-  <nav [attr.aria-label]="'candeonato.detail.archiveNav' | translate">
-    <a routerLink="/candeonatos">{{ 'candeonato.history.all' | translate }}</a>
-    <a routerLink="/candeonato">{{ 'candeonato.history.current' | translate }}</a>
-  </nav>
-</footer>
+<app-footer></app-footer>
