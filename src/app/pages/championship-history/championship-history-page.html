@@ -1,0 +1,148 @@
+<a class="skip-link" [routerLink]="[]" fragment="contenido-historial">{{
+  'candeonato.history.skip' | translate
+}}</a>
+
+@if (state$ | async; as state) {
+  <header class="archive-hero">
+    <picture aria-hidden="true">
+      <source
+        media="(max-width: 47.99rem)"
+        [srcset]="state.championships[0]?.coverMobileUrl || '/media/hero-poster-mobile.webp'"
+      />
+      <img
+        [src]="state.championships[0]?.coverUrl || '/media/hero-poster.webp'"
+        alt=""
+        width="1600"
+        height="900"
+      />
+    </picture>
+    <div class="archive-vignette" aria-hidden="true"></div>
+    <div class="archive-grid" aria-hidden="true"></div>
+
+    <app-candeonato-navbar variant="archive" />
+
+    <div class="archive-hero-content">
+      <p class="eyebrow">{{ 'candeonato.history.eyebrow' | translate }}</p>
+      <h1>
+        <span>{{ 'candeonato.history.titleLead' | translate }}</span>
+        <span
+          class="archive-title-neon"
+          [attr.data-title]="'candeonato.history.titleAccent' | translate"
+          >{{ 'candeonato.history.titleAccent' | translate }}</span
+        >
+      </h1>
+      <p>{{ 'candeonato.history.intro' | translate }}</p>
+      <a class="button button-primary" routerLink="/candeonato">{{
+        'candeonato.history.openCurrent' | translate
+      }}</a>
+    </div>
+  </header>
+
+  <main id="contenido-historial" class="archive-main" tabindex="-1">
+    <section class="section-shell edition-section" aria-labelledby="editions-title">
+      <div class="section-heading">
+        <p class="eyebrow">{{ 'candeonato.history.available' | translate }}</p>
+        <h2 id="editions-title" class="section-title">
+          {{ 'candeonato.history.archive' | translate }}
+        </h2>
+        <p class="lede">{{ 'candeonato.history.automatic' | translate }}</p>
+      </div>
+
+      @if (state.kind === 'loading') {
+        <p class="archive-note" role="status">{{ 'candeonato.history.loading' | translate }}</p>
+      } @else if (state.kind === 'error') {
+        <p class="archive-note" role="alert">
+          {{ 'candeonato.history.error' | translate }}
+        </p>
+      } @else if (state.championships.length === 0) {
+        <p class="archive-note">{{ 'candeonato.history.empty' | translate }}</p>
+      } @else {
+        <div class="edition-list">
+          @for (championship of state.championships; track championship.id) {
+            <a
+              class="edition-card"
+              [routerLink]="
+                championship.externalTournamentId
+                  ? ['/candeonatos', championship.externalTournamentId]
+                  : '/candeonato'
+              "
+              [attr.aria-label]="'candeonato.history.open' | translate: { name: championship.name }"
+            >
+              <div class="edition-cover">
+                @if (championship.coverUrl) {
+                  <picture>
+                    <source
+                      media="(max-width: 47.99rem)"
+                      [srcset]="championship.coverMobileUrl || championship.coverUrl"
+                    />
+                    <img
+                      [src]="championship.coverUrl"
+                      [alt]="
+                        localizedCoverAlt(championship) ||
+                        ('candeonato.history.posterAlt' | translate: { name: championship.name })
+                      "
+                      loading="lazy"
+                    />
+                  </picture>
+                } @else {
+                  <div class="edition-cover-placeholder" aria-hidden="true">
+                    <span>CANDEWEB</span>
+                    <strong>{{ championship.name }}</strong>
+                    <small>{{ 'candeonato.history.posterPending' | translate }}</small>
+                  </div>
+                }
+                <span class="edition-number">
+                  {{
+                    'candeonato.history.edition'
+                      | translate
+                        : {
+                            number:
+                              championship.editionNumber ??
+                              championship.externalTournamentId ??
+                              '—',
+                          }
+                  }}
+                </span>
+              </div>
+              <div class="edition-copy">
+                <div class="edition-meta">
+                  <span>{{ championship.status }}</span>
+                  @if (championship.season) {
+                    <span>{{ championship.season }}</span>
+                  }
+                  <span>{{
+                    championship.syncStatus === 'success'
+                      ? ('candeonato.history.synced' | translate)
+                      : ('candeonato.history.syncPending' | translate)
+                  }}</span>
+                </div>
+                <h3>{{ championship.name }}</h3>
+                <p>
+                  {{
+                    localizedSummary(championship) ||
+                      ('candeonato.history.editorialPending' | translate)
+                  }}
+                </p>
+                <span class="edition-link-label">
+                  {{
+                    championship.externalTournamentId
+                      ? ('candeonato.history.viewStandings' | translate)
+                      : ('candeonato.history.viewPresentation' | translate)
+                  }}
+                  <span aria-hidden="true">→</span>
+                </span>
+              </div>
+            </a>
+          }
+        </div>
+      }
+
+      <aside class="archive-note" [attr.aria-label]="'candeonato.history.availability' | translate">
+        <span aria-hidden="true">+</span>
+        <p>{{ 'candeonato.history.sourceNote' | translate }}</p>
+      </aside>
+    </section>
+  </main>
+
+  <app-footer></app-footer>
+}

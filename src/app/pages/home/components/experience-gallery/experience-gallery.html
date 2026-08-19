@@ -1,0 +1,116 @@
+<section
+  id="contenido"
+  class="section-shell experiences-section"
+  aria-labelledby="experiences-title"
+>
+  <div class="section-heading experiences-heading">
+    <div>
+      <p class="eyebrow">{{ 'home.content.eyebrow' | translate }}</p>
+      <h2 id="experiences-title" class="section-title">{{ 'home.content.title' | translate }}</h2>
+    </div>
+    <p class="body-copy">
+      {{ 'home.content.intro' | translate }}
+    </p>
+  </div>
+
+  @if (state$ | async; as state) {
+    @if (state.kind === 'loading') {
+      <p class="experience-message" role="status">{{ 'home.content.loading' | translate }}</p>
+    }
+
+    <div class="experience-grid">
+      <article class="experience-card experience-card-main">
+        <img
+          [src]="
+            state.content?.channel?.offlineImageUrl ||
+            state.content?.channel?.profileImageUrl ||
+            '/media/hero-poster.webp'
+          "
+          [alt]="
+            state.content?.channel
+              ? 'Imagen pública del canal de Twitch ' + state.content?.channel?.displayName
+              : 'Coche de simracing utilizado en el universo audiovisual de Candemor'
+          "
+          width="1600"
+          height="900"
+          loading="lazy"
+        />
+        <div class="experience-overlay">
+          <p class="eyebrow">{{ 'home.content.officialChannel' | translate }}</p>
+          <h3>
+            {{ state.content?.channel?.displayName || ('home.content.liveTitle' | translate) }}
+          </h3>
+          <p>
+            {{ state.content?.channel?.description || ('home.content.liveFallback' | translate) }}
+          </p>
+          <a
+            class="experience-status"
+            [href]="state.content?.channel?.url || 'https://www.twitch.tv/candemorracingteam'"
+            [attr.aria-label]="'home.content.twitchLabel' | translate"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {{ 'home.content.viewChannel' | translate }} <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </article>
+
+      @if (state.content?.clips?.length) {
+        <ul class="twitch-clips" [attr.aria-label]="'home.content.clipsLabel' | translate">
+          @for (clip of state.content?.clips; track clip.id) {
+            <li>
+              @if (clip.url; as clipUrl) {
+                <a
+                  class="twitch-clip-link"
+                  [href]="clipUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  [attr.aria-label]="clip.title + ' (se abre en Twitch en una pestaña nueva)'"
+                >
+                  <img
+                    [src]="clip.thumbnailUrl || '/media/hero-poster.webp'"
+                    [alt]="'Miniatura del clip «' + clip.title + '»'"
+                    width="480"
+                    height="272"
+                    loading="lazy"
+                  />
+                  <span class="twitch-clip-copy">
+                    <span class="eyebrow">{{ 'home.content.clip' | translate }}</span>
+                    <strong>{{ clip.title }}</strong>
+                    <span class="twitch-clip-meta">
+                      @if (clip.creatorName) {
+                        {{ 'home.content.by' | translate: { creator: clip.creatorName } }}
+                        <span aria-hidden="true">·</span>
+                      }
+                      {{ 'home.content.views' | translate: { count: (clip.viewCount | number) } }}
+                      <span aria-hidden="true">·</span>
+                      {{ clip.durationSeconds | number: '1.0-0' }} s
+                    </span>
+                  </span>
+                </a>
+              }
+            </li>
+          }
+        </ul>
+      } @else {
+        <article class="experience-card experience-card-archive">
+          <div class="archive-art" aria-hidden="true">
+            <span>CND</span>
+            <i></i><i></i><i></i>
+          </div>
+          <div class="experience-overlay">
+            <p class="eyebrow">Twitch</p>
+            <h3>{{ 'home.content.clipsPreparing' | translate }}</h3>
+            <p>
+              @if (state.kind === 'error') {
+                {{ 'home.content.twitchUnavailable' | translate }}
+              } @else {
+                {{ 'home.content.noClips' | translate }}
+              }
+            </p>
+          </div>
+        </article>
+      }
+    </div>
+  }
+</section>

@@ -1,0 +1,94 @@
+<div class="media-controls" role="group" [attr.aria-label]="'candeonato.media.group' | translate">
+  <button
+    class="control-button"
+    type="button"
+    [attr.aria-label]="
+      paused ? ('candeonato.media.play' | translate) : ('candeonato.media.pause' | translate)
+    "
+    [attr.aria-pressed]="paused"
+    (click)="playToggle.emit()"
+  >
+    @if (paused) {
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+        <path
+          d="m8 5 11 7-11 7V5Z"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linejoin="round"
+        />
+      </svg>
+    } @else {
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+        <path d="M8 5v14M16 5v14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+      </svg>
+    }
+  </button>
+
+  <button
+    class="control-button"
+    type="button"
+    [attr.aria-label]="
+      muted ? ('candeonato.media.unmute' | translate) : ('candeonato.media.mute' | translate)
+    "
+    [attr.aria-pressed]="!muted"
+    (click)="soundToggle.emit()"
+  >
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+      <path
+        d="M4 9v6h4l5 4V5L8 9H4Z"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linejoin="round"
+      />
+      @if (muted) {
+        <path d="m16 9 5 5m0-5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+      } @else {
+        <path
+          d="M16 9.5c.8.7 1.2 1.5 1.2 2.5s-.4 1.8-1.2 2.5M18.5 7c1.5 1.3 2.3 3 2.3 5s-.8 3.7-2.3 5"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+        />
+      }
+    </svg>
+  </button>
+
+  <button
+    class="control-button"
+    type="button"
+    [attr.aria-label]="
+      viewingVideo
+        ? ('candeonato.media.showInterface' | translate)
+        : ('candeonato.media.hideInterface' | translate)
+    "
+    [attr.aria-pressed]="viewingVideo"
+    [attr.title]="
+      viewingVideo
+        ? ('candeonato.media.showTitle' | translate)
+        : ('candeonato.media.hideTitle' | translate)
+    "
+    (click)="viewToggle.emit()"
+  >
+    @if (viewingVideo) {
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+        <path
+          d="M4 8V4h4m8 0h4v4m0 8v4h-4M8 20H4v-4M8 9h8v6H8V9Z"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    } @else {
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+        <path
+          d="M2.8 12s3.4-5.5 9.2-5.5 9.2 5.5 9.2 5.5-3.4 5.5-9.2 5.5S2.8 12 2.8 12Z"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linejoin="round"
+        />
+        <circle cx="12" cy="12" r="2.4" stroke="currentColor" stroke-width="1.8" />
+      </svg>
+    }
+  </button>
+</div>

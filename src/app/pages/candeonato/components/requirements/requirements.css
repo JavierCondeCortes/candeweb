@@ -1,0 +1,162 @@
+.requirements-section {
+  position: relative;
+}
+
+.requirements-section::before {
+  position: absolute;
+  top: 10%;
+  right: -20rem;
+  width: 34rem;
+  height: 34rem;
+  border-radius: 50%;
+  background: rgba(255, 43, 214, 0.1);
+  filter: blur(8rem);
+  content: '';
+  pointer-events: none;
+}
+
+.data-grid {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+}
+
+.data-card {
+  min-height: 14rem;
+  padding: 1.4rem;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.035), transparent 70%);
+}
+
+.data-card dt {
+  color: var(--lime);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.data-card .data-value {
+  margin: 2rem 0 0;
+  color: var(--text);
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  font-size: clamp(2rem, 5vw, 3.8rem);
+  font-style: italic;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.data-card .data-description {
+  max-width: 30ch;
+  margin: 1rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.entry-notes {
+  display: grid;
+  gap: 0;
+  margin-top: 2rem;
+  border-top: 1px solid var(--border);
+}
+
+.entry-notes > div {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr;
+  gap: 1rem;
+  padding-block: 1.1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.entry-notes span {
+  color: var(--magenta);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 900;
+}
+
+.entry-notes p {
+  max-width: 60ch;
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.entry-notes strong {
+  color: var(--text);
+}
+
+.schedule-section {
+  padding-top: 0;
+}
+
+.schedule-card {
+  display: grid;
+  gap: clamp(2.5rem, 6vw, 5rem);
+  padding: clamp(1.5rem, 5vw, 4rem);
+  border: 1px solid var(--magenta-soft);
+  background: linear-gradient(115deg, rgba(255, 43, 214, 0.14), transparent 45%), var(--surface);
+  box-shadow: 0 0 4rem rgba(255, 43, 214, 0.09);
+}
+
+.schedule-card h2 {
+  margin: 0.7rem 0 1rem;
+  color: var(--text);
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  font-size: clamp(2.8rem, 8vw, 6rem);
+  font-style: italic;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.schedule-card p:not(.eyebrow) {
+  max-width: 54ch;
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.schedule-card ol {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.schedule-card li {
+  display: grid;
+  gap: 0.3rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.schedule-card li:first-child {
+  border-top: 1px solid var(--border);
+}
+
+.schedule-card li span {
+  color: var(--lime);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+@media (min-width: 42rem) {
+  .data-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 64rem) {
+  .data-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .schedule-card {
+    grid-template-columns: 1.1fr 0.9fr;
+    align-items: center;
+  }
+}

@@ -1,0 +1,38 @@
+<section id="evento" class="section-shell event-section" aria-labelledby="evento-title">
+  <div class="section-heading reveal">
+    <p class="eyebrow">{{ 'candeonato.about.eyebrow' | translate }}</p>
+    <h2 id="evento-title" class="section-title">{{ 'candeonato.about.title' | translate }}</h2>
+  </div>
+
+  <div class="event-layout">
+    <div class="event-copy">
+      <p class="lede">
+        {{ localizedDescription() || ('candeonato.about.introFallback' | translate) }}
+      </p>
+      <p class="body-copy">
+        {{ 'candeonato.about.body' | translate }}
+      </p>
+      <blockquote>
+        <span aria-hidden="true">“</span>
+        {{ 'candeonato.about.quote' | translate }}
+      </blockquote>
+    </div>
+
+    <figure class="car-visual reveal">
+      <div class="car-frame">
+        <img
+          src="/media/mazda-outline.webp"
+          [alt]="'candeonato.about.imageAlt' | translate"
+          width="1400"
+          height="788"
+          loading="lazy"
+        />
+        <span class="scan-line" aria-hidden="true"></span>
+      </div>
+      <figcaption>
+        <span>MX-5 / CUP</span>
+        {{ 'candeonato.about.caption' | translate }}
+      </figcaption>
+    </figure>
+  </div>
+</section>

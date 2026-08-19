@@ -1,0 +1,90 @@
+<section
+  id="requisitos"
+  class="section-shell requirements-section"
+  aria-labelledby="requisitos-title"
+>
+  <div class="section-heading reveal">
+    <p class="eyebrow">{{ 'candeonato.requirements.eyebrow' | translate }}</p>
+    <h2 id="requisitos-title" class="section-title">
+      {{ 'candeonato.requirements.title' | translate }}
+    </h2>
+    <p class="lede">{{ 'candeonato.requirements.intro' | translate }}</p>
+  </div>
+
+  <dl class="data-grid">
+    <div class="data-card reveal">
+      <dt>{{ 'candeonato.requirements.simulator' | translate }}</dt>
+      <dd class="data-value">iRacing</dd>
+      <dd class="data-description">
+        {{ 'candeonato.requirements.simulatorDescription' | translate }}
+      </dd>
+    </div>
+    <div class="data-card reveal">
+      <dt>{{ 'candeonato.requirements.car' | translate }}</dt>
+      <dd class="data-value">Mazda MX-5</dd>
+      <dd class="data-description">{{ 'candeonato.requirements.carDescription' | translate }}</dd>
+    </div>
+    <div class="data-card reveal">
+      <dt>{{ 'candeonato.requirements.setup' | translate }}</dt>
+      <dd class="data-value">{{ 'candeonato.requirements.fixedSetup' | translate }}</dd>
+      <dd class="data-description">{{ 'candeonato.requirements.setupDescription' | translate }}</dd>
+    </div>
+    <div class="data-card reveal">
+      <dt>{{ 'candeonato.requirements.tracks' | translate }}</dt>
+      <dd class="data-value">{{ 'candeonato.requirements.free' | translate }}</dd>
+      <dd class="data-description">
+        {{ 'candeonato.requirements.tracksDescription' | translate }}
+      </dd>
+    </div>
+  </dl>
+
+  <div class="entry-notes">
+    <div>
+      <span aria-hidden="true">01</span>
+      <p>
+        <strong>{{ 'candeonato.requirements.freeTitle' | translate }}</strong>
+        {{ 'candeonato.requirements.freeText' | translate }}
+      </p>
+    </div>
+    <div>
+      <span aria-hidden="true">02</span>
+      <p>
+        <strong>{{ 'candeonato.requirements.placesTitle' | translate }}</strong>
+        {{ 'candeonato.requirements.placesText' | translate }}
+      </p>
+    </div>
+    <div>
+      <span aria-hidden="true">03</span>
+      <p>
+        <strong>{{ 'candeonato.requirements.discordTitle' | translate }}</strong>
+        {{ 'candeonato.requirements.discordText' | translate }}
+      </p>
+    </div>
+  </div>
+</section>
+
+<section id="calendario" class="section-shell schedule-section" aria-labelledby="calendario-title">
+  <div class="schedule-card reveal">
+    <div>
+      <p class="eyebrow">{{ 'candeonato.schedule.raceDay' | translate: { year: year() } }}</p>
+      <h2 id="calendario-title">{{ longDate() }}</h2>
+      <p>
+        {{ 'candeonato.schedule.intro' | translate }}
+      </p>
+    </div>
+    <ol [attr.aria-label]="'candeonato.schedule.processLabel' | translate">
+      <li>
+        <span>{{ 'candeonato.schedule.now' | translate }}</span
+        ><strong>{{ 'candeonato.schedule.registrationOpen' | translate }}</strong>
+      </li>
+      <li>
+        <span>{{ 'candeonato.schedule.before' | translate }}</span
+        ><strong>{{ 'candeonato.schedule.confirmation' | translate }}</strong>
+      </li>
+      <li>
+        <span>{{ shortDate() }}</span
+        ><strong>{{ 'candeonato.schedule.briefing' | translate }}</strong>
+      </li>
+    </ol>
+  </div>
+</section>

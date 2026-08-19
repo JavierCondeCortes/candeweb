@@ -1,0 +1,58 @@
+<main class="admin-auth-page">
+  <section class="admin-auth-card" aria-labelledby="accept-invitation-title">
+    <a class="admin-brand" routerLink="/">CND<span>///</span> ADMIN</a>
+    <app-language-switcher />
+    <p class="admin-eyebrow">{{ 'admin.acceptInvitation.eyebrow' | translate }}</p>
+    <h1 id="accept-invitation-title">{{ 'admin.acceptInvitation.title' | translate }}</h1>
+
+    @if (loading()) {
+      <p role="status">{{ 'admin.common.loading' | translate }}</p>
+    } @else if (invitation(); as invitationData) {
+      <p>{{ 'admin.acceptInvitation.intro' | translate }}</p>
+      <dl class="admin-invitation-identity">
+        <div>
+          <dt>{{ 'admin.acceptInvitation.name' | translate }}</dt>
+          <dd>{{ invitationData.displayName }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'admin.acceptInvitation.email' | translate }}</dt>
+          <dd>{{ invitationData.email }}</dd>
+        </div>
+      </dl>
+      @if (errorMessage()) {
+        <div class="admin-alert is-error" role="alert">{{ errorMessage() }}</div>
+      }
+      <form class="admin-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <label>
+          <span>{{ 'admin.acceptInvitation.password' | translate }}</span>
+          <input
+            type="password"
+            formControlName="password"
+            autocomplete="new-password"
+            minlength="12"
+          />
+          <small>{{ 'admin.login.passwordHelp' | translate }}</small>
+        </label>
+        <label>
+          <span>{{ 'admin.acceptInvitation.confirmPassword' | translate }}</span>
+          <input
+            type="password"
+            formControlName="passwordConfirmation"
+            autocomplete="new-password"
+          />
+        </label>
+        <button class="admin-button is-primary" type="submit" [disabled]="submitting()">
+          {{
+            (submitting() ? 'admin.acceptInvitation.creating' : 'admin.acceptInvitation.submit')
+              | translate
+          }}
+        </button>
+      </form>
+    } @else {
+      <div class="admin-alert is-error" role="alert">{{ errorMessage() }}</div>
+      <a class="admin-button" routerLink="/admin/solicitar-acceso">{{
+        'admin.acceptInvitation.requestAgain' | translate
+      }}</a>
+    }
+  </section>
+</main>

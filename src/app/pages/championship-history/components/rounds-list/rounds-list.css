@@ -1,0 +1,257 @@
+:host {
+  display: block;
+}
+
+.round-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.round-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: linear-gradient(145deg, rgba(255, 43, 214, 0.08), transparent 45%), var(--surface);
+}
+
+.round-card::after {
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-top: 2px solid var(--lime);
+  border-right: 2px solid var(--lime);
+  content: '';
+  pointer-events: none;
+}
+
+.round-card > header {
+  display: grid;
+  grid-template-columns: 2.6rem minmax(0, 1fr);
+  gap: 1rem;
+  padding: 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.track-number,
+.track-label,
+.track-layout {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.track-number {
+  color: var(--magenta);
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.track-label {
+  color: var(--lime);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+h3 {
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.25rem, 4vw, 1.8rem);
+  line-height: 1.08;
+  text-transform: uppercase;
+}
+
+.track-layout {
+  margin-top: 0.45rem;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+li {
+  padding: 1.15rem 1.25rem;
+}
+
+li + li {
+  border-top: 1px solid var(--border);
+}
+
+.round-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.67rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.round-title span {
+  color: var(--magenta);
+  font-weight: 900;
+}
+
+.round-title strong {
+  color: var(--text);
+}
+
+dl {
+  display: grid;
+  grid-template-columns: minmax(7rem, 1.5fr) repeat(2, minmax(3.5rem, 0.5fr));
+  gap: 0.75rem;
+  margin: 1rem 0 0;
+}
+
+dt,
+dd {
+  margin: 0;
+}
+
+dt {
+  color: var(--text-muted);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+}
+
+dd {
+  margin-top: 0.15rem;
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+abbr {
+  text-decoration: none;
+}
+
+.round-results-toggle,
+.round-results button {
+  min-height: 2.75rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.round-results-toggle {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.round-results-toggle:hover,
+.round-results button:hover {
+  border-color: var(--lime);
+  color: var(--lime);
+}
+
+.round-results {
+  margin-top: 1rem;
+  padding: clamp(1rem, 3vw, 2rem);
+  border: 1px solid var(--magenta-soft);
+  background: var(--surface);
+}
+
+.round-results-heading,
+.round-results-source {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.round-results-heading h3 {
+  margin-top: 0.35rem;
+}
+
+.round-results-message {
+  margin: 1.5rem 0 0;
+  color: var(--text-muted);
+}
+
+.round-results-message p {
+  margin: 0 0 0.75rem;
+}
+
+.round-results-scroll {
+  margin-top: 1.5rem;
+  overflow-x: auto;
+  outline-offset: 0.3rem;
+}
+
+.round-results table {
+  width: 100%;
+  min-width: 48rem;
+  border-collapse: collapse;
+}
+
+.round-results caption {
+  padding: 0 0 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-align: left;
+}
+
+.round-results th,
+.round-results td {
+  padding: 0.7rem 0.65rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.round-results th {
+  color: var(--lime);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.round-results td {
+  font-size: 0.78rem;
+}
+
+.round-results td:first-child strong {
+  color: var(--magenta);
+  font-size: 1rem;
+}
+
+.round-results-source {
+  margin-top: 1rem;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.round-results-source p {
+  margin: 0;
+}
+
+.round-results-source a {
+  color: var(--lime);
+  text-underline-offset: 0.25rem;
+}
+
+.empty-state {
+  margin: 0;
+  padding: 2rem;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+@media (min-width: 64rem) {
+  .round-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

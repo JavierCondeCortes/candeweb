@@ -1,0 +1,102 @@
+.event-section {
+  position: relative;
+  scroll-margin-top: 2rem;
+}
+
+.event-layout {
+  display: grid;
+  gap: clamp(3rem, 7vw, 6rem);
+  align-items: center;
+}
+
+.event-copy {
+  display: grid;
+  gap: 1.5rem;
+}
+
+blockquote {
+  max-width: 48rem;
+  margin: 1rem 0 0;
+  padding: 1.25rem 0 1.25rem 1.25rem;
+  border-left: 2px solid var(--magenta);
+  color: var(--text);
+  font-size: clamp(1.2rem, 3vw, 2rem);
+  font-style: italic;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+blockquote span {
+  color: var(--magenta);
+}
+
+.car-visual {
+  margin: 0;
+}
+
+.car-frame {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.car-frame::before,
+.car-frame::after {
+  position: absolute;
+  z-index: 2;
+  width: 2.4rem;
+  height: 2.4rem;
+  content: '';
+  pointer-events: none;
+}
+
+.car-frame::before {
+  top: 0.7rem;
+  left: 0.7rem;
+  border-top: 2px solid var(--lime);
+  border-left: 2px solid var(--lime);
+}
+
+.car-frame::after {
+  right: 0.7rem;
+  bottom: 0.7rem;
+  border-right: 2px solid var(--magenta);
+  border-bottom: 2px solid var(--magenta);
+}
+
+.car-frame img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.scan-line {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, transparent 0 5px, rgba(245, 245, 242, 0.04) 6px);
+  pointer-events: none;
+}
+
+figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding-top: 0.8rem;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+figcaption span {
+  color: var(--lime);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+@media (min-width: 64rem) {
+  .event-layout {
+    grid-template-columns: minmax(0, 0.85fr) minmax(28rem, 1.15fr);
+  }
+}

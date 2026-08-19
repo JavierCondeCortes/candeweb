@@ -1,0 +1,50 @@
+<header class="admin-page-header">
+  <div>
+    <p class="admin-eyebrow">{{ 'admin.audit.eyebrow' | translate }}</p>
+    <h1>{{ 'admin.audit.title' | translate }}</h1>
+    <p>{{ 'admin.audit.intro' | translate }}</p>
+  </div>
+</header>
+
+@if (errorMessage()) {
+  <div class="admin-alert is-error" role="alert">{{ errorMessage() }}</div>
+} @else if (entries().length === 0) {
+  <p role="status">{{ 'admin.audit.loading' | translate }}</p>
+} @else {
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <caption>
+        {{
+          'admin.audit.caption' | translate
+        }}
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">{{ 'admin.audit.date' | translate }}</th>
+          <th scope="col">{{ 'admin.audit.person' | translate }}</th>
+          <th scope="col">{{ 'admin.audit.action' | translate }}</th>
+          <th scope="col">{{ 'admin.audit.entity' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (entry of entries(); track entry.id) {
+          <tr>
+            <td>{{ entry.createdAt | date: 'short' }}</td>
+            <td>
+              {{ entry.actorName || entry.actorEmail || ('admin.common.system' | translate) }}
+            </td>
+            <td>
+              <code>{{ entry.action }}</code>
+            </td>
+            <td>
+              {{ entry.entityType }}
+              @if (entry.entityId) {
+                <small>{{ entry.entityId }}</small>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

@@ -1,0 +1,132 @@
+<header class="admin-page-header">
+  <div>
+    <p class="admin-eyebrow">{{ 'admin.sponsorForm.eyebrow' | translate }}</p>
+    <h1>
+      {{ (sponsorId() ? 'admin.sponsorForm.editTitle' : 'admin.sponsorForm.newTitle') | translate }}
+    </h1>
+    <p>{{ 'admin.sponsorForm.intro' | translate }}</p>
+  </div>
+  <a class="admin-button" routerLink="/admin/sponsors">{{ 'admin.common.back' | translate }}</a>
+</header>
+
+@if (loading()) {
+  <p role="status">{{ 'admin.sponsorForm.loading' | translate }}</p>
+} @else {
+  @if (errorMessage()) {
+    <div id="sponsor-form-error" class="admin-alert is-error" role="alert" tabindex="-1">
+      {{ errorMessage() }}
+    </div>
+  }
+  <form class="admin-editor-form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+    <section class="admin-form-section" aria-labelledby="sponsor-info-title">
+      <div>
+        <h2 id="sponsor-info-title">{{ 'admin.sponsorForm.information' | translate }}</h2>
+        <p>{{ 'admin.sponsorForm.informationHelp' | translate }}</p>
+      </div>
+      <div class="admin-form-grid">
+        <label
+          ><span>{{ 'admin.sponsorForm.name' | translate }}</span
+          ><input type="text" formControlName="name" maxlength="100"
+        /></label>
+        <label
+          ><span>{{ 'admin.sponsorForm.website' | translate }}</span
+          ><input type="url" formControlName="websiteUrl" placeholder="https://"
+        /></label>
+        <label class="is-wide"
+          ><span>{{ 'admin.sponsorForm.description' | translate }}</span
+          ><textarea formControlName="description" maxlength="240" rows="3"></textarea>
+        </label>
+      </div>
+    </section>
+    <section class="admin-form-section" aria-labelledby="sponsor-logo-title">
+      <div>
+        <h2 id="sponsor-logo-title">{{ 'admin.sponsorForm.logo' | translate }}</h2>
+        <p>{{ 'admin.sponsorForm.logoHelp' | translate }}</p>
+      </div>
+      <div class="admin-form-grid">
+        @if (form.controls.logoUrl.value) {
+          <div class="admin-sponsor-preview">
+            <img [src]="form.controls.logoUrl.value" [alt]="form.controls.logoAlt.value || ''" />
+          </div>
+        }
+        @if (uploadMessage()) {
+          <p class="admin-upload-success is-wide" role="status">{{ uploadMessage() }}</p>
+        }
+        <label class="is-wide"
+          ><span>{{ 'admin.sponsorForm.uploadLogo' | translate }}</span
+          ><input
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/avif"
+            (change)="chooseImage($event)"
+          /><small>{{
+            (uploading() ? 'admin.common.uploading' : 'admin.sponsorForm.uploadHelp') | translate
+          }}</small></label
+        >
+        <label class="is-wide"
+          ><span>{{ 'admin.common.imageUrl' | translate }}</span
+          ><input type="text" formControlName="logoUrl" />
+          @if (fieldErrors()['logoUrl']; as error) {
+            <small class="field-error">{{ error }}</small>
+          }
+        </label>
+        <label class="is-wide"
+          ><span>{{ 'admin.common.alternativeText' | translate }}</span
+          ><input type="text" formControlName="logoAlt" maxlength="160" />
+          @if (fieldErrors()['logoAlt']; as error) {
+            <small class="field-error">{{ error }}</small>
+          }
+        </label>
+      </div>
+    </section>
+    <section class="admin-form-section" aria-labelledby="sponsor-publish-title">
+      <div>
+        <h2 id="sponsor-publish-title">{{ 'admin.common.publication' | translate }}</h2>
+        <p>{{ 'admin.sponsorForm.publicationHelp' | translate }}</p>
+      </div>
+      <div class="admin-form-grid">
+        <label
+          ><span>{{ 'admin.common.status' | translate }}</span
+          ><select formControlName="status">
+            <option value="draft">{{ 'admin.common.draft' | translate }}</option>
+            <option value="published">{{ 'admin.common.published' | translate }}</option>
+            <option value="archived">{{ 'admin.common.archived' | translate }}</option>
+          </select></label
+        >
+        <label
+          ><span>{{ 'admin.common.order' | translate }}</span
+          ><input type="number" formControlName="displayOrder" min="0"
+        /></label>
+      </div>
+    </section>
+    <section class="admin-form-section" aria-labelledby="sponsor-preview-title">
+      <div>
+        <h2 id="sponsor-preview-title">{{ 'admin.common.privatePreview' | translate }}</h2>
+        <p>{{ 'admin.sponsorForm.previewHelp' | translate }}</p>
+      </div>
+      <article class="admin-live-preview admin-sponsor-live-preview">
+        @if (form.controls.logoUrl.value) {
+          <img [src]="form.controls.logoUrl.value" [alt]="form.controls.logoAlt.value || ''" />
+        }
+        <div>
+          <p class="admin-eyebrow">Sponsor</p>
+          <h3>{{ form.controls.name.value || ('admin.sponsorForm.previewName' | translate) }}</h3>
+          <p>{{ form.controls.description.value }}</p>
+        </div>
+      </article>
+    </section>
+    <div class="admin-form-actions">
+      <button class="admin-button is-primary" type="submit" [disabled]="saving() || uploading()">
+        {{ (saving() ? 'admin.common.saving' : 'admin.sponsorForm.save') | translate }}</button
+      ><a class="admin-button" routerLink="/admin/sponsors">{{
+        'admin.common.cancel' | translate
+      }}</a>
+    </div>
+    @if (sponsorId()) {
+      <p class="admin-form-meta">
+        {{ 'admin.common.lastUpdated' | translate }}
+        <time [attr.datetime]="loadedUpdatedAt()">{{ loadedUpdatedAt() | date: 'short' }}</time> ·
+        {{ updatedByName() || ('admin.common.system' | translate) }}
+      </p>
+    }
+  </form>
+}

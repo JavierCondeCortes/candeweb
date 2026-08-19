@@ -1,0 +1,13 @@
+<a class="skip-link" href="#contenido-inicio">{{ 'home.skip' | translate }}</a>
+
+<app-home-hero />
+
+<main id="contenido-inicio" class="home-main" tabindex="-1">
+  <app-community-intro [discordUrl]="(settings$ | async)?.discordUrl || null" />
+  <app-team-showcase />
+  <app-experience-gallery />
+  <app-event-feature />
+  <app-sponsor-strip />
+</main>
+
+<app-footer></app-footer>

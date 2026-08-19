@@ -1,0 +1,299 @@
+<header class="admin-page-header">
+  <div>
+    <p class="admin-eyebrow">{{ 'admin.memberForm.eyebrow' | translate }}</p>
+    <h1>
+      {{ (memberId() ? 'admin.memberForm.editTitle' : 'admin.memberForm.newTitle') | translate }}
+    </h1>
+    <p>{{ 'admin.memberForm.intro' | translate }}</p>
+  </div>
+  <a class="admin-button" routerLink="/admin/miembros">{{ 'admin.common.back' | translate }}</a>
+</header>
+
+@if (loading()) {
+  <p role="status">{{ 'admin.memberForm.loading' | translate }}</p>
+} @else {
+  @if (errorMessage()) {
+    <div id="member-form-error" class="admin-alert is-error" role="alert" tabindex="-1">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <form class="admin-editor-form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+    <section class="admin-form-section" aria-labelledby="member-identity-title">
+      <div>
+        <h2 id="member-identity-title">{{ 'admin.memberForm.identity' | translate }}</h2>
+        <p>{{ 'admin.memberForm.identityHelp' | translate }}</p>
+      </div>
+      <div class="admin-form-grid">
+        <label>
+          <span>{{ 'admin.memberForm.name' | translate }}</span>
+          <input
+            type="text"
+            formControlName="name"
+            maxlength="80"
+            [attr.aria-invalid]="fieldErrors()['name'] ? 'true' : null"
+            [attr.aria-describedby]="fieldErrors()['name'] ? 'member-name-error' : null"
+          />
+          @if (fieldErrors()['name']; as error) {
+            <small id="member-name-error" class="field-error">{{ error }}</small>
+          }
+        </label>
+        <label>
+          <span>{{ 'admin.memberForm.slug' | translate }}</span>
+          <input
+            type="text"
+            formControlName="slug"
+            maxlength="100"
+            [placeholder]="'admin.memberForm.slugPlaceholder' | translate"
+            [attr.aria-invalid]="fieldErrors()['slug'] ? 'true' : null"
+            [attr.aria-describedby]="fieldErrors()['slug'] ? 'member-slug-error' : null"
+          />
+          @if (fieldErrors()['slug']; as error) {
+            <small id="member-slug-error" class="field-error">{{ error }}</small>
+          }
+        </label>
+        <label>
+          <span>{{ 'admin.memberForm.alias' | translate }}</span>
+          <input type="text" formControlName="alias" maxlength="50" />
+        </label>
+        <label>
+          <span>{{ 'admin.memberForm.role' | translate }}</span>
+          <input
+            type="text"
+            formControlName="roleLabel"
+            maxlength="80"
+            [placeholder]="'admin.memberForm.rolePlaceholder' | translate"
+          />
+        </label>
+        <label class="is-wide">
+          <span>{{ 'admin.memberForm.description' | translate }}</span>
+          <textarea formControlName="bio" maxlength="280" rows="4"></textarea>
+        </label>
+      </div>
+    </section>
+
+    <section class="admin-form-section" aria-labelledby="member-image-title">
+      <div>
+        <h2 id="member-image-title">{{ 'admin.memberForm.photo' | translate }}</h2>
+        <p>{{ 'admin.memberForm.photoHelp' | translate }}</p>
+      </div>
+      <div class="admin-form-grid">
+        @if (form.controls.photoUrl.value) {
+          <img
+            class="admin-image-preview"
+            [src]="form.controls.photoUrl.value"
+            [alt]="'admin.memberForm.photoPreviewAlt' | translate"
+          />
+        }
+        <label class="is-wide">
+          <span>{{ 'admin.memberForm.uploadImage' | translate }}</span>
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            (change)="chooseImage($event)"
+          />
+          <small>{{
+            (uploading() ? 'admin.common.uploading' : 'admin.memberForm.uploadHelp') | translate
+          }}</small>
+        </label>
+        <label class="is-wide">
+          <span>{{ 'admin.common.imageUrl' | translate }}</span>
+          <input
+            type="text"
+            formControlName="photoUrl"
+            [attr.aria-invalid]="fieldErrors()['photoUrl'] ? 'true' : null"
+            [attr.aria-describedby]="fieldErrors()['photoUrl'] ? 'member-photo-url-error' : null"
+          />
+          @if (fieldErrors()['photoUrl']; as error) {
+            <small id="member-photo-url-error" class="field-error">{{ error }}</small>
+          }
+        </label>
+        <label class="is-wide">
+          <span>{{ 'admin.common.alternativeText' | translate }}</span>
+          <input
+            type="text"
+            formControlName="photoAlt"
+            maxlength="160"
+            [attr.aria-invalid]="fieldErrors()['photoAlt'] ? 'true' : null"
+            [attr.aria-describedby]="fieldErrors()['photoAlt'] ? 'member-photo-alt-error' : null"
+          />
+          @if (fieldErrors()['photoAlt']; as error) {
+            <small id="member-photo-alt-error" class="field-error">{{ error }}</small>
+          }
+        </label>
+        <label class="admin-check is-wide">
+          <input
+            type="checkbox"
+            formControlName="photoConsentConfirmed"
+            [attr.aria-invalid]="fieldErrors()['photoConsentConfirmed'] ? 'true' : null"
+            [attr.aria-describedby]="
+              fieldErrors()['photoConsentConfirmed'] ? 'member-photo-consent-error' : null
+            "
+          />
+          <span>{{ 'admin.memberForm.consent' | translate }}</span>
+          @if (fieldErrors()['photoConsentConfirmed']; as error) {
+            <small id="member-photo-consent-error" class="field-error">{{ error }}</small>
+          }
+        </label>
+      </div>
+    </section>
+
+    <section class="admin-form-section" aria-labelledby="member-social-title">
+      <div>
+        <h2 id="member-social-title">{{ 'admin.members.socials' | translate }}</h2>
+        <p>{{ 'admin.memberForm.socialsHelp' | translate }}</p>
+      </div>
+      <div class="admin-form-grid">
+        <label>
+          <span>Twitch</span>
+          <input
+            type="url"
+            formControlName="twitchUrl"
+            [attr.aria-invalid]="fieldErrors()['twitchUrl'] ? 'true' : null"
+            [attr.aria-describedby]="fieldErrors()['twitchUrl'] ? 'member-twitch-error' : null"
+          />
+          @if (fieldErrors()['twitchUrl']; as error) {
+            <small id="member-twitch-error" class="field-error">{{ error }}</small>
+          }
+        </label>
+        <label>
+          <span>Instagram</span>
+          <input
+            type="url"
+            formControlName="instagramUrl"
+            [attr.aria-invalid]="fieldErrors()['instagramUrl'] ? 'true' : null"
+            [attr.aria-describedby]="
+              fieldErrors()['instagramUrl'] ? 'member-instagram-error' : null
+            "
+          />
+          @if (fieldErrors()['instagramUrl']; as error) {
+            <small id="member-instagram-error" class="field-error">{{ error }}</small>
+          }
+        </label>
+        <label>
+          <span>YouTube</span>
+          <input
+            type="url"
+            formControlName="youtubeUrl"
+            [attr.aria-invalid]="fieldErrors()['youtubeUrl'] ? 'true' : null"
+            [attr.aria-describedby]="fieldErrors()['youtubeUrl'] ? 'member-youtube-error' : null"
+          />
+          @if (fieldErrors()['youtubeUrl']; as error) {
+            <small id="member-youtube-error" class="field-error">{{ error }}</small>
+          }
+        </label>
+        <label>
+          <span>X</span>
+          <input
+            type="url"
+            formControlName="xUrl"
+            [attr.aria-invalid]="fieldErrors()['xUrl'] ? 'true' : null"
+            [attr.aria-describedby]="fieldErrors()['xUrl'] ? 'member-x-error' : null"
+          />
+          @if (fieldErrors()['xUrl']; as error) {
+            <small id="member-x-error" class="field-error">{{ error }}</small>
+          }
+        </label>
+      </div>
+    </section>
+
+    <section class="admin-form-section" aria-labelledby="member-publish-title">
+      <div>
+        <h2 id="member-publish-title">{{ 'admin.common.publication' | translate }}</h2>
+        <p>{{ 'admin.memberForm.publicationHelp' | translate }}</p>
+      </div>
+      <div class="admin-form-grid">
+        <label>
+          <span>{{ 'admin.common.status' | translate }}</span>
+          <select formControlName="status">
+            <option value="draft">{{ 'admin.common.draft' | translate }}</option>
+            <option value="published">{{ 'admin.common.published' | translate }}</option>
+            <option value="archived">{{ 'admin.common.archived' | translate }}</option>
+          </select>
+        </label>
+        <label>
+          <span>{{ 'admin.common.order' | translate }}</span>
+          <input
+            type="number"
+            formControlName="displayOrder"
+            min="0"
+            [attr.aria-invalid]="fieldErrors()['displayOrder'] ? 'true' : null"
+            [attr.aria-describedby]="
+              fieldErrors()['displayOrder'] ? 'member-display-order-error' : null
+            "
+          />
+          @if (fieldErrors()['displayOrder']; as error) {
+            <small id="member-display-order-error" class="field-error">{{ error }}</small>
+          }
+        </label>
+        <label class="admin-check">
+          <input type="checkbox" formControlName="isFeatured" />
+          <span>{{ 'admin.memberForm.showHome' | translate }}</span>
+        </label>
+      </div>
+    </section>
+
+    <section class="admin-form-section" aria-labelledby="member-preview-title">
+      <div>
+        <h2 id="member-preview-title">{{ 'admin.common.privatePreview' | translate }}</h2>
+        <p>{{ 'admin.memberForm.previewHelp' | translate }}</p>
+      </div>
+      <article
+        class="admin-live-preview"
+        [attr.aria-label]="'admin.memberForm.previewLabel' | translate"
+      >
+        @if (form.controls.photoUrl.value) {
+          <img
+            [src]="form.controls.photoUrl.value"
+            [alt]="form.controls.photoAlt.value || ''"
+            width="288"
+            height="360"
+          />
+        }
+        <div>
+          <p class="admin-eyebrow">{{ 'admin.memberForm.paddock' | translate }}</p>
+          <h3>{{ form.controls.name.value || ('admin.memberForm.previewName' | translate) }}</h3>
+          @if (form.controls.roleLabel.value) {
+            <p>{{ form.controls.roleLabel.value }}</p>
+          }
+          @if (form.controls.bio.value) {
+            <p>{{ form.controls.bio.value }}</p>
+          }
+          <div
+            class="admin-preview-links"
+            [attr.aria-label]="'admin.memberForm.previewSocials' | translate"
+          >
+            @if (form.controls.twitchUrl.value) {
+              <span>Twitch</span>
+            }
+            @if (form.controls.instagramUrl.value) {
+              <span>Instagram</span>
+            }
+            @if (form.controls.youtubeUrl.value) {
+              <span>YouTube</span>
+            }
+            @if (form.controls.xUrl.value) {
+              <span>X</span>
+            }
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <div class="admin-form-actions">
+      <button class="admin-button is-primary" type="submit" [disabled]="saving() || uploading()">
+        {{ (saving() ? 'admin.common.saving' : 'admin.memberForm.save') | translate }}
+      </button>
+      <a class="admin-button" routerLink="/admin/miembros">{{
+        'admin.common.cancel' | translate
+      }}</a>
+    </div>
+    @if (memberId()) {
+      <p class="admin-form-meta">
+        {{ 'admin.common.lastUpdated' | translate }}
+        <time [attr.datetime]="loadedUpdatedAt()">{{ loadedUpdatedAt() | date: 'short' }}</time>
+        · {{ updatedByName() || ('admin.common.system' | translate) }}
+      </p>
+    }
+  </form>
+}

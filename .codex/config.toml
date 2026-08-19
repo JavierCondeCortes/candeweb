@@ -1,0 +1,3 @@
+[mcp_servers.chrome-devtools]
+command = "cmd.exe"
+args = ["/d", "/c", "node", "scripts/start-browser-devtools-mcp.mjs"]

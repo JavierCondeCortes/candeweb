@@ -1,0 +1,51 @@
+<section id="comunidad" class="section-shell community-section" aria-labelledby="community-title">
+  <div class="community-copy">
+    <div class="section-heading">
+      <p class="eyebrow">{{ 'home.community.eyebrow' | translate }}</p>
+      <h2 id="community-title" class="section-title">{{ 'home.community.title' | translate }}</h2>
+      <p class="lede">{{ 'home.community.lede' | translate }}</p>
+    </div>
+
+    <ol class="community-values">
+      @for (value of values; track value.index) {
+        <li>
+          <span>{{ value.index }}</span>
+          <div>
+            <h3>{{ 'home.community.values.' + value.key + 'Title' | translate }}</h3>
+            <p>{{ 'home.community.values.' + value.key + 'Description' | translate }}</p>
+          </div>
+        </li>
+      }
+    </ol>
+
+    @if (discordUrl(); as url) {
+      <a
+        class="button button-secondary community-discord-link"
+        [href]="url"
+        target="_blank"
+        rel="noopener noreferrer"
+        [attr.aria-label]="
+          ('home.community.joinDiscord' | translate) +
+          ' (' +
+          ('home.common.newTab' | translate) +
+          ')'
+        "
+      >
+        {{ 'home.community.joinDiscord' | translate }} <span aria-hidden="true">↗</span>
+      </a>
+    }
+  </div>
+
+  <figure class="community-visual">
+    <div class="community-frame">
+      <img
+        src="/media/mazda-outline.webp"
+        [alt]="'home.community.imageAlt' | translate"
+        width="1280"
+        height="720"
+        loading="lazy"
+      />
+    </div>
+    <figcaption>{{ 'home.community.caption' | translate }}</figcaption>
+  </figure>
+</section>
