@@ -1,0 +1,133 @@
+<div class="table-tools">
+  <label for="driver-search">{{
+    (hasPublicNames() ? 'candeonato.sports.searchDriver' : 'candeonato.sports.searchDriverId')
+      | translate
+  }}</label>
+  <div class="search-control">
+    <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none">
+      <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.8" />
+      <path d="m16 16 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+    </svg>
+    <input
+      id="driver-search"
+      type="search"
+      [attr.inputmode]="hasPublicNames() ? 'search' : 'numeric'"
+      [placeholder]="hasPublicNames() ? 'Ej. Pablo Cabrera' : 'Ej. 801380'"
+      autocomplete="off"
+      [value]="query()"
+      (input)="updateQuery($event)"
+    />
+  </div>
+</div>
+
+<div class="table-frame">
+  <table>
+    <caption>
+      {{
+        'candeonato.sports.standingsCaption' | translate: { name: championshipName() }
+      }}
+    </caption>
+    <thead>
+      <tr>
+        <th scope="col">{{ 'candeonato.sports.position' | translate }}</th>
+        <th scope="col">{{ 'candeonato.sports.driver' | translate }}</th>
+        <th scope="col" class="numeric points-column">
+          {{ 'candeonato.sports.points' | translate }}
+        </th>
+        <th scope="col" class="numeric desktop-stat">
+          {{ 'candeonato.sports.rounds' | translate }}
+        </th>
+        <th scope="col" class="numeric desktop-stat">{{ 'candeonato.sports.wins' | translate }}</th>
+        <th scope="col" class="numeric desktop-stat">
+          {{ 'candeonato.sports.podiums' | translate }}
+        </th>
+        <th scope="col" class="numeric desktop-stat">Inc.</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (standing of filteredStandings(); track standing.driverId ?? standing.position) {
+        <tr [class.podium-row]="standing.position <= 3">
+          <td class="position-cell">
+            <span class="position-mark" [attr.aria-label]="'Posición ' + standing.position">
+              {{ standing.position.toString().padStart(2, '0') }}
+            </span>
+          </td>
+          <th scope="row">
+            <details>
+              <summary>
+                <span>{{ standing.driverLabel }}</span>
+                @if (standing.position <= 3) {
+                  <span class="podium-label">Top {{ standing.position }}</span>
+                }
+              </summary>
+              <dl>
+                <div>
+                  <dt>{{ 'candeonato.sports.rounds' | translate }}</dt>
+                  <dd>{{ standing.rounds }}</dd>
+                </div>
+                <div>
+                  <dt>{{ 'candeonato.sports.wins' | translate }}</dt>
+                  <dd>{{ standing.wins }}</dd>
+                </div>
+                <div>
+                  <dt>{{ 'candeonato.sports.podiums' | translate }}</dt>
+                  <dd>{{ standing.podiums }}</dd>
+                </div>
+                <div>
+                  <dt>{{ 'candeonato.sports.incidents' | translate }}</dt>
+                  <dd>{{ standing.incidents }}</dd>
+                </div>
+                <div>
+                  <dt>{{ 'candeonato.sports.laps' | translate }}</dt>
+                  <dd>{{ standing.laps }}</dd>
+                </div>
+                <div>
+                  <dt>{{ 'candeonato.sports.poles' | translate }}</dt>
+                  <dd>{{ standing.poles }}</dd>
+                </div>
+              </dl>
+            </details>
+          </th>
+          <td class="numeric points-column">
+            <strong>{{ standing.points }}</strong>
+          </td>
+          <td class="numeric desktop-stat">{{ standing.rounds }}</td>
+          <td class="numeric desktop-stat">{{ standing.wins }}</td>
+          <td class="numeric desktop-stat">{{ standing.podiums }}</td>
+          <td class="numeric desktop-stat">{{ standing.incidents }}</td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="7" class="no-results">
+            {{ 'candeonato.sports.noSearchResults' | translate }}
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+@if (!query() && standings().length > 10) {
+  <button
+    class="show-all-button"
+    type="button"
+    [attr.aria-expanded]="showAll()"
+    (click)="toggleAll()"
+  >
+    {{
+      showAll()
+        ? ('candeonato.sports.topTen' | translate)
+        : ('candeonato.sports.fullStandings' | translate: { count: standings().length })
+    }}
+  </button>
+}
+
+<p class="source-note">
+  {{
+    hasMatchedIds()
+      ? ('candeonato.sports.sourceMatched' | translate)
+      : hasPublicNames()
+        ? ('candeonato.sports.sourceNames' | translate)
+        : ('candeonato.sports.sourceIds' | translate)
+  }}
+</p>

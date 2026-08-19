@@ -1,0 +1,163 @@
+<div class="round-grid">
+  @for (group of groups(); track group.key; let circuitIndex = $index) {
+    <article class="round-card">
+      <header>
+        <p class="track-number" aria-hidden="true">0{{ circuitIndex + 1 }}</p>
+        <div>
+          <p class="track-label">{{ 'candeonato.sports.circuit' | translate }}</p>
+          <h3>{{ group.circuit }}</h3>
+          <p class="track-layout">{{ group.layout }}</p>
+        </div>
+      </header>
+
+      <ol [attr.aria-label]="'candeonato.sports.roundsAt' | translate: { circuit: group.circuit }">
+        @for (round of group.rounds; track round.id) {
+          <li>
+            <div class="round-title">
+              <span>{{
+                'candeonato.sports.round'
+                  | translate: { number: round.number.toString().padStart(2, '0') }
+              }}</span>
+              <strong>{{ roundType(round) }}</strong>
+            </div>
+            <dl>
+              <div>
+                <dt>{{ 'candeonato.sports.date' | translate }}</dt>
+                <dd>{{ roundDate(round.date) }}</dd>
+              </div>
+              <div>
+                <dt>{{ 'candeonato.sports.laps' | translate }}</dt>
+                <dd>{{ round.laps ?? '—' }}</dd>
+              </div>
+              <div>
+                <dt><abbr title="Strength of Field">SOF</abbr></dt>
+                <dd>{{ round.sof ?? '—' }}</dd>
+              </div>
+            </dl>
+            @if (round.externalSessionId; as sessionId) {
+              <button
+                class="round-results-toggle"
+                [id]="'round-results-button-' + sessionId"
+                type="button"
+                [attr.aria-expanded]="openSessionId() === sessionId"
+                [attr.aria-controls]="'round-results-' + sessionId"
+                (click)="toggleResults(sessionId)"
+              >
+                {{
+                  (openSessionId() === sessionId
+                    ? 'candeonato.sports.hidePositions'
+                    : 'candeonato.sports.showPositions'
+                  ) | translate
+                }}
+              </button>
+            }
+          </li>
+        }
+      </ol>
+    </article>
+  } @empty {
+    <p class="empty-state">{{ 'candeonato.sports.noRounds' | translate }}</p>
+  }
+</div>
+
+@if (selectedRound(); as round) {
+  @if (round.externalSessionId; as sessionId) {
+    <section
+      class="round-results"
+      [id]="'round-results-' + sessionId"
+      [attr.aria-labelledby]="'round-results-button-' + sessionId"
+    >
+      <div class="round-results-heading">
+        <div>
+          <p class="track-label">{{ 'candeonato.sports.sessionResult' | translate }}</p>
+          <h3>{{ round.name }}</h3>
+        </div>
+        <button type="button" (click)="toggleResults(sessionId)">
+          {{ 'candeonato.sports.close' | translate }}
+        </button>
+      </div>
+
+      @switch (resultState(sessionId)?.kind) {
+        @case ('loading') {
+          <p class="round-results-message" role="status">
+            {{ 'candeonato.sports.loadingPositions' | translate }}
+          </p>
+        }
+        @case ('error') {
+          <div class="round-results-message" role="alert">
+            <p>{{ 'candeonato.sports.positionsError' | translate }}</p>
+            <button type="button" (click)="retryResults(sessionId)">
+              {{ 'candeonato.sports.retry' | translate }}
+            </button>
+          </div>
+        }
+        @case ('ready') {
+          @if (resultState(sessionId); as state) {
+            @if (state.kind === 'ready') {
+              @if (state.response.results.length) {
+                <div
+                  class="round-results-scroll"
+                  tabindex="0"
+                  [attr.aria-label]="'candeonato.sports.scrollableTable' | translate"
+                >
+                  <table>
+                    <caption>
+                      {{
+                        'candeonato.sports.positionsCaption' | translate: { name: round.name }
+                      }}
+                    </caption>
+                    <thead>
+                      <tr>
+                        <th scope="col">{{ 'candeonato.sports.position' | translate }}</th>
+                        <th scope="col">{{ 'candeonato.sports.driver' | translate }}</th>
+                        <th scope="col">{{ 'candeonato.sports.team' | translate }}</th>
+                        <th scope="col">{{ 'candeonato.sports.laps' | translate }}</th>
+                        <th scope="col">{{ 'candeonato.sports.totalTime' | translate }}</th>
+                        <th scope="col">{{ 'candeonato.sports.average' | translate }}</th>
+                        <th scope="col">Inc.</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (
+                        result of state.response.results;
+                        track result.position + ':' + result.driverName
+                      ) {
+                        <tr>
+                          <td>
+                            <strong>{{ result.position }}</strong>
+                          </td>
+                          <td>{{ result.driverName }}</td>
+                          <td>{{ result.team || '—' }}</td>
+                          <td>{{ result.laps ?? '—' }}</td>
+                          <td>{{ result.totalTime || '—' }}</td>
+                          <td>{{ result.averageLap || '—' }}</td>
+                          <td>{{ result.incidents ?? '—' }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              } @else {
+                <p class="round-results-message">
+                  {{ 'candeonato.sports.noPositions' | translate }}
+                </p>
+              }
+              <div class="round-results-source">
+                <p>{{ 'candeonato.sports.cacheNote' | translate }}</p>
+                <a
+                  [href]="state.response.sourceUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  [attr.aria-label]="'candeonato.sports.originalResultLabel' | translate"
+                >
+                  {{ 'candeonato.sports.originalSource' | translate }}
+                  <span aria-hidden="true">↗</span>
+                </a>
+              </div>
+            }
+          }
+        }
+      }
+    </section>
+  }
+}

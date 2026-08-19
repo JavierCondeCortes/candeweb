@@ -1,0 +1,164 @@
+:host {
+  display: contents;
+}
+
+.candeonato-nav {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 20;
+  display: flex;
+  width: min(calc(100% - 2rem), var(--content-width));
+  min-height: 4.75rem;
+  margin-inline: auto;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(245, 245, 242, 0.22);
+}
+
+.candeonato-brand {
+  position: relative;
+  z-index: 22;
+  color: var(--text);
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  font-size: 1.5rem;
+  font-style: italic;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.candeonato-brand span {
+  color: var(--magenta);
+}
+
+.candeonato-nav-actions {
+  position: relative;
+  z-index: 22;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.candeonato-menu-button {
+  position: relative;
+  z-index: 22;
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0.7rem;
+  align-content: center;
+  gap: 0.4rem;
+  border: 1px solid rgba(245, 245, 242, 0.5);
+  border-radius: 50%;
+  background: rgba(5, 5, 5, 0.72);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.candeonato-menu-button span {
+  display: block;
+  height: 1px;
+  background: currentColor;
+  transition: transform 160ms ease;
+}
+
+.candeonato-nav.menu-open .candeonato-menu-button span:first-child {
+  transform: translateY(0.22rem) rotate(45deg);
+}
+
+.candeonato-nav.menu-open .candeonato-menu-button span:last-child {
+  transform: translateY(-0.22rem) rotate(-45deg);
+}
+
+.candeonato-nav-links {
+  position: fixed;
+  z-index: 21;
+  inset: 0;
+  display: grid;
+  width: 100vw;
+  min-height: 100svh;
+  padding: 7rem 1.5rem 2rem;
+  align-content: center;
+  visibility: hidden;
+  background:
+    radial-gradient(circle at 85% 10%, rgba(255, 43, 214, 0.18), transparent 24rem),
+    rgba(5, 5, 5, 0.98);
+  opacity: 0;
+  transform: translateY(-1rem);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease,
+    visibility 180ms ease;
+}
+
+.candeonato-nav.menu-open .candeonato-nav-links {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.candeonato-nav-links a {
+  padding: 0.9rem 0;
+  border-bottom: 1px solid rgba(245, 245, 242, 0.16);
+  color: var(--text);
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  font-size: clamp(2.3rem, 12vw, 4rem);
+  font-style: italic;
+  font-weight: 800;
+  line-height: 1;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.candeonato-nav-links a:hover,
+.candeonato-nav-links a.is-active,
+.candeonato-nav-links a[aria-current='page'] {
+  color: var(--lime);
+}
+
+@media (min-width: 48rem) {
+  .candeonato-nav {
+    width: min(calc(100% - 5rem), var(--content-width));
+  }
+}
+
+@media (min-width: 64rem) {
+  .candeonato-menu-button {
+    display: none;
+  }
+
+  .candeonato-nav-links {
+    position: static;
+    display: flex;
+    width: auto;
+    min-height: 0;
+    padding: 0;
+    align-items: center;
+    gap: 1.75rem;
+    visibility: visible;
+    background: transparent;
+    opacity: 1;
+    transform: none;
+  }
+
+  .candeonato-nav-links a {
+    padding: 0;
+    border: 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.68rem;
+    font-style: normal;
+    letter-spacing: 0.08em;
+  }
+
+  .candeonato-nav-actions {
+    margin-left: -0.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .candeonato-menu-button span,
+  .candeonato-nav-links {
+    transition: none;
+  }
+}

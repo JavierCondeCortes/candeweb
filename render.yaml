@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: candeweb
+    runtime: node
+    plan: starter
+    region: frankfurt
+    numInstances: 1
+    buildCommand: npm ci && npm run build
+    startCommand: npm run serve:prod
+    healthCheckPath: /api/health
+    autoDeployTrigger: checksPass
+    maxShutdownDelaySeconds: 30
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: API_HOST
+        value: 0.0.0.0
+      - key: ADMIN_SETUP_TOKEN
+        generateValue: true
+      - key: TWITCH_CLIENT_ID
+        sync: false
+      - key: TWITCH_CLIENT_SECRET
+        sync: false
+    disk:
+      name: candemor-data
+      mountPath: /opt/render/project/src/server/data
+      sizeGB: 1

@@ -1,0 +1,43 @@
+<main class="admin-auth-page">
+  <section class="admin-auth-card" aria-labelledby="access-request-title">
+    <a class="admin-brand" routerLink="/">CND<span>///</span> ADMIN</a>
+    <app-language-switcher />
+
+    <p class="admin-eyebrow">{{ 'admin.accessRequest.eyebrow' | translate }}</p>
+    <h1 id="access-request-title">{{ 'admin.accessRequest.title' | translate }}</h1>
+
+    @if (sent()) {
+      <div class="admin-alert is-success" role="status">
+        <strong>{{ 'admin.accessRequest.sentTitle' | translate }}</strong>
+        <p>{{ 'admin.accessRequest.sentHelp' | translate }}</p>
+      </div>
+      <a class="admin-button" routerLink="/admin/login">{{
+        'admin.accessRequest.back' | translate
+      }}</a>
+    } @else {
+      <p>{{ 'admin.accessRequest.intro' | translate }}</p>
+      @if (errorMessage()) {
+        <div class="admin-alert is-error" role="alert">{{ errorMessage() }}</div>
+      }
+      <form class="admin-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <label>
+          <span>{{ 'admin.accessRequest.name' | translate }}</span>
+          <input type="text" formControlName="displayName" autocomplete="name" maxlength="80" />
+        </label>
+        <label>
+          <span>{{ 'admin.accessRequest.email' | translate }}</span>
+          <input type="email" formControlName="email" autocomplete="email" />
+        </label>
+        <button class="admin-button is-primary" type="submit" [disabled]="submitting()">
+          {{
+            (submitting() ? 'admin.accessRequest.sending' : 'admin.accessRequest.submit')
+              | translate
+          }}
+        </button>
+        <a class="admin-button" routerLink="/admin/login">{{
+          'admin.accessRequest.back' | translate
+        }}</a>
+      </form>
+    }
+  </section>
+</main>

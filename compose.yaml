@@ -1,0 +1,41 @@
+name: candeweb
+
+services:
+  candeweb:
+    image: ${DOCKER_IMAGE:-candeweb:local}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    pull_policy: missing
+    init: true
+    restart: unless-stopped
+    ports:
+      - '${CANDEWEB_PORT:-3000}:3000'
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      API_HOST: 0.0.0.0
+      DATABASE_PATH: /app/data/candemor.db
+      UPLOAD_DIR: /app/data/uploads
+      BACKUP_DIR: /app/data/backups
+      BROWSER_DIR: /app/dist/candeweb/browser
+      ADMIN_SETUP_TOKEN: ${ADMIN_SETUP_TOKEN:-}
+      TWITCH_CLIENT_ID: ${TWITCH_CLIENT_ID:-}
+      TWITCH_CLIENT_SECRET: ${TWITCH_CLIENT_SECRET:-}
+      FATCAT_API_BASE_URL: ${FATCAT_API_BASE_URL:-https://fatcatrace.xyz/api/torneo}
+      FATCAT_ROUND_BASE_URL: ${FATCAT_ROUND_BASE_URL:-https://fatcatrace.xyz/ronda}
+      FATCAT_ORIGIN: ${FATCAT_ORIGIN:-https://fatcatrace.xyz}
+    volumes:
+      - candeweb-data:/app/data
+    read_only: true
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 30s
+
+volumes:
+  candeweb-data:
+    name: candeweb-data

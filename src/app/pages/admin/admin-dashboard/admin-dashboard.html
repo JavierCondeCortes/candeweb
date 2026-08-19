@@ -1,0 +1,88 @@
+<header class="admin-page-header">
+  <div>
+    <p class="admin-eyebrow">{{ 'admin.dashboard.eyebrow' | translate }}</p>
+    <h1>{{ 'admin.dashboard.title' | translate }}</h1>
+    <p>{{ 'admin.dashboard.intro' | translate }}</p>
+  </div>
+  <div class="admin-header-actions">
+    <a class="admin-button is-primary" routerLink="/admin/miembros/nuevo">{{
+      'admin.dashboard.newMember' | translate
+    }}</a>
+    <a class="admin-button" routerLink="/admin/candeonatos/nuevo">{{
+      'admin.dashboard.newChampionship' | translate
+    }}</a>
+    <a class="admin-button" routerLink="/admin/sponsors/nuevo">{{
+      'admin.dashboard.newSponsor' | translate
+    }}</a>
+  </div>
+</header>
+
+@if (errorMessage()) {
+  <div class="admin-alert is-error" role="alert">{{ errorMessage() }}</div>
+} @else if (!summary()) {
+  <p role="status">{{ 'admin.dashboard.loading' | translate }}</p>
+} @else if (summary(); as data) {
+  <section class="admin-metrics" [attr.aria-label]="'admin.dashboard.contentSummary' | translate">
+    <article>
+      <span>{{ 'admin.dashboard.publishedMembers' | translate }}</span>
+      <strong>{{ data.members.published }}</strong>
+      <small>{{
+        'admin.dashboard.featuredMembers' | translate: { count: data.members.featured }
+      }}</small>
+    </article>
+    <article>
+      <span>{{ 'admin.dashboard.drafts' | translate }}</span>
+      <strong>{{ data.members.drafts + data.championships.drafts + data.sponsors.drafts }}</strong>
+      <small>{{ 'admin.dashboard.pendingReview' | translate }}</small>
+    </article>
+    <article [class.has-error]="data.championships.sync_errors > 0">
+      <span>{{ 'admin.dashboard.syncErrors' | translate }}</span>
+      <strong>{{ data.championships.sync_errors }}</strong>
+      <small>{{ 'admin.dashboard.sportsSources' | translate }}</small>
+    </article>
+  </section>
+
+  <section class="admin-panel" aria-labelledby="sponsors-summary-title">
+    <div>
+      <p class="admin-eyebrow">{{ 'admin.dashboard.sponsors' | translate }}</p>
+      <h2 id="sponsors-summary-title">
+        {{ 'admin.dashboard.publishedSponsors' | translate: { count: data.sponsors.published } }}
+      </h2>
+      <p>
+        {{
+          'admin.dashboard.savedSponsors'
+            | translate: { total: data.sponsors.total, drafts: data.sponsors.drafts }
+        }}
+      </p>
+    </div>
+    <a class="admin-button" routerLink="/admin/sponsors">{{
+      'admin.dashboard.manageSponsors' | translate
+    }}</a>
+  </section>
+
+  <section class="admin-panel" aria-labelledby="featured-title">
+    <div>
+      <p class="admin-eyebrow">{{ 'admin.dashboard.featuredEdition' | translate }}</p>
+      <h2 id="featured-title">
+        {{ data.featuredChampionship?.name ?? ('admin.dashboard.notSelected' | translate) }}
+      </h2>
+      @if (data.featuredChampionship; as championship) {
+        <p>
+          {{
+            'admin.dashboard.editionStatus'
+              | translate
+                : {
+                    status: championship.status,
+                    synced: championship.lastSyncedAt || ('admin.dashboard.pending' | translate),
+                  }
+          }}
+        </p>
+      } @else {
+        <p>{{ 'admin.dashboard.selectEdition' | translate }}</p>
+      }
+    </div>
+    <a class="admin-button" routerLink="/admin/candeonatos">{{
+      'admin.dashboard.manageEditions' | translate
+    }}</a>
+  </section>
+}

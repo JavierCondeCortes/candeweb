@@ -1,0 +1,23 @@
+.git
+.github
+.codex
+.vscode
+.angular
+node_modules
+dist
+coverage
+tmp
+out-tsc
+server/data
+.env
+.env.*
+!.env.example
+!.env.docker.example
+npm-debug.log*
+*.log
+**/.DS_Store
+**/Thumbs.db
+
+# Másteres de vídeo: el contenedor utiliza sus derivados optimizados de public/media.
+public/exampleVideo.mp4
+public/video.mp4

@@ -1,0 +1,90 @@
+<main class="admin-auth-page">
+  <section class="admin-auth-card" aria-labelledby="admin-login-title">
+    <a class="admin-brand" routerLink="/">CND<span>///</span> ADMIN</a>
+    <app-language-switcher />
+
+    @if (loading()) {
+      <p role="status">{{ 'admin.login.checking' | translate }}</p>
+    } @else {
+      <p class="admin-eyebrow">{{ 'admin.login.eyebrow' | translate }}</p>
+      <h1 id="admin-login-title">
+        {{ (needsSetup() ? 'admin.login.setupTitle' : 'admin.login.title') | translate }}
+      </h1>
+      <p>
+        @if (needsSetup()) {
+          {{ 'admin.login.setupIntro' | translate }}
+        } @else {
+          {{ 'admin.login.intro' | translate }}
+        }
+      </p>
+
+      @if (errorMessage()) {
+        <div class="admin-alert is-error" role="alert">{{ errorMessage() }}</div>
+      }
+
+      <form class="admin-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        @if (needsSetup()) {
+          <label>
+            <span>{{ 'admin.login.displayName' | translate }}</span>
+            <input type="text" formControlName="displayName" autocomplete="name" maxlength="80" />
+          </label>
+          <label>
+            <span>{{ 'admin.login.setupToken' | translate }}</span>
+            <input type="password" formControlName="setupToken" autocomplete="off" />
+            <small>{{ 'admin.login.setupTokenHelp' | translate }}</small>
+          </label>
+        }
+
+        <label>
+          <span>{{ 'admin.login.email' | translate }}</span>
+          <input type="email" formControlName="email" autocomplete="username" />
+        </label>
+
+        <label>
+          <span>{{ 'admin.login.password' | translate }}</span>
+          <input
+            type="password"
+            formControlName="password"
+            [attr.autocomplete]="needsSetup() ? 'new-password' : 'current-password'"
+            minlength="12"
+            aria-describedby="password-help"
+          />
+          <small id="password-help">{{ 'admin.login.passwordHelp' | translate }}</small>
+        </label>
+
+        @if (!needsSetup() && requiresMfa()) {
+          <label>
+            <span>{{ 'admin.login.mfaCode' | translate }}</span>
+            <input
+              type="text"
+              formControlName="mfaCode"
+              autocomplete="one-time-code"
+              inputmode="numeric"
+              maxlength="11"
+              [placeholder]="'admin.login.mfaPlaceholder' | translate"
+              autofocus
+            />
+          </label>
+        }
+
+        <button class="admin-button is-primary" type="submit" [disabled]="submitting()">
+          {{
+            (submitting()
+              ? 'admin.login.processing'
+              : needsSetup()
+                ? 'admin.login.create'
+                : 'admin.login.submit'
+            ) | translate
+          }}
+        </button>
+      </form>
+
+      @if (!needsSetup()) {
+        <p class="admin-auth-secondary">
+          {{ 'admin.login.noAccess' | translate }}
+          <a routerLink="/admin/solicitar-acceso">{{ 'admin.login.requestAccess' | translate }}</a>
+        </p>
+      }
+    }
+  </section>
+</main>

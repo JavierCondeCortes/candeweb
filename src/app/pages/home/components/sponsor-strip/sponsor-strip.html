@@ -1,0 +1,57 @@
+<section id="sponsors" class="sponsor-section" aria-labelledby="sponsor-title">
+  <div class="section-shell">
+    <div class="section-heading sponsor-heading">
+      <p class="eyebrow">{{ 'home.sponsors.eyebrow' | translate }}</p>
+      <h2 id="sponsor-title" class="section-title">{{ 'home.sponsors.title' | translate }}</h2>
+      <p class="lede">{{ 'home.sponsors.intro' | translate }}</p>
+    </div>
+
+    @if (state$ | async; as state) {
+      @if (state.kind === 'loading') {
+        <p class="sponsor-note" role="status">{{ 'home.sponsors.loading' | translate }}</p>
+      } @else if (state.kind === 'error') {
+        <p class="sponsor-note" role="status">{{ 'home.sponsors.error' | translate }}</p>
+      } @else if (state.sponsors.length === 0) {
+        <p class="sponsor-note">
+          {{ 'home.sponsors.empty' | translate }}
+        </p>
+      } @else {
+        <ul class="sponsor-grid" [attr.aria-label]="'home.sponsors.listLabel' | translate">
+          @for (sponsor of state.sponsors; track sponsor.id) {
+            <li>
+              @if (sponsor.websiteUrl) {
+                <a
+                  class="sponsor-card"
+                  [href]="sponsor.websiteUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  [attr.aria-label]="sponsor.name + ' (se abre en una pestaña nueva)'"
+                >
+                  <img
+                    [src]="sponsor.logoUrl"
+                    [alt]="sponsor.logoAlt || sponsor.name"
+                    width="1200"
+                    height="600"
+                    loading="lazy"
+                  />
+                  <span>{{ sponsor.name }}</span>
+                </a>
+              } @else {
+                <div class="sponsor-card">
+                  <img
+                    [src]="sponsor.logoUrl"
+                    [alt]="sponsor.logoAlt || sponsor.name"
+                    width="1200"
+                    height="600"
+                    loading="lazy"
+                  />
+                  <span>{{ sponsor.name }}</span>
+                </div>
+              }
+            </li>
+          }
+        </ul>
+      }
+    }
+  </div>
+</section>

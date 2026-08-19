@@ -1,0 +1,238 @@
+<a class="skip-link" [routerLink]="[]" fragment="contenido-clasificacion">{{
+  'candeonato.detail.skip' | translate
+}}</a>
+
+<header class="detail-hero">
+  <div class="detail-grid" aria-hidden="true"></div>
+  <app-candeonato-navbar
+    variant="detail"
+    [menuOpen]="isMenuOpen()"
+    (menuOpenChange)="isMenuOpen.set($event)"
+  />
+
+  <div class="detail-hero-content">
+    <p class="eyebrow">{{ 'candeonato.detail.tournament' | translate: { id: tournamentId() } }}</p>
+    <h1>Candeonato</h1>
+    @if (championship(); as data) {
+      <p class="edition-name">{{ data.name }}</p>
+      <div class="format-tags" [attr.aria-label]="'candeonato.detail.features' | translate">
+        @for (tag of data.formatTags; track tag) {
+          <span>{{ formatTagLabel(tag) }}</span>
+        }
+        <span>{{
+          'candeonato.detail.roundsCount' | translate: { count: data.stats.roundCount }
+        }}</span>
+      </div>
+      @if (editions().length) {
+        <div class="edition-selector">
+          <label for="edition-select">{{ 'candeonato.detail.changeEdition' | translate }}</label>
+          <select id="edition-select" (change)="selectEdition($event)">
+            @for (edition of editions(); track edition.id) {
+              <option
+                [value]="edition.externalTournamentId"
+                [selected]="edition.externalTournamentId === tournamentId()"
+              >
+                {{ edition.name }}
+                <!-- ·
+                {{
+                  'candeonato.detail.tournamentOption'
+                    | translate: { id: edition.externalTournamentId }
+                }} -->
+              </option>
+            }
+          </select>
+        </div>
+      }
+    } @else {
+      <p class="edition-name">{{ 'candeonato.detail.fallbackTitle' | translate }}</p>
+    }
+  </div>
+</header>
+
+<main id="contenido-clasificacion" class="detail-main" tabindex="-1">
+  @if (state() === 'loading') {
+    <section
+      class="section-shell loading-section"
+      aria-busy="true"
+      [attr.aria-label]="'candeonato.detail.loadingLabel' | translate"
+    >
+      <p class="eyebrow">{{ 'candeonato.detail.connecting' | translate }}</p>
+      <div class="loading-title" aria-hidden="true"></div>
+      <div class="loading-grid" aria-hidden="true">
+        <span></span><span></span><span></span><span></span>
+      </div>
+      <p class="loading-copy">{{ 'candeonato.detail.loading' | translate }}</p>
+    </section>
+  }
+
+  @if (state() === 'error') {
+    <section class="section-shell error-section" role="alert">
+      <p class="eyebrow">{{ 'candeonato.detail.connectionError' | translate }}</p>
+      <h2>{{ 'candeonato.detail.loadError' | translate }}</h2>
+      <p>{{ errorMessage() }}</p>
+      <div class="error-actions">
+        <button class="button button-primary" type="button" (click)="refresh()">
+          {{ 'candeonato.detail.retry' | translate }}
+        </button>
+        <a class="button button-secondary" routerLink="/candeonatos">{{
+          'candeonato.detail.back' | translate
+        }}</a>
+      </div>
+    </section>
+  }
+
+  @if (state() === 'ready' && championship(); as data) {
+    <div class="data-toolbar section-shell" aria-live="polite">
+      <div>
+        <span class="data-status" [class.stale]="isStale()">
+          <i aria-hidden="true"></i>
+          {{
+            isStale()
+              ? ('candeonato.detail.memory' | translate)
+              : dataSource() === 'snapshot'
+                ? ('candeonato.detail.snapshot' | translate)
+                : ('candeonato.detail.live' | translate)
+          }}
+        </span>
+        <span>{{ 'candeonato.detail.updated' | translate: { date: lastUpdated() } }}</span>
+      </div>
+      <button type="button" [disabled]="isRefreshing()" (click)="refresh()">
+        {{
+          (isRefreshing() ? 'candeonato.detail.refreshing' : 'candeonato.detail.refresh')
+            | translate
+        }}
+      </button>
+    </div>
+
+    @if (errorMessage()) {
+      <p class="refresh-error section-shell" role="status">{{ errorMessage() }}</p>
+    }
+
+    @if (data.warnings.length) {
+      <aside class="data-notice section-shell" aria-labelledby="data-notice-title">
+        <div class="notice-mark" aria-hidden="true">!</div>
+        <div>
+          <p id="data-notice-title" class="notice-title">
+            {{ 'candeonato.detail.partialSource' | translate }}
+          </p>
+          <ul>
+            @for (warning of data.warnings; track warning.code) {
+              <li>{{ warningLabel(warning.code) }}</li>
+            }
+          </ul>
+        </div>
+      </aside>
+    }
+
+    @if (corrections().length) {
+      <aside class="data-notice section-shell" aria-labelledby="editorial-corrections-title">
+        <div class="notice-mark" aria-hidden="true">i</div>
+        <div>
+          <p id="editorial-corrections-title" class="notice-title">
+            {{ 'candeonato.detail.corrections' | translate }}
+          </p>
+          <p>{{ 'candeonato.detail.correctionsHelp' | translate }}</p>
+          <ul>
+            @for (correction of corrections(); track correction.id) {
+              <li>
+                <strong>{{ correction.reason }}:</strong> {{ correction.note }}
+                <small>— {{ correction.createdByName }}</small>
+              </li>
+            }
+          </ul>
+        </div>
+      </aside>
+    }
+
+    <section class="section-shell summary-section" aria-labelledby="summary-title">
+      <div class="section-heading">
+        <p class="eyebrow">{{ 'candeonato.detail.statsEyebrow' | translate }}</p>
+        <h2 id="summary-title" class="section-title">
+          {{ 'candeonato.detail.summary' | translate }}
+        </h2>
+        <p class="lede">
+          {{ 'candeonato.detail.statsIntro' | translate: { count: data.stats.circuitCount } }}
+        </p>
+      </div>
+      <app-championship-stats [stats]="data.stats" />
+    </section>
+
+    <section
+      id="clasificacion"
+      class="section-shell standings-section"
+      aria-labelledby="standings-title"
+    >
+      <div class="section-heading section-heading-split">
+        <div>
+          <p class="eyebrow">{{ 'candeonato.detail.points' | translate }}</p>
+          <h2 id="standings-title" class="section-title">
+            {{ 'candeonato.detail.standings' | translate }}
+          </h2>
+        </div>
+        <p class="body-copy">
+          {{ 'candeonato.detail.standingsIntro' | translate }}
+        </p>
+      </div>
+      <app-standings-table [standings]="data.standings" [championshipName]="data.name" />
+    </section>
+
+    <section id="rondas" class="section-shell rounds-section" aria-labelledby="rounds-title">
+      <div class="section-heading section-heading-split">
+        <div>
+          <p class="eyebrow">{{ 'candeonato.detail.calendar' | translate }}</p>
+          <h2 id="rounds-title" class="section-title">
+            {{ 'candeonato.detail.rounds' | translate }}
+          </h2>
+        </div>
+        <p class="body-copy">
+          {{ 'candeonato.detail.roundsIntro' | translate }}
+        </p>
+      </div>
+      <app-rounds-list [groups]="data.roundGroups" />
+    </section>
+
+    @if (data.leaders.length) {
+      <section
+        id="estadisticas"
+        class="section-shell leaders-section"
+        aria-labelledby="leaders-title"
+      >
+        <div class="section-heading">
+          <p class="eyebrow">{{ 'candeonato.detail.performance' | translate }}</p>
+          <h2 id="leaders-title" class="section-title">
+            {{ 'candeonato.detail.telemetry' | translate }}
+          </h2>
+        </div>
+        <dl class="leaders-grid">
+          @for (leader of data.leaders; track leader.metric) {
+            <div>
+              <dt>{{ leaderLabel(leader.metric) }}</dt>
+              <dd class="leader-value">
+                <strong>{{ leader.value }}</strong> {{ leaderUnit(leader.metric) }}
+              </dd>
+              <dd class="leader-driver">{{ leader.driverLabel }}</dd>
+            </div>
+          }
+        </dl>
+      </section>
+    }
+
+    <section class="section-shell pending-section" aria-labelledby="results-title">
+      <div>
+        <p class="eyebrow">{{ 'candeonato.detail.partial' | translate }}</p>
+        <h2 id="results-title">{{ 'candeonato.detail.racePoints' | translate }}</h2>
+        <p>{{ 'candeonato.detail.racePointsHelp' | translate }}</p>
+      </div>
+      <span class="pending-code" aria-hidden="true">DATA<br />PARTIAL</span>
+    </section>
+
+    <div class="source-row section-shell">
+      <p>{{ 'candeonato.detail.externalSource' | translate }}</p>
+      <a [href]="sourceBaseUrl + '/' + tournamentId()" target="_blank" rel="noopener noreferrer">
+        {{ 'candeonato.detail.originalJson' | translate }}
+      </a>
+    </div>
+  }
+</main>
+
+<app-footer></app-footer>

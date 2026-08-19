@@ -1,0 +1,175 @@
+<header class="admin-page-header">
+  <div>
+    <p class="admin-eyebrow">{{ 'admin.members.eyebrow' | translate }}</p>
+    <h1>{{ 'admin.members.title' | translate }}</h1>
+    <p>{{ 'admin.members.intro' | translate }}</p>
+  </div>
+  <a class="admin-button is-primary" routerLink="/admin/miembros/nuevo">{{
+    'admin.members.add' | translate
+  }}</a>
+</header>
+
+@if (message()) {
+  <p class="admin-alert is-success" role="status">{{ message() }}</p>
+}
+@if (errorMessage()) {
+  <div class="admin-alert is-error" role="alert">{{ errorMessage() }}</div>
+}
+
+@if (loading()) {
+  <p role="status">{{ 'admin.members.loading' | translate }}</p>
+} @else if (members().length === 0) {
+  <section class="admin-empty">
+    <h2>{{ 'admin.members.emptyTitle' | translate }}</h2>
+    <p>{{ 'admin.members.emptyHelp' | translate }}</p>
+  </section>
+} @else {
+  <div class="admin-filter-bar" [attr.aria-label]="'admin.members.filterLabel' | translate">
+    <label>
+      <span>{{ 'admin.common.search' | translate }}</span>
+      <input
+        type="search"
+        [placeholder]="'admin.members.searchPlaceholder' | translate"
+        [value]="query()"
+        (input)="query.set($any($event.target).value)"
+      />
+    </label>
+    <label>
+      <span>{{ 'admin.common.status' | translate }}</span>
+      <select [value]="statusFilter()" (change)="statusFilter.set($any($event.target).value)">
+        <option value="all">{{ 'admin.common.all' | translate }}</option>
+        <option value="draft">{{ 'admin.common.drafts' | translate }}</option>
+        <option value="published">{{ 'admin.common.publishedPlural' | translate }}</option>
+        <option value="archived">{{ 'admin.common.archivedPlural' | translate }}</option>
+      </select>
+    </label>
+    <span role="status">{{
+      'admin.common.results' | translate: { count: filteredMembers().length }
+    }}</span>
+  </div>
+
+  @if (filteredMembers().length === 0) {
+    <section class="admin-empty">
+      <h2>{{ 'admin.common.noMatches' | translate }}</h2>
+      <p>{{ 'admin.common.noMatchesHelp' | translate }}</p>
+    </section>
+  } @else {
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <caption>
+          {{
+            'admin.members.caption' | translate
+          }}
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ 'admin.common.order' | translate }}</th>
+            <th scope="col">{{ 'admin.members.member' | translate }}</th>
+            <th scope="col">{{ 'admin.common.status' | translate }}</th>
+            <th scope="col">{{ 'admin.members.home' | translate }}</th>
+            <th scope="col">{{ 'admin.members.socials' | translate }}</th>
+            <th scope="col">{{ 'admin.common.actions' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (member of filteredMembers(); track member.id; let index = $index) {
+            <tr>
+              <td>
+                @if (!isFiltered()) {
+                  <div
+                    class="admin-order-actions"
+                    [attr.aria-label]="
+                      'admin.members.orderMember' | translate: { name: member.name }
+                    "
+                  >
+                    <button
+                      type="button"
+                      [disabled]="index === 0"
+                      [attr.aria-label]="'admin.members.moveUp' | translate: { name: member.name }"
+                      (click)="move(index, -1)"
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      [disabled]="index === members().length - 1"
+                      [attr.aria-label]="
+                        'admin.members.moveDown' | translate: { name: member.name }
+                      "
+                      (click)="move(index, 1)"
+                    >
+                      ↓
+                    </button>
+                  </div>
+                } @else {
+                  {{ member.displayOrder + 1 }}
+                }
+              </td>
+              <th scope="row">
+                <div class="admin-person">
+                  @if (member.photoUrl) {
+                    <img [src]="member.photoUrl" alt="" width="48" height="60" />
+                  }
+                  <span>
+                    {{ member.name }}
+                    @if (member.isDemo) {
+                      <small>{{ 'admin.members.demo' | translate }}</small>
+                    }
+                  </span>
+                </div>
+              </th>
+              <td>
+                <span class="admin-status" [attr.data-status]="member.status">{{
+                  statusLabel(member.status)
+                }}</span>
+              </td>
+              <td>
+                {{ (member.isFeatured ? 'admin.common.yes' : 'admin.common.no') | translate }}
+              </td>
+              <td>{{ member.twitchUrl ? 'Twitch' : ('admin.members.noSocials' | translate) }}</td>
+              <td>
+                <div class="admin-row-actions">
+                  <a [routerLink]="['/admin/miembros', member.id]">{{
+                    'admin.common.edit' | translate
+                  }}</a>
+                  @if (member.status === 'published') {
+                    <a routerLink="/" fragment="equipo">{{
+                      'admin.common.viewWebsite' | translate
+                    }}</a>
+                  }
+                  @if (member.status !== 'published') {
+                    <button
+                      type="button"
+                      [disabled]="busyId() === member.id"
+                      (click)="runAction(member, 'publish')"
+                    >
+                      {{ 'admin.common.publish' | translate }}
+                    </button>
+                  }
+                  @if (member.status !== 'archived') {
+                    <button
+                      class="is-danger"
+                      type="button"
+                      [disabled]="busyId() === member.id"
+                      (click)="runAction(member, 'archive')"
+                    >
+                      {{ 'admin.common.archive' | translate }}
+                    </button>
+                  }
+                  <button
+                    class="is-danger"
+                    type="button"
+                    [disabled]="busyId() === member.id"
+                    (click)="deleteMember(member)"
+                  >
+                    {{ 'admin.common.delete' | translate }}
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+}

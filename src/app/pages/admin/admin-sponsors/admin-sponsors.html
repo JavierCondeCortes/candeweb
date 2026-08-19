@@ -1,0 +1,126 @@
+<header class="admin-page-header">
+  <div>
+    <p class="admin-eyebrow">{{ 'admin.sponsors.eyebrow' | translate }}</p>
+    <h1>{{ 'admin.sponsors.title' | translate }}</h1>
+    <p>{{ 'admin.sponsors.intro' | translate }}</p>
+  </div>
+  <a class="admin-button is-primary" routerLink="/admin/sponsors/nuevo">{{
+    'admin.sponsors.add' | translate
+  }}</a>
+</header>
+
+@if (errorMessage()) {
+  <div class="admin-alert is-error" role="alert">{{ errorMessage() }}</div>
+}
+@if (message()) {
+  <div class="admin-alert" role="status">{{ message() }}</div>
+}
+
+<div class="admin-toolbar">
+  <label>
+    <span>{{ 'admin.common.search' | translate }}</span>
+    <input
+      type="search"
+      [placeholder]="'admin.sponsors.searchPlaceholder' | translate"
+      [value]="query()"
+      (input)="query.set($any($event.target).value)"
+    />
+  </label>
+  <a routerLink="/" fragment="sponsors" target="_blank">{{
+    'admin.sponsors.viewPublic' | translate
+  }}</a>
+</div>
+
+@if (loading()) {
+  <p role="status">{{ 'admin.sponsors.loading' | translate }}</p>
+} @else if (filteredSponsors().length === 0) {
+  <div class="admin-empty">
+    <h2>
+      {{
+        (sponsors().length ? 'admin.sponsors.noMatches' : 'admin.sponsors.emptyTitle') | translate
+      }}
+    </h2>
+    <p>{{ 'admin.sponsors.emptyHelp' | translate }}</p>
+  </div>
+} @else {
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <caption class="sr-only">
+        {{
+          'admin.sponsors.caption' | translate
+        }}
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">{{ 'admin.sponsors.sponsor' | translate }}</th>
+          <th scope="col">{{ 'admin.common.status' | translate }}</th>
+          <th scope="col">{{ 'admin.common.order' | translate }}</th>
+          <th scope="col">{{ 'admin.common.actions' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (sponsor of filteredSponsors(); track sponsor.id) {
+          <tr>
+            <th scope="row">
+              <div class="admin-person">
+                @if (sponsor.logoUrl) {
+                  <img class="admin-sponsor-logo" [src]="sponsor.logoUrl" alt="" />
+                }
+                <span>
+                  {{ sponsor.name }}
+                  <small>{{
+                    sponsor.websiteUrl || ('admin.sponsors.noWebsite' | translate)
+                  }}</small>
+                </span>
+              </div>
+            </th>
+            <td>
+              <span class="admin-status" [attr.data-status]="sponsor.status">{{
+                statusLabel(sponsor.status)
+              }}</span>
+            </td>
+            <td>{{ sponsor.displayOrder + 1 }}</td>
+            <td>
+              <div class="admin-row-actions">
+                <a [routerLink]="['/admin/sponsors', sponsor.id]">{{
+                  'admin.common.edit' | translate
+                }}</a>
+                @if (sponsor.status === 'published') {
+                  <a routerLink="/" fragment="sponsors">{{
+                    'admin.common.viewWebsite' | translate
+                  }}</a>
+                } @else {
+                  <button
+                    type="button"
+                    [disabled]="busyId() === sponsor.id"
+                    (click)="runAction(sponsor, 'publish')"
+                  >
+                    {{ 'admin.common.publish' | translate }}
+                  </button>
+                }
+                @if (sponsor.status !== 'archived') {
+                  <button
+                    class="is-danger"
+                    type="button"
+                    [disabled]="busyId() === sponsor.id"
+                    (click)="runAction(sponsor, 'archive')"
+                  >
+                    {{ 'admin.common.archive' | translate }}
+                  </button>
+                }
+                <button
+                  class="is-danger"
+                  type="button"
+                  [disabled]="busyId() === sponsor.id"
+                  (click)="deleteSponsor(sponsor)"
+                >
+                  {{ 'admin.common.delete' | translate }}
+                </button>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

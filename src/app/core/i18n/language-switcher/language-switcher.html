@@ -1,0 +1,23 @@
+<div class="language-switcher" role="group" [attr.aria-label]="'home.language.label' | translate">
+  <button
+    type="button"
+    lang="es"
+    [class.is-active]="language() === 'es'"
+    [attr.aria-pressed]="language() === 'es'"
+    [disabled]="loading()"
+    (click)="changeLanguage('es')"
+  >
+    ES
+  </button>
+  <span aria-hidden="true">/</span>
+  <button
+    type="button"
+    lang="en"
+    [class.is-active]="language() === 'en'"
+    [attr.aria-pressed]="language() === 'en'"
+    [disabled]="loading()"
+    (click)="changeLanguage('en')"
+  >
+    EN
+  </button>
+</div>

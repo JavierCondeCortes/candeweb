@@ -39,6 +39,15 @@ testem.log
 /typings
 __screenshots__/
 
+# Local environment variables and credentials
+.env
+.env.*
+!.env.example
+!.env.docker.example
+/server/data/
+
 # System files
 .DS_Store
 Thumbs.db
+public/exampleVideo.mp4
+public/video.mp4

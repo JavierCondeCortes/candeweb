@@ -1,0 +1,120 @@
+<header class="admin-page-header">
+  <div>
+    <p class="admin-eyebrow">{{ 'admin.security.eyebrow' | translate }}</p>
+    <h1>{{ 'admin.security.title' | translate }}</h1>
+    <p>{{ 'admin.security.intro' | translate }}</p>
+  </div>
+</header>
+
+@if (message()) {
+  <p class="admin-alert is-success" role="status">{{ message() }}</p>
+}
+@if (errorMessage()) {
+  <div class="admin-alert is-error" role="alert">{{ errorMessage() }}</div>
+}
+
+<section class="admin-panel admin-security-panel" aria-labelledby="mfa-title">
+  <div>
+    <p class="admin-eyebrow">{{ 'admin.security.secondFactor' | translate }}</p>
+    <h2 id="mfa-title">
+      {{
+        (session()?.admin?.mfaEnabled ? 'admin.security.enabled' : 'admin.security.pending')
+          | translate
+      }}
+    </h2>
+    <p>
+      {{ 'admin.security.totpHelp' | translate }}
+    </p>
+
+    @if (!setup() && recoveryCodes().length === 0) {
+      <button
+        class="admin-button is-primary"
+        type="button"
+        [disabled]="loading()"
+        (click)="startSetup()"
+      >
+        {{
+          (loading()
+            ? 'admin.security.preparing'
+            : session()?.admin?.mfaEnabled
+              ? 'admin.security.rotate'
+              : 'admin.security.configure'
+          ) | translate
+        }}
+      </button>
+    }
+  </div>
+</section>
+
+@if (setup(); as configuration) {
+  <section class="admin-form-section" aria-labelledby="mfa-setup-title">
+    <div>
+      <h2 id="mfa-setup-title">{{ 'admin.security.linkApp' | translate }}</h2>
+      <p>{{ 'admin.security.linkHelp' | translate }}</p>
+    </div>
+    <div>
+      <figure class="admin-totp-qr">
+        <img
+          [src]="configuration.qrCodeDataUrl"
+          [alt]="'admin.security.qrAlt' | translate"
+          width="320"
+          height="320"
+        />
+        <figcaption>{{ 'admin.security.scanQr' | translate }}</figcaption>
+      </figure>
+      <ol class="admin-security-steps">
+        <li>{{ 'admin.security.stepOne' | translate }}</li>
+        <li>{{ 'admin.security.stepTwo' | translate }}</li>
+        <li>
+          {{ 'admin.security.stepThree' | translate }}
+          <code>{{ configuration.secret }}</code>
+          <button class="admin-button" type="button" (click)="copySecret()">
+            {{ 'admin.security.copySecret' | translate }}
+          </button>
+        </li>
+        <li>{{ 'admin.security.stepFour' | translate }}</li>
+      </ol>
+
+      <form class="admin-form" [formGroup]="form" (ngSubmit)="confirm()" novalidate>
+        <label>
+          <span>{{ 'admin.security.sixDigitCode' | translate }}</span>
+          <input
+            type="text"
+            formControlName="code"
+            autocomplete="one-time-code"
+            inputmode="numeric"
+            pattern="[0-9]{6}"
+            maxlength="6"
+          />
+        </label>
+        <button class="admin-button is-primary" type="submit" [disabled]="confirming()">
+          {{ (confirming() ? 'admin.security.verifying' : 'admin.security.activate') | translate }}
+        </button>
+      </form>
+    </div>
+  </section>
+}
+
+@if (recoveryCodes().length) {
+  <section class="admin-form-section" aria-labelledby="recovery-title">
+    <div>
+      <h2 id="recovery-title">{{ 'admin.security.recoveryCodes' | translate }}</h2>
+      <p>{{ 'admin.security.recoveryHelp' | translate }}</p>
+    </div>
+    <div>
+      <ul
+        class="admin-recovery-codes"
+        [attr.aria-label]="'admin.security.recoveryCodes' | translate"
+      >
+        @for (code of recoveryCodes(); track code) {
+          <li>
+            <code>{{ code }}</code>
+          </li>
+        }
+      </ul>
+      <button class="admin-button" type="button" (click)="copyRecoveryCodes()">
+        {{ 'admin.security.copyAll' | translate }}
+      </button>
+    </div>
+  </section>
+}

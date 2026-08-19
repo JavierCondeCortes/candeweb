@@ -1,0 +1,11 @@
+# Candemor Racing Team
+
+Sitio oficial de la comunidad Candemor Racing Team y de su campeonato, el Candeonato.
+
+## Secciones públicas
+
+- [Inicio](/): comunidad, equipo, contenido y acceso al canal oficial de Twitch.
+- [Candeonato](/candeonato): presentación y requisitos del campeonato.
+- [Historial de Candeonatos](/candeonatos): ediciones, clasificaciones y carreras publicadas.
+
+La administración se encuentra en una zona privada y no forma parte del contenido público.
