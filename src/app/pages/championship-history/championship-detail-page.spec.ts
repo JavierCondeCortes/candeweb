@@ -111,6 +111,7 @@ describe('ChampionshipDetailPage', () => {
                   },
                 ],
               }),
+            getSiteSettings: () => of({ featuredChampionship: null }),
           },
         },
         {
@@ -162,7 +163,10 @@ describe('ChampionshipDetailPage', () => {
         },
         {
           provide: PublicContentService,
-          useValue: { getChampionships: () => of({ championships: [] }) },
+          useValue: {
+            getChampionships: () => of({ championships: [] }),
+            getSiteSettings: () => of({ featuredChampionship: null }),
+          },
         },
         {
           provide: RoundResultsService,

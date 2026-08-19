@@ -24,7 +24,7 @@ describe('CandeonatoPage', () => {
 
     expect(host.querySelector('h1')?.textContent).toContain('CANDEONATO');
     expect(host.querySelector('main#contenido')).toBeTruthy();
-    expect(host.querySelector('a[href="/candeonatos/42"]')).toBeTruthy();
+    expect(host.querySelector('a[href="/candeonatos"]')).toBeTruthy();
 
     const footerMark = host.querySelector<HTMLAnchorElement>('a.footer-mark');
     expect(footerMark?.getAttribute('aria-label')).toContain(footerMark?.textContent?.trim());

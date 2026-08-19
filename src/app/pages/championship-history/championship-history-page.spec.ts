@@ -29,6 +29,7 @@ describe('ChampionshipHistoryPage', () => {
                   },
                 ],
               }),
+            getSiteSettings: () => of({ featuredChampionship: null }),
           },
         },
       ],
