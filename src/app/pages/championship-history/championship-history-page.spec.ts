@@ -29,6 +29,14 @@ describe('ChampionshipHistoryPage', () => {
                   },
                 ],
               }),
+
+            getSiteSettings: () =>
+              of({
+                twitchChannelUrl: 'https://www.twitch.tv/candemorracingteam',
+                discordUrl: 'https://discord.gg/j22XuDEfMk',
+                contactEmail: null,
+                featuredChampionship: null,
+              }),
           },
         },
       ],

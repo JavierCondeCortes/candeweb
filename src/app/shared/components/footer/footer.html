@@ -1,6 +1,6 @@
 <footer class="site-footer" [attr.aria-label]="'candeonato.footer.label' | translate">
     <div class="footer-inner">
-        <a class="footer-mark" href="#inicio" [attr.aria-label]="
+        <a class="footer-mark" href="#inicio" data-testid="footer-mark" [attr.aria-label]="
         'CANDEWEB — Candeonato ' +
         ((featured$ | async)?.editionNumber ?? '08') +
         ', volver al inicio'">

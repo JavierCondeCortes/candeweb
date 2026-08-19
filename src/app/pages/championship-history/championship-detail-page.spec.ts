@@ -111,6 +111,13 @@ describe('ChampionshipDetailPage', () => {
                   },
                 ],
               }),
+            getSiteSettings: () =>
+              of({
+                twitchChannelUrl: 'https://www.twitch.tv/candemorracingteam',
+                discordUrl: 'https://discord.gg/j22XuDEfMk',
+                contactEmail: null,
+                featuredChampionship: null,
+              }),
           },
         },
         {
@@ -162,7 +169,16 @@ describe('ChampionshipDetailPage', () => {
         },
         {
           provide: PublicContentService,
-          useValue: { getChampionships: () => of({ championships: [] }) },
+          useValue: {
+            getChampionships: () => of({ championships: [] }),
+            getSiteSettings: () =>
+              of({
+                twitchChannelUrl: 'https://www.twitch.tv/candemorracingteam',
+                discordUrl: 'https://discord.gg/j22XuDEfMk',
+                contactEmail: null,
+                featuredChampionship: null,
+              }),
+          },
         },
         {
           provide: RoundResultsService,

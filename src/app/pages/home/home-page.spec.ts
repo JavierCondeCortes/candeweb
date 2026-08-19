@@ -35,6 +35,7 @@ describe('HomePage', () => {
                   member('5', 'Marcos León', true),
                 ],
               }),
+
             getSponsors: () =>
               of({
                 sponsors: [
@@ -53,11 +54,15 @@ describe('HomePage', () => {
                   },
                 ],
               }),
+
             getSiteSettings: () =>
               of({
                 featuredChampionship: championship,
+                twitchChannelUrl: 'https://www.twitch.tv/candemorracingteam',
                 discordUrl: 'https://discord.gg/j22XuDEfMk',
+                contactEmail: null,
               }),
+
             getTwitchContent: () =>
               of({
                 channel: {
@@ -76,7 +81,8 @@ describe('HomePage', () => {
                     embedUrl: 'https://clips.twitch.tv/embed?clip=clip-id',
                     title: 'Final del Candeonato',
                     creatorName: 'CandemorFan',
-                    thumbnailUrl: 'https://clips-media-assets2.twitch.tv/preview.jpg',
+                    thumbnailUrl:
+                      'https://clips-media-assets2.twitch.tv/preview.jpg',
                     viewCount: 120,
                     createdAt: '2026-08-01T20:00:00Z',
                     durationSeconds: 28.4,
@@ -93,86 +99,180 @@ describe('HomePage', () => {
   it('renders the public sections, managed sponsors and no merchandise', async () => {
     const fixture = TestBed.createComponent(HomePage);
     await fixture.whenStable();
+
     const host = fixture.nativeElement as HTMLElement;
 
     expect(host.querySelector('#comunidad')).toBeTruthy();
     expect(host.querySelector('#equipo')).toBeTruthy();
     expect(host.querySelector('#contenido')).toBeTruthy();
     expect(host.querySelector('#sponsors')).toBeTruthy();
+
     expect(
-      host.querySelector<HTMLAnchorElement>('.home-nav-links a[href="/candeonatos"]'),
+      host.querySelector<HTMLAnchorElement>(
+        '.home-nav-links a[href="/candeonatos"]',
+      ),
     ).toBeTruthy();
+
     expect(host.querySelector('#unirse')).toBeFalsy();
+
     expect(host.querySelectorAll('.team-card')).toHaveLength(5);
     expect(host.querySelectorAll('.team-card a')).toHaveLength(3);
-    expect(host.querySelectorAll('.team-card')[1].querySelector('.team-card-socials')).toBeFalsy();
-    expect(host.textContent).toContain('Cada cierto tiempo, Candemor organiza el Candeonato');
-    expect(host.querySelector<HTMLImageElement>('.home-event-preview-media img')?.src).toContain(
-      'current-edition.webp',
+
+    expect(
+      host
+        .querySelectorAll('.team-card')[1]
+        .querySelector('.team-card-socials'),
+    ).toBeFalsy();
+
+    expect(host.textContent).toContain(
+      'Cada cierto tiempo, Candemor organiza el Candeonato',
     );
+
+    expect(
+      host.querySelector<HTMLImageElement>('.home-event-preview-media img')?.src,
+    ).toContain('current-edition.webp');
+
     expect(host.querySelector('video.home-event-preview-media')).toBeNull();
-    const expandPoster = host.querySelector<HTMLButtonElement>('.home-event-poster-expand');
+
+    const expandPoster =
+      host.querySelector<HTMLButtonElement>('.home-event-poster-expand');
+
     expect(expandPoster).toBeTruthy();
+
     expandPoster?.click();
     fixture.detectChanges();
-    const posterDialog = host.querySelector<HTMLDialogElement>('.home-event-poster-dialog');
+
+    const posterDialog =
+      host.querySelector<HTMLDialogElement>('.home-event-poster-dialog');
+
     expect(posterDialog?.hasAttribute('open')).toBe(true);
-    host.querySelector<HTMLButtonElement>('.home-event-poster-dialog-close')?.click();
+
+    host
+      .querySelector<HTMLButtonElement>('.home-event-poster-dialog-close')
+      ?.click();
+
     fixture.detectChanges();
+
     expect(posterDialog?.hasAttribute('open')).toBe(false);
+
     expandPoster?.click();
     fixture.detectChanges();
-    host.querySelector<HTMLElement>('.home-event-poster-dialog-content')?.click();
+
+    host
+      .querySelector<HTMLElement>('.home-event-poster-dialog-content')
+      ?.click();
+
     fixture.detectChanges();
+
     expect(posterDialog?.hasAttribute('open')).toBe(false);
+
     const mediaButtons = host.querySelectorAll<HTMLButtonElement>(
       '.home-event-media-choice button',
     );
+
     expect(mediaButtons[0].getAttribute('aria-pressed')).toBe('true');
+
     mediaButtons[1].click();
     fixture.detectChanges();
-    expect(host.querySelector<HTMLVideoElement>('.home-event-preview-media')?.poster).toContain(
-      'current-edition.webp',
-    );
+
     expect(
-      host.querySelector<HTMLSourceElement>('.home-event-preview-media source')?.src,
+      host.querySelector<HTMLVideoElement>('.home-event-preview-media')?.poster,
+    ).toContain('current-edition.webp');
+
+    expect(
+      host.querySelector<HTMLSourceElement>(
+        '.home-event-preview-media source',
+      )?.src,
     ).toContain('current-edition.mp4');
+
     expect(host.querySelector('.home-event-poster-expand')).toBeNull();
+
     expect(mediaButtons[1].getAttribute('aria-pressed')).toBe('true');
+
     expect(
-      host.querySelector('.home-event-preview-meta [data-status="active"]')?.textContent,
+      host.querySelector(
+        '.home-event-preview-meta [data-status="active"]',
+      )?.textContent,
     ).toContain('En curso');
-    expect(host.querySelector('time[datetime="2026-09-04T18:00:00+02:00"]')).toBeTruthy();
-    expect(host.querySelector('time[datetime="2026-09-06T20:00:00+02:00"]')).toBeFalsy();
+
+    expect(
+      host.querySelector(
+        'time[datetime="2026-09-04T18:00:00+02:00"]',
+      ),
+    ).toBeTruthy();
+
+    expect(
+      host.querySelector(
+        'time[datetime="2026-09-06T20:00:00+02:00"]',
+      ),
+    ).toBeFalsy();
+
     expect(host.textContent).toContain('Esto es Candemor');
     expect(host.textContent).toContain('Final del Candeonato');
-    expect(host.querySelector('a[href="https://discord.gg/j22XuDEfMk"]')).toBeTruthy();
+
+    expect(
+      host.querySelector(
+        'a[href="https://discord.gg/j22XuDEfMk"]',
+      ),
+    ).toBeTruthy();
+
     expect(host.textContent).toContain('Sponsors y colaboradores');
-    expect(host.querySelector('a[href="https://example.com"] img')?.getAttribute('alt')).toBe(
-      'Logotipo de Marca de prueba',
-    );
+
+    expect(
+      host
+        .querySelector('a[href="https://example.com"] img')
+        ?.getAttribute('alt'),
+    ).toBe('Logotipo de Marca de prueba');
+
     expect(host.textContent).not.toContain('Tienda');
 
-    const footerLinks = Array.from(host.querySelectorAll<HTMLAnchorElement>('.home-footer nav a'));
-    expect(footerLinks.map((link) => link.textContent?.trim())).toContain(
+    const historyLink = host.querySelector<HTMLAnchorElement>(
+      '.site-footer a[href="/candeonatos"]',
+    );
+
+    expect(historyLink).toBeTruthy();
+    expect(historyLink?.textContent?.trim()).toBe(
       'Historial de Candeonatos',
     );
-    expect(footerLinks.some((link) => link.hash === '#comunidad')).toBe(false);
-    expect(footerLinks.some((link) => link.hash === '#equipo')).toBe(false);
-    expect(footerLinks.some((link) => link.hash === '#contenido')).toBe(false);
+
+    const footerLinks = Array.from(
+      host.querySelectorAll<HTMLAnchorElement>('.site-footer a'),
+    );
+
+    expect(
+      footerLinks.some((link) => link.hash === '#comunidad'),
+    ).toBe(false);
+
+    expect(
+      footerLinks.some((link) => link.hash === '#equipo'),
+    ).toBe(false);
+
+    expect(
+      footerLinks.some((link) => link.hash === '#contenido'),
+    ).toBe(false);
   });
 
   it('keeps the public home structure accessible and free of duplicate identifiers', async () => {
     const fixture = TestBed.createComponent(HomePage);
     await fixture.whenStable();
+
     const host = fixture.nativeElement as HTMLElement;
-    const ids = Array.from(host.querySelectorAll<HTMLElement>('[id]')).map((element) => element.id);
-    const skipLink = host.querySelector<HTMLAnchorElement>('.skip-link');
+
+    const ids = Array.from(
+      host.querySelectorAll<HTMLElement>('[id]'),
+    ).map((element) => element.id);
+
+    const skipLink =
+      host.querySelector<HTMLAnchorElement>('.skip-link');
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(host.querySelectorAll('h1')).toHaveLength(1);
+
     expect(skipLink?.hash).toBe('#contenido-inicio');
-    expect(host.querySelector(skipLink?.hash ?? 'invalid')).toBeTruthy();
+
+    expect(
+      host.querySelector(skipLink?.hash ?? 'invalid'),
+    ).toBeTruthy();
 
     for (const image of host.querySelectorAll<HTMLImageElement>('img')) {
       expect(image.hasAttribute('alt')).toBe(true);
@@ -180,32 +280,49 @@ describe('HomePage', () => {
       expect(image.height).toBeGreaterThan(0);
     }
 
-    for (const externalLink of host.querySelectorAll<HTMLAnchorElement>('a[target="_blank"]')) {
+    for (const externalLink of host.querySelectorAll<HTMLAnchorElement>(
+      'a[target="_blank"]',
+    )) {
       expect(externalLink.rel.split(/\s+/)).toContain('noopener');
-      expect(externalLink.getAttribute('aria-label')).toContain('pestaña nueva');
+
+      expect(
+        externalLink.getAttribute('aria-label'),
+      ).toContain('pestaña nueva');
     }
 
-    for (const brandLink of host.querySelectorAll<HTMLAnchorElement>('a.home-brand')) {
-      expect(brandLink.getAttribute('aria-label')).toContain(brandLink.textContent?.trim());
+    for (const brandLink of host.querySelectorAll<HTMLAnchorElement>(
+      'a.home-brand',
+    )) {
+      expect(
+        brandLink.getAttribute('aria-label'),
+      ).toContain(brandLink.textContent?.trim());
     }
   });
 
   it('updates public interface text immediately when English is selected', async () => {
     const fixture = TestBed.createComponent(HomePage);
     await fixture.whenStable();
+
     const i18n = TestBed.inject(I18nService);
 
     i18n.setLanguage('en');
     fixture.detectChanges();
 
     const host = fixture.nativeElement as HTMLElement;
+
     expect(host.textContent).toContain('This is Candemor');
     expect(host.textContent).toContain('Sponsors and partners');
+
     expect(
-      host.querySelector('.home-event-preview-meta [data-status="active"]')?.textContent,
+      host.querySelector(
+        '.home-event-preview-meta [data-status="active"]',
+      )?.textContent,
     ).toContain('In progress');
+
     expect(
-      host.querySelector<HTMLAnchorElement>('a[target="_blank"]')?.getAttribute('aria-label'),
+      host
+        .querySelector<HTMLAnchorElement>('a[target="_blank"]')
+        ?.getAttribute('aria-label'),
     ).toContain('opens in a new tab');
 
     i18n.setLanguage('es');
@@ -251,9 +368,11 @@ function member(id: string, name: string, withTwitch: boolean) {
     alias: null,
     roleLabel: null,
     bio: null,
-    photoUrl: `/media/team/member-alex.webp`,
+    photoUrl: '/media/team/member-alex.webp',
     photoAlt: `Retrato ficticio de ${name}`,
-    twitchUrl: withTwitch ? 'https://www.twitch.tv/candemorracingteam' : null,
+    twitchUrl: withTwitch
+      ? 'https://www.twitch.tv/candemorracingteam'
+      : null,
     instagramUrl: null,
     youtubeUrl: null,
     xUrl: null,

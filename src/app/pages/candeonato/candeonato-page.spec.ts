@@ -13,20 +13,40 @@ describe('CandeonatoPage', () => {
         {
           provide: PublicContentService,
           useValue: {
-            getSiteSettings: () => of({ featuredChampionship: null }),
+            getSiteSettings: () =>
+              of({
+                twitchChannelUrl: 'https://www.twitch.tv/candemorracingteam',
+                discordUrl: 'https://discord.gg/j22XuDEfMk',
+                contactEmail: null,
+                featuredChampionship: null,
+              }),
           },
         },
       ],
     }).compileComponents();
+
     const fixture = TestBed.createComponent(CandeonatoPage);
     await fixture.whenStable();
+
     const host = fixture.nativeElement as HTMLElement;
 
     expect(host.querySelector('h1')?.textContent).toContain('CANDEONATO');
     expect(host.querySelector('main#contenido')).toBeTruthy();
-    expect(host.querySelector('a[href="/candeonatos/42"]')).toBeTruthy();
 
-    const footerMark = host.querySelector<HTMLAnchorElement>('a.footer-mark');
-    expect(footerMark?.getAttribute('aria-label')).toContain(footerMark?.textContent?.trim());
+    const historyLink = host.querySelector<HTMLAnchorElement>(
+      '.site-footer a[href="/candeonatos"]',
+    );
+
+    expect(historyLink).toBeTruthy();
+    expect(historyLink?.textContent?.trim()).toBe('Historial de Candeonatos');
+
+    const footerMark = host.querySelector<HTMLAnchorElement>(
+      '[data-testid="footer-mark"]',
+    );
+
+    expect(footerMark).toBeTruthy();
+    expect(footerMark?.getAttribute('aria-label')).toContain(
+      footerMark?.textContent?.trim(),
+    );
   });
 });
