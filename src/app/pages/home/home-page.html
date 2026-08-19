@@ -10,45 +10,4 @@
   <app-sponsor-strip />
 </main>
 
-<footer class="home-footer" [attr.aria-label]="'home.footer.label' | translate">
-  <div class="home-footer-inner">
-    <div class="home-footer-intro">
-      <a
-        class="home-brand"
-        routerLink="/"
-        fragment="inicio"
-        [attr.aria-label]="'home.nav.homeLabel' | translate"
-      >
-        CANDE<span>WEB</span>
-      </a>
-      <p>{{ 'home.footer.description' | translate }}</p>
-    </div>
-    <nav [attr.aria-label]="'home.footer.secondaryNav' | translate">
-      <a routerLink="/candeonatos">{{ 'home.footer.history' | translate }}</a>
-      <a
-        [href]="(settings$ | async)?.twitchChannelUrl || 'https://www.twitch.tv/candemorracingteam'"
-        [attr.aria-label]="'home.nav.twitchLabel' | translate"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Twitch <span aria-hidden="true">↗</span>
-      </a>
-      @if ((settings$ | async)?.discordUrl; as discordUrl) {
-        <a
-          [href]="discordUrl"
-          [attr.aria-label]="'home.nav.discordLabel' | translate"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Discord <span aria-hidden="true">↗</span>
-        </a>
-      }
-      @if ((settings$ | async)?.contactEmail; as email) {
-        <a [href]="'mailto:' + email">{{ 'home.footer.contact' | translate }}</a>
-      }
-    </nav>
-  </div>
-  <p class="home-footer-bottom">
-    {{ 'home.footer.legal' | translate: { year: currentYear } }}
-  </p>
-</footer>
+<app-footer></app-footer>

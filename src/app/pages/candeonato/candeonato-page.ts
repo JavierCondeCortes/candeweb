@@ -1,6 +1,5 @@
 import { AsyncPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { catchError, map, of, shareReplay } from 'rxjs';
 import { PublicContentService } from '../../core/services/public-content.service';
 import { About } from './components/about/about';
@@ -15,7 +14,6 @@ import { Footer } from '../../shared/components/footer/footer';
   selector: 'app-candeonato-page',
   imports: [
     AsyncPipe,
-    RouterLink,
     Footer,
     Hero,
     About,
