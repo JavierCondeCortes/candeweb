@@ -13,6 +13,7 @@ import {
   reconcileStandingsWithDriverIds,
 } from './fatcat-standings.mjs';
 import { createTwitchStatusService } from './twitch.mjs';
+import { routeSetupApi, runSetupCleanup } from './setups.mjs';
 import {
   championshipFromRow,
   memberFromRow,
@@ -77,6 +78,9 @@ export function createCandemorApp(options = {}) {
   const rootDir = resolve(options.rootDir ?? process.cwd());
   const databasePath = resolve(options.databasePath ?? join(rootDir, 'server/data/candemor.db'));
   const uploadDir = resolve(options.uploadDir ?? join(rootDir, 'server/data/uploads'));
+  const setupDir = resolve(
+    options.setupDir ?? process.env.SETUP_DIR ?? join(rootDir, 'server/data/setups'),
+  );
   const browserDir = resolve(options.browserDir ?? join(rootDir, 'dist/candeweb/browser'));
   const secureCookies = options.secureCookies ?? process.env.NODE_ENV === 'production';
   const twitchStatusService = options.twitchStatusService ?? createTwitchStatusService();
@@ -87,6 +91,15 @@ export function createCandemorApp(options = {}) {
   const loginAttempts = new Map();
   const actionAttempts = new Map();
   mkdirSync(uploadDir, { recursive: true });
+  mkdirSync(setupDir, { recursive: true });
+
+  const cleanExpiredSetups = () =>
+    runSetupCleanup(db, setupDir).catch((error) =>
+      console.error('No se pudieron limpiar los setups caducados.', error),
+    );
+  void cleanExpiredSetups();
+  const setupCleanupTimer = setInterval(cleanExpiredSetups, 60 * 60 * 1000);
+  setupCleanupTimer.unref();
 
   const server = createServer(async (request, response) => {
     try {
@@ -95,6 +108,7 @@ export function createCandemorApp(options = {}) {
         response,
         db,
         uploadDir,
+        setupDir,
         browserDir,
         secureCookies,
         loginAttempts,
@@ -113,6 +127,7 @@ export function createCandemorApp(options = {}) {
     db,
     server,
     close() {
+      clearInterval(setupCleanupTimer);
       return new Promise((resolveClose, rejectClose) => {
         server.close((error) => {
           db.close();
@@ -331,13 +346,21 @@ async function routeRequest(context) {
 
   if (method === 'GET' && path === '/api/admin/session') {
     const needsSetup =
-      Number(db.prepare('SELECT COUNT(*) AS count FROM admin_profiles').get().count) === 0;
+      Number(
+        db
+          .prepare(
+            "SELECT COUNT(*) AS count FROM admin_profiles WHERE account_type = 'administrator'",
+          )
+          .get().count,
+      ) === 0;
     const session = getSession(db, request);
+    const adminSession =
+      session && ['owner', 'admin'].includes(session.admin.role) ? session : null;
     return sendJson(response, 200, {
-      authenticated: Boolean(session),
+      authenticated: Boolean(adminSession),
       needsSetup,
-      admin: session?.admin ?? null,
-      csrfToken: session?.csrfToken ?? null,
+      admin: adminSession?.admin ?? null,
+      csrfToken: adminSession?.csrfToken ?? null,
     });
   }
 
@@ -371,9 +394,18 @@ async function routeRequest(context) {
     return sendEmpty(response, 204);
   }
 
+  if (
+    path.startsWith('/api/setup-access/') ||
+    path === '/api/setups' ||
+    path.startsWith('/api/setups/')
+  ) {
+    return routeSetupApi({ ...context, path, method, url });
+  }
+
   if (path.startsWith('/api/admin/')) {
     const session = getSession(db, request);
     if (!session) throw new ApiError(401, 'UNAUTHENTICATED', 'Inicia sesión para continuar.');
+    requireAdministrator(session);
     if (!SESSION_METHODS.has(method) && !requireCsrf(request, session)) {
       throw new ApiError(403, 'INVALID_CSRF', 'La sesión necesita renovarse antes de guardar.');
     }
@@ -1051,7 +1083,11 @@ async function routeAdmin(context) {
 
 async function setupFirstAdmin(context) {
   const { db, request, response, secureCookies } = context;
-  const adminCount = Number(db.prepare('SELECT COUNT(*) AS count FROM admin_profiles').get().count);
+  const adminCount = Number(
+    db
+      .prepare("SELECT COUNT(*) AS count FROM admin_profiles WHERE account_type = 'administrator'")
+      .get().count,
+  );
   if (adminCount > 0)
     throw new ApiError(409, 'SETUP_COMPLETE', 'La administración ya está configurada.');
 
@@ -1074,7 +1110,9 @@ async function setupFirstAdmin(context) {
       `INSERT INTO admin_profiles
      (id, email, display_name, password_hash, role, is_owner, active, email_verified_at, created_at, updated_at)
      SELECT ?, ?, ?, ?, 'admin', 1, 1, ?, ?, ?
-     WHERE NOT EXISTS (SELECT 1 FROM admin_profiles)`,
+     WHERE NOT EXISTS (
+       SELECT 1 FROM admin_profiles WHERE account_type = 'administrator'
+     )`,
     )
     .run(id, identity.email, identity.displayName, passwordHash, timestamp, timestamp, timestamp);
   if (inserted.changes === 0) {
@@ -1250,7 +1288,8 @@ async function routeAdminUsers(context) {
       .prepare(
         `SELECT id, email, display_name, is_owner, active, totp_enabled,
                 email_verified_at, created_at, updated_at
-         FROM admin_profiles ORDER BY is_owner DESC, created_at ASC`,
+         FROM admin_profiles WHERE account_type = 'administrator'
+         ORDER BY is_owner DESC, created_at ASC`,
       )
       .all()
       .map(adminAccountFromRow);
@@ -1416,7 +1455,7 @@ function findAdminAccount(db, id) {
     .prepare(
       `SELECT id, email, display_name, is_owner, active, totp_enabled,
               email_verified_at, created_at, updated_at
-       FROM admin_profiles WHERE id = ?`,
+       FROM admin_profiles WHERE id = ? AND account_type = 'administrator'`,
     )
     .get(id);
 }
@@ -1460,7 +1499,7 @@ async function login(context) {
   const admin = db
     .prepare(
       `SELECT * FROM admin_profiles
-       WHERE email = ? AND active = 1 AND role = 'admin'`,
+       WHERE email = ? AND active = 1 AND role = 'admin' AND account_type = 'administrator'`,
     )
     .get(email);
   if (!admin || !(await verifyPassword(password, admin.password_hash))) {

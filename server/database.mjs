@@ -543,6 +543,120 @@ function migrate(db) {
   db.prepare('INSERT OR IGNORE INTO schema_migrations (version, applied_at) VALUES (17, ?)').run(
     now(),
   );
+
+  const setupAccountColumns = db.prepare('PRAGMA table_info(admin_profiles)').all();
+  if (!setupAccountColumns.some((column) => column.name === 'account_type')) {
+    db.exec(
+      `ALTER TABLE admin_profiles ADD COLUMN account_type TEXT NOT NULL DEFAULT 'administrator'
+       CHECK (account_type IN ('administrator', 'setup_user'));`,
+    );
+  }
+  if (!setupAccountColumns.some((column) => column.name === 'can_access_setups')) {
+    db.exec(
+      'ALTER TABLE admin_profiles ADD COLUMN can_access_setups INTEGER NOT NULL DEFAULT 0 CHECK (can_access_setups IN (0, 1));',
+    );
+  }
+  if (!setupAccountColumns.some((column) => column.name === 'can_upload_setups')) {
+    db.exec(
+      'ALTER TABLE admin_profiles ADD COLUMN can_upload_setups INTEGER NOT NULL DEFAULT 0 CHECK (can_upload_setups IN (0, 1));',
+    );
+  }
+  db.exec(`
+    UPDATE admin_profiles
+    SET account_type = 'administrator', can_access_setups = 1, can_upload_setups = 1
+    WHERE is_owner = 1 OR account_type = 'administrator';
+
+    CREATE TABLE IF NOT EXISTS setup_access_requests (
+      id TEXT PRIMARY KEY,
+      email TEXT NOT NULL COLLATE NOCASE UNIQUE,
+      display_name TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending' CHECK (
+        status IN ('pending', 'approved', 'rejected', 'activated')
+      ),
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      reviewed_at TEXT,
+      reviewed_by TEXT REFERENCES admin_profiles(id) ON DELETE SET NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS setup_invitations (
+      id TEXT PRIMARY KEY,
+      request_id TEXT REFERENCES setup_access_requests(id) ON DELETE SET NULL,
+      email TEXT NOT NULL COLLATE NOCASE,
+      display_name TEXT NOT NULL,
+      token_hash TEXT NOT NULL UNIQUE,
+      expires_at TEXT NOT NULL,
+      accepted_at TEXT,
+      created_by TEXT NOT NULL REFERENCES admin_profiles(id),
+      created_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS setups (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      simulator TEXT NOT NULL,
+      car TEXT NOT NULL,
+      track TEXT NOT NULL,
+      configuration TEXT,
+      session_type TEXT NOT NULL DEFAULT 'race' CHECK (
+        session_type IN ('race', 'qualifying', 'wet', 'endurance', 'other')
+      ),
+      description TEXT,
+      tags_json TEXT NOT NULL DEFAULT '[]',
+      status TEXT NOT NULL DEFAULT 'draft' CHECK (
+        status IN ('draft', 'published', 'archived', 'expired')
+      ),
+      created_by TEXT NOT NULL REFERENCES admin_profiles(id),
+      published_by TEXT REFERENCES admin_profiles(id) ON DELETE SET NULL,
+      published_at TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      deleted_at TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS setup_files (
+      id TEXT PRIMARY KEY,
+      setup_id TEXT NOT NULL REFERENCES setups(id) ON DELETE CASCADE,
+      version_number INTEGER NOT NULL CHECK (version_number > 0),
+      original_name TEXT NOT NULL,
+      storage_path TEXT NOT NULL UNIQUE,
+      extension TEXT NOT NULL,
+      mime_type TEXT NOT NULL,
+      byte_size INTEGER NOT NULL CHECK (byte_size > 0),
+      checksum_sha256 TEXT NOT NULL,
+      notes TEXT,
+      uploaded_by TEXT NOT NULL REFERENCES admin_profiles(id),
+      uploaded_at TEXT NOT NULL,
+      retention_days INTEGER CHECK (retention_days IS NULL OR retention_days BETWEEN 1 AND 3650),
+      expires_at TEXT,
+      download_count INTEGER NOT NULL DEFAULT 0 CHECK (download_count >= 0),
+      deleted_at TEXT,
+      UNIQUE(setup_id, version_number)
+    );
+
+    CREATE TABLE IF NOT EXISTS setup_downloads (
+      id TEXT PRIMARY KEY,
+      file_id TEXT NOT NULL REFERENCES setup_files(id) ON DELETE CASCADE,
+      account_id TEXT REFERENCES admin_profiles(id) ON DELETE SET NULL,
+      downloaded_at TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS setup_access_requests_status
+      ON setup_access_requests(status, created_at DESC);
+    CREATE INDEX IF NOT EXISTS setup_invitations_email
+      ON setup_invitations(email, created_at DESC);
+    CREATE INDEX IF NOT EXISTS setups_catalog
+      ON setups(status, simulator, car, track, updated_at DESC);
+    CREATE INDEX IF NOT EXISTS setup_files_active
+      ON setup_files(setup_id, deleted_at, version_number DESC);
+    CREATE INDEX IF NOT EXISTS setup_files_expiry
+      ON setup_files(expires_at) WHERE deleted_at IS NULL;
+    CREATE INDEX IF NOT EXISTS setup_downloads_recent
+      ON setup_downloads(downloaded_at DESC);
+  `);
+  db.prepare('INSERT OR IGNORE INTO schema_migrations (version, applied_at) VALUES (18, ?)').run(
+    now(),
+  );
 }
 
 function seed(db) {

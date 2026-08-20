@@ -21,6 +21,11 @@ La web queda disponible en `http://localhost:4200` y el panel en
 base de datos está vacía. Esta cuenta puede revisar solicitudes desde `/admin/administradores`.
 Los datos locales se guardan en `server/data/` y no se publican en Git.
 
+El footer enlaza a `/setups`, una biblioteca privada. Las personas pueden solicitar acceso; owner o
+admin aprueban la invitación y deciden por separado si la cuenta solo descarga o también puede
+crear borradores y subir versiones. Los binarios se guardan fuera de las rutas públicas en
+`server/data/setups` y owner/admin pueden asignarles una caducidad automática.
+
 Comandos separados:
 
 ```bash
@@ -88,11 +93,12 @@ comprobar el árbol de accesibilidad sobre la aplicación renderizada.
 npm run backup
 ```
 
-Por defecto la copia se guarda en `server/data/backups/`. Debe copiarse además a una ubicación
-externa al servidor en un despliegue real.
+Por defecto la copia de SQLite se guarda en `server/data/backups/`. En un despliegue real debe
+copiarse además el directorio `server/data/` completo a una ubicación externa; así se incluyen los
+setups privados y el resto de archivos administrados.
 
-La especificación, el estado de implementación y las decisiones pendientes están en
-[`docs/admin/admin.md`](docs/admin/admin.md).
+La administración editorial se documenta en [`docs/admin/admin.md`](docs/admin/admin.md) y la
+biblioteca privada en [`docs/setups/setups.md`](docs/setups/setups.md).
 
 ## Despliegue
 

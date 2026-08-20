@@ -3,6 +3,7 @@
 @import './app/pages/championship-history/championship-detail-page.css';
 @import './app/pages/home/home-page.css';
 @import './app/pages/admin/admin.css';
+@import './app/pages/setups/setups.css';
 
 @font-face {
   font-family: 'Dog Rough';

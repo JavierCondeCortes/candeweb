@@ -1,0 +1,151 @@
+@if (loading()) {
+  <p role="status">{{ 'home.setups.common.loading' | translate }}</p>
+} @else if (errorMessage() && !setup()) {
+  <div class="setup-alert is-error" role="alert">{{ errorMessage() }}</div>
+} @else if (setup(); as item) {
+  <section class="setup-page-heading" aria-labelledby="setup-detail-title">
+    <div>
+      <p class="setup-eyebrow">
+        {{ item.simulator }} // {{ 'home.setups.sessionType.' + item.sessionType | translate }}
+      </p>
+      <h1 id="setup-detail-title">{{ item.title }}</h1>
+      <p>
+        {{ item.car }} · {{ item.track }}
+        @if (item.configuration) {
+          · {{ item.configuration }}
+        }
+      </p>
+    </div>
+    <div class="setup-actions">
+      <a class="setup-button" routerLink="/setups">{{ 'home.setups.common.back' | translate }}</a>
+      @if (item.canEdit) {
+        <a class="setup-button" [routerLink]="['/setups', item.id, 'editar']">{{
+          'home.setups.detail.edit' | translate
+        }}</a>
+      }
+    </div>
+  </section>
+
+  @if (errorMessage()) {
+    <div class="setup-alert is-error" role="alert">{{ errorMessage() }}</div>
+  }
+
+  <div class="setup-detail-layout">
+    <section class="setup-panel">
+      <div class="setup-card-topline">
+        <span class="setup-status" [attr.data-status]="item.status">{{
+          'home.setups.status.' + item.status | translate
+        }}</span
+        ><span>{{ item.createdByName }}</span>
+      </div>
+      <p>{{ item.description || ('home.setups.detail.noDescription' | translate) }}</p>
+      @if (item.tags.length) {
+        <ul class="setup-tags">
+          @for (tag of item.tags; track tag) {
+            <li>{{ tag }}</li>
+          }
+        </ul>
+      }
+      <dl class="setup-detail-meta">
+        <div>
+          <dt>{{ 'home.setups.detail.updated' | translate }}</dt>
+          <dd>{{ item.updatedAt | date: 'medium' }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'home.setups.detail.versions' | translate }}</dt>
+          <dd>{{ item.files?.length || 0 }}</dd>
+        </div>
+      </dl>
+      @if (item.canManage) {
+        <div class="setup-actions setup-admin-actions">
+          @if (item.status !== 'published') {
+            <button
+              class="setup-button is-primary"
+              type="button"
+              (click)="action('publish')"
+              [disabled]="busy()"
+            >
+              {{ 'home.setups.detail.publish' | translate }}
+            </button>
+          }
+          @if (item.status === 'published') {
+            <button
+              class="setup-button"
+              type="button"
+              (click)="action('archive')"
+              [disabled]="busy()"
+            >
+              {{ 'home.setups.detail.archive' | translate }}
+            </button>
+          }
+          <button class="setup-button is-danger" type="button" (click)="deleteSetup()">
+            {{ 'home.setups.detail.delete' | translate }}
+          </button>
+        </div>
+      }
+    </section>
+
+    <section class="setup-panel" aria-labelledby="setup-files-title">
+      <div class="setup-section-heading">
+        <div>
+          <p class="setup-eyebrow">{{ 'home.setups.detail.filesEyebrow' | translate }}</p>
+          <h2 id="setup-files-title">{{ 'home.setups.detail.filesTitle' | translate }}</h2>
+        </div>
+      </div>
+      @if (!item.files?.length) {
+        <div class="setup-empty">
+          <p>{{ 'home.setups.detail.noFiles' | translate }}</p>
+        </div>
+      }
+      <div class="setup-file-list">
+        @for (file of item.files; track file.id) {
+          <article class="setup-file-row">
+            <div>
+              <strong>v{{ file.versionNumber }} · {{ file.originalName }}</strong>
+              <p>{{ formatBytes(file.byteSize) }} · {{ file.uploadedAt | date: 'mediumDate' }}</p>
+              @if (file.notes) {
+                <p>{{ file.notes }}</p>
+              }
+            </div>
+            <div class="setup-file-actions">
+              @if (file.expiresAt) {
+                <span class="setup-expiry"
+                  >{{ 'home.setups.detail.expires' | translate }}
+                  {{ file.expiresAt | date: 'mediumDate' }}</span
+                >
+              } @else {
+                <span>{{ 'home.setups.detail.noExpiry' | translate }}</span>
+              }
+              <a class="setup-button is-primary" [href]="downloadUrl(file)">{{
+                'home.setups.detail.download' | translate
+              }}</a>
+              @if (capabilities().canManage) {
+                <label class="setup-inline-control"
+                  ><span>{{ 'home.setups.detail.retention' | translate }}</span
+                  ><select
+                    [value]="file.retentionDays ?? ''"
+                    (change)="updateRetention(file, $event)"
+                  >
+                    <option value="">∞</option>
+                    <option value="7">7</option>
+                    <option value="30">30</option>
+                    <option value="90">90</option>
+                    <option value="180">180</option>
+                    <option value="365">365</option>
+                  </select></label
+                >
+                <button
+                  class="setup-text-button is-danger"
+                  type="button"
+                  (click)="deleteFile(file)"
+                >
+                  {{ 'home.setups.detail.deleteFile' | translate }}
+                </button>
+              }
+            </div>
+          </article>
+        }
+      </div>
+    </section>
+  </div>
+}

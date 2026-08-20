@@ -17,6 +17,7 @@ services:
       API_HOST: 0.0.0.0
       DATABASE_PATH: /app/data/candemor.db
       UPLOAD_DIR: /app/data/uploads
+      SETUP_DIR: /app/data/setups
       BACKUP_DIR: /app/data/backups
       BROWSER_DIR: /app/dist/candeweb/browser
       ADMIN_SETUP_TOKEN: ${ADMIN_SETUP_TOKEN:-}

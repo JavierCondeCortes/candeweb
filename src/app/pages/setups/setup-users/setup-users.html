@@ -1,0 +1,146 @@
+<section class="setup-page-heading" aria-labelledby="setup-users-title">
+  <div>
+    <p class="setup-eyebrow">{{ 'home.setups.users.eyebrow' | translate }}</p>
+    <h1 id="setup-users-title">{{ 'home.setups.users.title' | translate }}</h1>
+    <p>{{ 'home.setups.users.intro' | translate }}</p>
+  </div>
+  <div class="setup-storage-summary">
+    <strong>{{ formatBytes(storage().usedBytes) }}</strong>
+    <span>{{ storage().expiringFiles }} {{ 'home.setups.users.expiring' | translate }}</span>
+  </div>
+</section>
+
+@if (errorMessage()) {
+  <div class="setup-alert is-error" role="alert">{{ errorMessage() }}</div>
+}
+
+@if (invitation(); as data) {
+  <section class="setup-panel setup-invitation" aria-labelledby="setup-invitation-title">
+    <p class="setup-eyebrow">{{ 'home.setups.users.invitationReady' | translate }}</p>
+    <h2 id="setup-invitation-title">{{ data.email }}</h2>
+    <p>{{ 'home.setups.users.invitationHelp' | translate }}</p>
+    <label
+      ><span>{{ 'home.setups.users.invitationLink' | translate }}</span
+      ><input [value]="invitationUrl()" readonly
+    /></label>
+    <div class="setup-actions">
+      <button class="setup-button is-primary" type="button" (click)="copyInvitation()">
+        {{ 'home.setups.users.copy' | translate }}</button
+      ><button class="setup-button" type="button" (click)="invitation.set(null)">
+        {{ 'home.setups.common.close' | translate }}
+      </button>
+    </div>
+  </section>
+}
+
+@if (loading()) {
+  <p role="status">{{ 'home.setups.common.loading' | translate }}</p>
+} @else {
+  <section class="setup-panel" aria-labelledby="setup-requests-title">
+    <div class="setup-section-heading">
+      <div>
+        <p class="setup-eyebrow">{{ 'home.setups.users.requestsEyebrow' | translate }}</p>
+        <h2 id="setup-requests-title">{{ 'home.setups.users.requestsTitle' | translate }}</h2>
+      </div>
+      <span class="setup-count">{{ requests().length }}</span>
+    </div>
+    @if (!requests().length) {
+      <div class="setup-empty">
+        <p>{{ 'home.setups.users.noRequests' | translate }}</p>
+      </div>
+    }
+    <div class="setup-user-list">
+      @for (request of requests(); track request.id) {
+        <article class="setup-user-row">
+          <div>
+            <strong>{{ request.displayName }}</strong>
+            <p>
+              {{ request.email }} · {{ 'home.setups.requestStatus.' + request.status | translate }}
+            </p>
+          </div>
+          <div class="setup-actions">
+            <button
+              class="setup-button is-primary"
+              type="button"
+              (click)="approve(request)"
+              [disabled]="busyId() === request.id"
+            >
+              {{ 'home.setups.users.approve' | translate }}</button
+            ><button
+              class="setup-button"
+              type="button"
+              (click)="reject(request)"
+              [disabled]="busyId() === request.id"
+            >
+              {{ 'home.setups.users.reject' | translate }}
+            </button>
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+
+  <section class="setup-panel" aria-labelledby="setup-accounts-title">
+    <div class="setup-section-heading">
+      <div>
+        <p class="setup-eyebrow">{{ 'home.setups.users.accountsEyebrow' | translate }}</p>
+        <h2 id="setup-accounts-title">{{ 'home.setups.users.accountsTitle' | translate }}</h2>
+      </div>
+      <span class="setup-count">{{ users().length }}</span>
+    </div>
+    <div class="setup-user-list">
+      @for (user of users(); track user.id) {
+        <article class="setup-user-row">
+          <div>
+            <strong>{{ user.displayName }}</strong>
+            <p>{{ user.email }} · {{ 'home.setups.role.' + user.role | translate }}</p>
+            <div class="setup-permission-badges">
+              <span [class.is-on]="user.canAccessSetups">{{
+                'home.setups.users.access' | translate
+              }}</span
+              ><span [class.is-on]="user.canUploadSetups">{{
+                'home.setups.users.upload' | translate
+              }}</span>
+            </div>
+          </div>
+          @if (user.role === 'user') {
+            <div class="setup-actions">
+              @if (user.canAccessSetups) {
+                <button
+                  class="setup-button"
+                  type="button"
+                  (click)="toggleUpload(user)"
+                  [disabled]="busyId() === user.id"
+                >
+                  {{
+                    (user.canUploadSetups
+                      ? 'home.setups.users.removeUpload'
+                      : 'home.setups.users.allowUpload'
+                    ) | translate
+                  }}
+                </button>
+                <button
+                  class="setup-button is-danger"
+                  type="button"
+                  (click)="revoke(user)"
+                  [disabled]="busyId() === user.id"
+                >
+                  {{ 'home.setups.users.revoke' | translate }}
+                </button>
+              } @else {
+                <button
+                  class="setup-button is-primary"
+                  type="button"
+                  (click)="restore(user)"
+                  [disabled]="busyId() === user.id"
+                >
+                  {{ 'home.setups.users.restore' | translate }}
+                </button>
+              }
+            </div>
+          }
+        </article>
+      }
+    </div>
+  </section>
+}

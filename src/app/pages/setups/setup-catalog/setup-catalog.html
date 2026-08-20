@@ -1,0 +1,103 @@
+<section class="setup-hero" aria-labelledby="setup-catalog-title">
+  <p class="setup-eyebrow">{{ 'home.setups.catalog.eyebrow' | translate }}</p>
+  <h1 id="setup-catalog-title">{{ 'home.setups.catalog.title' | translate }}</h1>
+  <p>{{ 'home.setups.catalog.intro' | translate }}</p>
+  @if (capabilities().canUpload) {
+    <a class="setup-button is-primary" routerLink="/setups/nuevo">{{
+      'home.setups.catalog.upload' | translate
+    }}</a>
+  }
+</section>
+
+<section class="setup-panel" aria-labelledby="setup-filter-title">
+  <div class="setup-section-heading">
+    <div>
+      <p class="setup-eyebrow">{{ 'home.setups.catalog.searchEyebrow' | translate }}</p>
+      <h2 id="setup-filter-title">{{ 'home.setups.catalog.searchTitle' | translate }}</h2>
+    </div>
+  </div>
+  <form class="setup-filter-form" [formGroup]="filters" (ngSubmit)="load()">
+    <label>
+      <span>{{ 'home.setups.catalog.searchLabel' | translate }}</span>
+      <input
+        type="search"
+        formControlName="q"
+        [placeholder]="'home.setups.catalog.searchPlaceholder' | translate"
+      />
+    </label>
+    <label>
+      <span>{{ 'home.setups.catalog.simulator' | translate }}</span>
+      <input
+        type="text"
+        formControlName="simulator"
+        [placeholder]="'home.setups.catalog.simulatorPlaceholder' | translate"
+      />
+    </label>
+    <div class="setup-actions">
+      <button class="setup-button is-primary" type="submit">
+        {{ 'home.setups.catalog.filter' | translate }}
+      </button>
+      <button class="setup-button" type="button" (click)="clear()">
+        {{ 'home.setups.catalog.clear' | translate }}
+      </button>
+    </div>
+  </form>
+</section>
+
+<section class="setup-panel" aria-labelledby="setup-results-title">
+  <div class="setup-section-heading">
+    <div>
+      <p class="setup-eyebrow">{{ 'home.setups.catalog.resultsEyebrow' | translate }}</p>
+      <h2 id="setup-results-title">{{ 'home.setups.catalog.resultsTitle' | translate }}</h2>
+    </div>
+    <span class="setup-count">{{ setups().length }}</span>
+  </div>
+
+  @if (loading()) {
+    <p role="status">{{ 'home.setups.common.loading' | translate }}</p>
+  } @else if (errorMessage()) {
+    <div class="setup-alert is-error" role="alert">{{ errorMessage() }}</div>
+  } @else if (!setups().length) {
+    <div class="setup-empty">
+      <h3>{{ 'home.setups.catalog.emptyTitle' | translate }}</h3>
+      <p>{{ 'home.setups.catalog.emptyText' | translate }}</p>
+    </div>
+  } @else {
+    <div class="setup-grid">
+      @for (setup of setups(); track setup.id) {
+        <article class="setup-card">
+          <div class="setup-card-topline">
+            <span class="setup-status" [attr.data-status]="setup.status">{{
+              'home.setups.status.' + setup.status | translate
+            }}</span>
+            <span>v{{ setup.activeFileCount }}</span>
+          </div>
+          <p class="setup-card-simulator">{{ setup.simulator }}</p>
+          <h3>
+            <a [routerLink]="['/setups', setup.id]">{{ setup.title }}</a>
+          </h3>
+          <dl class="setup-card-meta">
+            <div>
+              <dt>{{ 'home.setups.catalog.car' | translate }}</dt>
+              <dd>{{ setup.car }}</dd>
+            </div>
+            <div>
+              <dt>{{ 'home.setups.catalog.track' | translate }}</dt>
+              <dd>{{ setup.track }}</dd>
+            </div>
+            <div>
+              <dt>{{ 'home.setups.catalog.type' | translate }}</dt>
+              <dd>{{ 'home.setups.sessionType.' + setup.sessionType | translate }}</dd>
+            </div>
+          </dl>
+          <p class="setup-card-author">
+            {{ 'home.setups.catalog.by' | translate }} {{ setup.createdByName }}
+          </p>
+          <a class="setup-text-link" [routerLink]="['/setups', setup.id]"
+            >{{ 'home.setups.catalog.view' | translate }} →</a
+          >
+        </article>
+      }
+    </div>
+  }
+</section>
