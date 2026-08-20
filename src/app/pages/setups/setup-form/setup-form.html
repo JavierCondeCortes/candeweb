@@ -1,7 +1,13 @@
 <section class="setup-page-heading" aria-labelledby="setup-form-title">
   <div>
     <p class="setup-eyebrow">{{ 'home.setups.form.eyebrow' | translate }}</p>
-    <h1 id="setup-form-title">
+    <h1
+      id="setup-form-title"
+      class="display-title setup-display-title"
+      [attr.data-title]="
+        (id ? 'home.setups.form.editTitle' : 'home.setups.form.newTitle') | translate
+      "
+    >
       {{ (id ? 'home.setups.form.editTitle' : 'home.setups.form.newTitle') | translate }}
     </h1>
     <p>{{ 'home.setups.form.intro' | translate }}</p>
@@ -28,18 +34,6 @@
           ><input type="text" formControlName="simulator" maxlength="80"
         /></label>
         <label
-          ><span>{{ 'home.setups.form.type' | translate }}</span>
-          <select formControlName="sessionType">
-            <option value="race">{{ 'home.setups.sessionType.race' | translate }}</option>
-            <option value="qualifying">
-              {{ 'home.setups.sessionType.qualifying' | translate }}
-            </option>
-            <option value="wet">{{ 'home.setups.sessionType.wet' | translate }}</option>
-            <option value="endurance">{{ 'home.setups.sessionType.endurance' | translate }}</option>
-            <option value="other">{{ 'home.setups.sessionType.other' | translate }}</option>
-          </select>
-        </label>
-        <label
           ><span>{{ 'home.setups.form.car' | translate }}</span
           ><input type="text" formControlName="car" maxlength="100"
         /></label>
@@ -50,6 +44,18 @@
         <label
           ><span>{{ 'home.setups.form.configuration' | translate }}</span
           ><input type="text" formControlName="configuration" maxlength="100"
+        /></label>
+        <label
+          ><span>{{ 'home.setups.form.season' | translate }}</span
+          ><input type="number" formControlName="season" min="1" max="99"
+        /></label>
+        <label
+          ><span>{{ 'home.setups.form.week' | translate }}</span
+          ><input type="number" formControlName="week" min="1" max="99"
+        /></label>
+        <label
+          ><span>{{ 'home.setups.form.year' | translate }}</span
+          ><input type="number" formControlName="year" min="2000" max="2100"
         /></label>
         <label
           ><span>{{ 'home.setups.form.tags' | translate }}</span
@@ -67,6 +73,33 @@
 
     <fieldset>
       <legend>{{ 'home.setups.form.fileSection' | translate }}</legend>
+      <label
+        ><span>{{ 'home.setups.form.type' | translate }}</span>
+        <select formControlName="fileSessionType">
+          <option value="race">{{ 'home.setups.sessionType.race' | translate }}</option>
+          <option value="qualifying">
+            {{ 'home.setups.sessionType.qualifying' | translate }}
+          </option>
+          <option value="wet">{{ 'home.setups.sessionType.wet' | translate }}</option>
+          <option value="endurance">{{ 'home.setups.sessionType.endurance' | translate }}</option>
+          <option value="endurance_safe">
+            {{ 'home.setups.sessionType.endurance_safe' | translate }}
+          </option>
+          <option value="qualifying_endurance">
+            {{ 'home.setups.sessionType.qualifying_endurance' | translate }}
+          </option>
+          <option value="qualifying_safe">
+            {{ 'home.setups.sessionType.qualifying_safe' | translate }}
+          </option>
+          <option value="race_endurance">
+            {{ 'home.setups.sessionType.race_endurance' | translate }}
+          </option>
+          <option value="race_safe">
+            {{ 'home.setups.sessionType.race_safe' | translate }}
+          </option>
+          <option value="other">{{ 'home.setups.sessionType.other' | translate }}</option>
+        </select>
+      </label>
       <label class="setup-file-picker">
         <span>{{ 'home.setups.form.file' | translate }}</span>
         <input

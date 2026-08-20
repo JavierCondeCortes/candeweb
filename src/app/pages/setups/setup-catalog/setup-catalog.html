@@ -1,6 +1,12 @@
 <section class="setup-hero" aria-labelledby="setup-catalog-title">
   <p class="setup-eyebrow">{{ 'home.setups.catalog.eyebrow' | translate }}</p>
-  <h1 id="setup-catalog-title">{{ 'home.setups.catalog.title' | translate }}</h1>
+  <h1
+    id="setup-catalog-title"
+    class="display-title setup-display-title"
+    [attr.data-title]="'home.setups.catalog.title' | translate"
+  >
+    {{ 'home.setups.catalog.title' | translate }}
+  </h1>
   <p>{{ 'home.setups.catalog.intro' | translate }}</p>
   @if (capabilities().canUpload) {
     <a class="setup-button is-primary" routerLink="/setups/nuevo">{{
@@ -86,8 +92,14 @@
               <dd>{{ setup.track }}</dd>
             </div>
             <div>
-              <dt>{{ 'home.setups.catalog.type' | translate }}</dt>
-              <dd>{{ 'home.setups.sessionType.' + setup.sessionType | translate }}</dd>
+              <dt>{{ 'home.setups.catalog.period' | translate }}</dt>
+              <dd>
+                @if (setup.season && setup.week && setup.year) {
+                  S{{ setup.season }} · W{{ setup.week }} · {{ setup.year }}
+                } @else {
+                  {{ 'home.setups.catalog.periodPending' | translate }}
+                }
+              </dd>
             </div>
           </dl>
           <p class="setup-card-author">

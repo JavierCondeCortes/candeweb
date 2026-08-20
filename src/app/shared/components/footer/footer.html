@@ -1,15 +1,10 @@
 <footer class="site-footer" [attr.aria-label]="'candeonato.footer.label' | translate">
   <div class="footer-inner">
-    <a
-      class="footer-mark"
-      href="#inicio"
-      data-testid="footer-mark"
-      [attr.aria-label]="
+    <a class="footer-mark" href="#inicio" data-testid="footer-mark" [attr.aria-label]="
         'CANDEWEB — Candeonato ' +
         ((featured$ | async)?.editionNumber ?? '08') +
         ', volver al inicio'
-      "
-    >
+      ">
       CANDE<span>WEB</span>
       <!-- {{ (featured$ | async)?.editionNumber ?? '08' }} -->
     </a>
@@ -19,13 +14,13 @@
         <a routerLink="/">Candemor Racing Team</a>
         <a href="/candeonato/#inscripcion">{{
           'candeonato.footer.registrationForm' | translate
-        }}</a>
+          }}</a>
+          <a routerLink="/setups">{{ 'home.footer.setups' | translate }}</a>
       </nav>
     </div>
     <div>
       <p class="footer-label">{{ 'candeonato.footer.results' | translate }}</p>
       <a routerLink="/candeonatos">{{ 'home.footer.history' | translate }}</a>
-      <a routerLink="/setups">{{ 'home.footer.setups' | translate }}</a>
     </div>
     <!-- <div>
             <p class="footer-label">{{ 'candeonato.footer.archive' | translate }}</p>
@@ -33,28 +28,19 @@
     <div>
       <p class="footer-label">{{ 'candeonato.footer.contact' | translate }}</p>
       <nav [attr.aria-label]="'home.footer.secondaryNav' | translate" class="flex flex-col gap-4">
-        <a
-          [href]="
+        <a [href]="
             (settings$ | async)?.twitchChannelUrl || 'https://www.twitch.tv/candemorracingteam'
-          "
-          [attr.aria-label]="'home.nav.twitchLabel' | translate"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+          " [attr.aria-label]="'home.nav.twitchLabel' | translate" target="_blank" rel="noopener noreferrer">
           Twitch <span aria-hidden="true">↗</span>
         </a>
         @if ((settings$ | async)?.discordUrl; as discordUrl) {
-          <a
-            [href]="discordUrl"
-            [attr.aria-label]="'home.nav.discordLabel' | translate"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Discord <span aria-hidden="true">↗</span>
-          </a>
+        <a [href]="discordUrl" [attr.aria-label]="'home.nav.discordLabel' | translate" target="_blank"
+          rel="noopener noreferrer">
+          Discord <span aria-hidden="true">↗</span>
+        </a>
         }
         @if ((settings$ | async)?.contactEmail; as email) {
-          <a [href]="'mailto:' + email">{{ 'home.footer.contact' | translate }}</a>
+        <a [href]="'mailto:' + email">{{ 'home.footer.contact' | translate }}</a>
         }
       </nav>
     </div>
@@ -65,7 +51,7 @@
   </div>
   <p class="footer-bottom">
     {{ 'home.footer.legal' | translate: { year: currentYear } }} || CANDEONATO #{{
-      (featured$ | async)?.editionNumber ?? 8
+    (featured$ | async)?.editionNumber ?? 8
     }}
     · {{ (featured$ | async)?.subtitle ?? 'NEW ERA EDITION' }} ·
     {{ (featured$ | async)?.season ?? '2026' }}

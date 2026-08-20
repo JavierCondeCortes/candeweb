@@ -164,6 +164,11 @@
       "qualifying": "Qualifying",
       "wet": "Wet",
       "endurance": "Endurance",
+      "endurance_safe": "Endurance Safe",
+      "qualifying_endurance": "Qualifying Endurance",
+      "qualifying_safe": "Qualifying Safe",
+      "race_endurance": "Race Endurance",
+      "race_safe": "Race Safe",
       "other": "Other"
     },
     "requestStatus": {
@@ -231,7 +236,8 @@
       "emptyText": "Try different filters or return when the team publishes a configuration.",
       "car": "Car",
       "track": "Circuit",
-      "type": "Session",
+      "period": "Season",
+      "periodPending": "Week and season pending",
       "by": "Uploaded by",
       "view": "View versions"
     },
@@ -244,6 +250,9 @@
       "title": "Title",
       "simulator": "Simulator",
       "type": "Session type",
+      "season": "Season",
+      "week": "Week",
+      "year": "Year",
       "car": "Car",
       "track": "Circuit",
       "configuration": "Track configuration",

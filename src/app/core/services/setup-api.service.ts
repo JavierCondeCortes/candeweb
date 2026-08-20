@@ -10,6 +10,7 @@ import {
   SetupInput,
   SetupInvitation,
   SetupSession,
+  SetupSessionType,
 } from '../models/setup.model';
 
 @Injectable({ providedIn: 'root' })
@@ -100,9 +101,13 @@ export class SetupApiService {
   uploadFile(
     setupId: string,
     file: File,
-    input: { notes?: string; retentionDays?: number | null } = {},
+    input: {
+      sessionType: SetupSessionType;
+      notes?: string;
+      retentionDays?: number | null;
+    },
   ) {
-    const query = new URLSearchParams({ fileName: file.name });
+    const query = new URLSearchParams({ fileName: file.name, sessionType: input.sessionType });
     if (input.notes) query.set('notes', input.notes);
     if (input.retentionDays) query.set('retentionDays', String(input.retentionDays));
     const options = this.options(true);

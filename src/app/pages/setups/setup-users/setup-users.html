@@ -1,7 +1,13 @@
 <section class="setup-page-heading" aria-labelledby="setup-users-title">
   <div>
     <p class="setup-eyebrow">{{ 'home.setups.users.eyebrow' | translate }}</p>
-    <h1 id="setup-users-title">{{ 'home.setups.users.title' | translate }}</h1>
+    <h1
+      id="setup-users-title"
+      class="display-title setup-display-title"
+      [attr.data-title]="'home.setups.users.title' | translate"
+    >
+      {{ 'home.setups.users.title' | translate }}
+    </h1>
     <p>{{ 'home.setups.users.intro' | translate }}</p>
   </div>
   <div class="setup-storage-summary">

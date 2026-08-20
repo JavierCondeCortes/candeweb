@@ -163,7 +163,12 @@
       "race": "Carrera",
       "qualifying": "Clasificación",
       "wet": "Mojado",
-      "endurance": "Resistencia",
+      "endurance": "Endurance",
+      "endurance_safe": "Endurance Safe",
+      "qualifying_endurance": "Clasificación Endurance",
+      "qualifying_safe": "Clasificación Safe",
+      "race_endurance": "Carrera Endurance",
+      "race_safe": "Carrera Safe",
       "other": "Otro"
     },
     "requestStatus": {
@@ -231,7 +236,8 @@
       "emptyText": "Prueba otros filtros o vuelve cuando el equipo publique una configuración.",
       "car": "Coche",
       "track": "Circuito",
-      "type": "Sesión",
+      "period": "Temporada",
+      "periodPending": "Semana y temporada por definir",
       "by": "Subido por",
       "view": "Ver versiones"
     },
@@ -244,6 +250,9 @@
       "title": "Título",
       "simulator": "Simulador",
       "type": "Tipo de sesión",
+      "season": "Temporada",
+      "week": "Semana",
+      "year": "Año",
       "car": "Coche",
       "track": "Circuito",
       "configuration": "Variante del trazado",

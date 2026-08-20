@@ -31,6 +31,18 @@ const SETUP_EXTENSIONS = new Set([
   '.xml',
   '.zip',
 ]);
+const SETUP_SESSION_TYPES = new Set([
+  'race',
+  'qualifying',
+  'wet',
+  'endurance',
+  'endurance_safe',
+  'qualifying_endurance',
+  'qualifying_safe',
+  'race_endurance',
+  'race_safe',
+  'other',
+]);
 const SECURITY_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
   'X-Frame-Options': 'SAMEORIGIN',
@@ -513,9 +525,9 @@ async function routeSetupLibrary(context) {
     const timestamp = new Date().toISOString();
     db.prepare(
       `INSERT INTO setups
-       (id, title, simulator, car, track, configuration, session_type, description, tags_json,
-        status, created_by, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', ?, ?, ?)`,
+       (id, title, simulator, car, track, configuration, season_number, week_number, season_year,
+        description, tags_json, status, created_by, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', ?, ?, ?)`,
     ).run(
       id,
       setup.title,
@@ -523,7 +535,9 @@ async function routeSetupLibrary(context) {
       setup.car,
       setup.track,
       setup.configuration,
-      setup.sessionType,
+      setup.season,
+      setup.week,
+      setup.year,
       setup.description,
       JSON.stringify(setup.tags),
       session.admin.id,
@@ -651,14 +665,17 @@ async function routeSetupLibrary(context) {
     const timestamp = new Date().toISOString();
     db.prepare(
       `UPDATE setups SET title = ?, simulator = ?, car = ?, track = ?, configuration = ?,
-       session_type = ?, description = ?, tags_json = ?, updated_at = ? WHERE id = ?`,
+       season_number = ?, week_number = ?, season_year = ?, description = ?, tags_json = ?,
+       updated_at = ? WHERE id = ?`,
     ).run(
       setup.title,
       setup.simulator,
       setup.car,
       setup.track,
       setup.configuration,
-      setup.sessionType,
+      setup.season,
+      setup.week,
+      setup.year,
       setup.description,
       JSON.stringify(setup.tags),
       timestamp,
@@ -715,6 +732,7 @@ async function saveSetupFile(context, setup, session) {
     throw new ApiError(422, 'INVALID_SETUP_FILE', 'El ZIP no tiene una cabecera válida.');
   }
   const notes = cleanOptionalText(context.url.searchParams.get('notes'), 500);
+  const sessionType = validateSetupFileSessionType(context.url.searchParams.get('sessionType'));
   const administrator = isSetupAdministrator(session);
   const retentionDays = administrator
     ? validateRetentionDays(context.url.searchParams.get('retentionDays'))
@@ -747,8 +765,9 @@ async function saveSetupFile(context, setup, session) {
       .prepare(
         `INSERT INTO setup_files
          (id, setup_id, version_number, original_name, storage_path, extension, mime_type,
-          byte_size, checksum_sha256, notes, uploaded_by, uploaded_at, retention_days, expires_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          byte_size, checksum_sha256, session_type, notes, uploaded_by, uploaded_at, retention_days,
+          expires_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         fileId,
@@ -760,6 +779,7 @@ async function saveSetupFile(context, setup, session) {
         String(context.request.headers['content-type'] ?? 'application/octet-stream').slice(0, 100),
         buffer.length,
         createHash('sha256').update(buffer).digest('hex'),
+        sessionType,
         notes,
         session.admin.id,
         uploadedAt.toISOString(),
@@ -776,6 +796,7 @@ async function saveSetupFile(context, setup, session) {
   recordAudit(context.db, session.admin.id, 'setups.file_uploaded', 'setup_file', fileId, {
     setupId: setup.id,
     byteSize: buffer.length,
+    sessionType,
     retentionDays,
   });
   return setupFileFromRow(
@@ -925,7 +946,9 @@ function setupFromRow(row, session) {
     car: row.car,
     track: row.track,
     configuration: row.configuration,
-    sessionType: row.session_type,
+    season: row.season_number,
+    week: row.week_number,
+    year: row.season_year,
     description: row.description,
     tags: parseJsonArray(row.tags_json),
     status: row.status,
@@ -954,6 +977,7 @@ function setupFileFromRow(row, includeManagementFields) {
     mimeType: row.mime_type,
     byteSize: row.byte_size,
     checksumSha256: row.checksum_sha256,
+    sessionType: SETUP_SESSION_TYPES.has(row.session_type) ? row.session_type : 'other',
     notes: row.notes,
     uploadedBy: row.uploaded_by,
     uploadedByName: row.uploaded_by_name ?? null,
@@ -974,11 +998,9 @@ function validateSetup(input) {
   if (simulator.length < 2) fields.simulator = 'Indica el simulador.';
   if (car.length < 2) fields.car = 'Indica el coche.';
   if (track.length < 2) fields.track = 'Indica el circuito.';
-  const sessionType = ['race', 'qualifying', 'wet', 'endurance', 'other'].includes(
-    input.sessionType,
-  )
-    ? input.sessionType
-    : 'race';
+  const season = positiveIntegerInRange(input.season, 1, 99, 'season', fields);
+  const week = positiveIntegerInRange(input.week, 1, 99, 'week', fields);
+  const year = positiveIntegerInRange(input.year, 2000, 2100, 'year', fields);
   const tags = Array.isArray(input.tags)
     ? [...new Set(input.tags.map((tag) => cleanText(tag, 30)).filter(Boolean))].slice(0, 10)
     : String(input.tags ?? '')
@@ -995,10 +1017,33 @@ function validateSetup(input) {
     car,
     track,
     configuration: cleanOptionalText(input.configuration, 100),
-    sessionType,
+    season,
+    week,
+    year,
     description: cleanOptionalText(input.description, 1000),
     tags,
   };
+}
+
+function validateSetupFileSessionType(value) {
+  const sessionType = String(value ?? '').trim();
+  if (!SETUP_SESSION_TYPES.has(sessionType)) {
+    throw new ApiError(
+      422,
+      'INVALID_SESSION_TYPE',
+      'Selecciona el tipo de sesión correspondiente a esta versión.',
+    );
+  }
+  return sessionType;
+}
+
+function positiveIntegerInRange(value, minimum, maximum, field, fields) {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < minimum || parsed > maximum) {
+    fields[field] = `Introduce un número entre ${minimum} y ${maximum}.`;
+    return null;
+  }
+  return parsed;
 }
 
 function validateRetentionDays(value) {

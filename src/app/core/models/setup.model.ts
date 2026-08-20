@@ -1,6 +1,16 @@
 export type SetupRole = 'owner' | 'admin' | 'user';
 export type SetupStatus = 'draft' | 'published' | 'archived' | 'expired';
-export type SetupSessionType = 'race' | 'qualifying' | 'wet' | 'endurance' | 'other';
+export type SetupSessionType =
+  | 'race'
+  | 'qualifying'
+  | 'wet'
+  | 'endurance'
+  | 'endurance_safe'
+  | 'qualifying_endurance'
+  | 'qualifying_safe'
+  | 'race_endurance'
+  | 'race_safe'
+  | 'other';
 
 export interface SetupAccount {
   id: string;
@@ -27,6 +37,7 @@ export interface SetupFile {
   mimeType: string;
   byteSize: number;
   checksumSha256: string;
+  sessionType: SetupSessionType;
   notes: string | null;
   uploadedBy: string;
   uploadedByName: string | null;
@@ -43,7 +54,9 @@ export interface RacingSetup {
   car: string;
   track: string;
   configuration: string | null;
-  sessionType: SetupSessionType;
+  season: number | null;
+  week: number | null;
+  year: number | null;
   description: string | null;
   tags: string[];
   status: SetupStatus;
@@ -70,7 +83,9 @@ export interface SetupInput {
   car: string;
   track: string;
   configuration: string;
-  sessionType: SetupSessionType;
+  season: number;
+  week: number;
+  year: number;
   description: string;
   tags: string[];
   updatedAt?: string;

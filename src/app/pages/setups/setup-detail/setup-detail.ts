@@ -101,6 +101,22 @@ export class SetupDetail implements OnInit {
   downloadUrl(file: SetupFile): string {
     return this.api.downloadUrl(file.setupId, file.id);
   }
+
+  periodLabel(setup: RacingSetup): string {
+    if (
+      typeof setup.season === 'number' &&
+      typeof setup.week === 'number' &&
+      typeof setup.year === 'number'
+    ) {
+      return `S${setup.season} · W${setup.week} · ${setup.year}`;
+    }
+    return this.i18n.translate('home.setups.catalog.periodPending');
+  }
+
+  sessionTypeLabel(file: SetupFile): string {
+    return this.i18n.translate(`home.setups.sessionType.${file.sessionType || 'other'}`);
+  }
+
   formatBytes(bytes: number): string {
     return bytes < 1024
       ? `${bytes} B`

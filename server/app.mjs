@@ -52,6 +52,7 @@ import {
 const JSON_LIMIT = 1024 * 1024;
 const MEDIA_LIMIT = 110 * 1024 * 1024;
 const SESSION_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+const PUBLIC_CHAMPIONSHIP_STATUSES = new Set(['registration', 'active', 'finished']);
 const BASE_SECURITY_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
   'X-Frame-Options': 'SAMEORIGIN',
@@ -172,12 +173,17 @@ async function routeRequest(context) {
       ? championshipFromDatabaseRow(
           db,
           db
-            .prepare(`SELECT ${CHAMPIONSHIP_COLUMNS} FROM championships WHERE id = ?`)
+            .prepare(
+              `SELECT ${CHAMPIONSHIP_COLUMNS} FROM championships
+               WHERE id = ? AND deleted_at IS NULL
+                 AND status IN ('registration', 'active', 'finished')`,
+            )
             .get(settings.featuredChampionshipId),
         )
       : null;
     return sendJson(response, 200, {
       ...publicSettings(settings),
+      featuredChampionshipId: featured?.id ?? null,
       featuredChampionship: publicChampionship(featured),
     });
   }
@@ -275,7 +281,7 @@ async function routeRequest(context) {
     const rows = db
       .prepare(
         `SELECT ${CHAMPIONSHIP_COLUMNS} FROM championships
-         WHERE status != 'draft' AND deleted_at IS NULL
+         WHERE status IN ('registration', 'active', 'finished') AND deleted_at IS NULL
          ORDER BY is_featured DESC, display_order ASC, edition_number DESC, created_at DESC`,
       )
       .all();
@@ -855,7 +861,14 @@ async function routeAdmin(context) {
     runChampionshipUpdate(db, current.id, championship, session.admin.displayName);
     linkMediaAsset(db, championship.coverUrl, championship.coverAlt, 'championship', current.id);
     linkMediaAsset(db, championship.backgroundVideoUrl, null, 'championship', current.id);
-    if (championship.isFeatured) {
+    if (!isPublicChampionshipStatus(championship.status)) {
+      unfeatureChampionship(
+        db,
+        current.id,
+        new Date().toISOString(),
+        session.admin.displayName,
+      );
+    } else if (championship.isFeatured) {
       featureChampionship(db, current.id, new Date().toISOString(), session.admin.displayName);
     }
     recordAudit(db, session.admin.id, 'championship.updated', 'championship', current.id, {
@@ -940,7 +953,7 @@ async function routeAdmin(context) {
       return sendJson(response, 200, result);
     }
     if (action === 'feature') {
-      if (championship.status === 'draft') {
+      if (!isPublicChampionshipStatus(championship.status)) {
         throw new ApiError(422, 'NOT_PUBLISHED', 'Publica la edición antes de destacarla.');
       }
       featureChampionship(db, championship.id, new Date().toISOString(), session.admin.displayName);
@@ -955,6 +968,8 @@ async function routeAdmin(context) {
       ).run(status, timestamp, status, timestamp, session.admin.displayName, championship.id);
       if (action === 'publish') {
         featureChampionship(db, championship.id, timestamp, session.admin.displayName);
+      } else {
+        unfeatureChampionship(db, championship.id, timestamp, session.admin.displayName);
       }
     }
     const auditAction =
@@ -989,7 +1004,7 @@ async function routeAdmin(context) {
     const settings = validateSettings(input);
     if (settings.featuredChampionshipId) {
       const featured = findChampionship(db, settings.featuredChampionshipId);
-      if (!featured || featured.status === 'draft') {
+      if (!featured || !isPublicChampionshipStatus(featured.status)) {
         throw new ApiError(422, 'INVALID_FEATURED', 'La edición destacada debe estar publicada.');
       }
     }
@@ -1627,7 +1642,7 @@ function findPublicChampionship(db, key) {
     db
       .prepare(
         `SELECT ${CHAMPIONSHIP_COLUMNS} FROM championships
-         WHERE deleted_at IS NULL AND status != 'draft'
+         WHERE deleted_at IS NULL AND status IN ('registration', 'active', 'finished')
            AND (slug = ? OR external_tournament_id = ?)
          LIMIT 1`,
       )
@@ -1826,7 +1841,7 @@ function saveChampionshipTranslations(db, id, championship) {
 
 function featureChampionship(db, id, timestamp, actorName) {
   const championship = findChampionship(db, id);
-  if (!championship || championship.status === 'draft') {
+  if (!championship || !isPublicChampionshipStatus(championship.status)) {
     throw new ApiError(422, 'INVALID_FEATURED', 'La edición destacada debe estar publicada.');
   }
   db.exec('BEGIN');
@@ -1847,6 +1862,28 @@ function featureChampionship(db, id, timestamp, actorName) {
     db.exec('ROLLBACK');
     throw error;
   }
+}
+
+function unfeatureChampionship(db, id, timestamp, actorName) {
+  db.exec('BEGIN');
+  try {
+    db.prepare(
+      `UPDATE championships SET is_featured = 0, updated_at = ?, updated_by_name = ?
+       WHERE id = ?`,
+    ).run(timestamp, actorName, id);
+    db.prepare(
+      `UPDATE site_settings SET featured_championship_id = NULL, updated_at = ?
+       WHERE id = 1 AND featured_championship_id = ?`,
+    ).run(timestamp, id);
+    db.exec('COMMIT');
+  } catch (error) {
+    db.exec('ROLLBACK');
+    throw error;
+  }
+}
+
+function isPublicChampionshipStatus(status) {
+  return PUBLIC_CHAMPIONSHIP_STATUSES.has(status);
 }
 
 function assertChampionshipIsUnique(db, championship, excludedId = null) {

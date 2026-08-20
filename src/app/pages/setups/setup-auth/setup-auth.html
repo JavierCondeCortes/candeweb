@@ -1,7 +1,7 @@
 <main class="setup-auth-page">
   <section class="setup-auth-card" aria-labelledby="setup-auth-title">
     <div class="setup-auth-topline">
-      <a class="setup-brand" routerLink="/">CND<span>///</span> SETUPS</a>
+      <a class="setup-brand" routerLink="/">CANDE<span>SETUPS</span> </a>
       <app-language-switcher />
     </div>
 
@@ -9,7 +9,13 @@
       <p role="status">{{ 'home.setups.common.loading' | translate }}</p>
     } @else if (mode === 'request') {
       <p class="setup-eyebrow">{{ 'home.setups.auth.requestEyebrow' | translate }}</p>
-      <h1 id="setup-auth-title">{{ 'home.setups.auth.requestTitle' | translate }}</h1>
+      <h1
+        id="setup-auth-title"
+        class="display-title setup-display-title"
+        [attr.data-title]="'home.setups.auth.requestTitle' | translate"
+      >
+        {{ 'home.setups.auth.requestTitle' | translate }}
+      </h1>
       <p>{{ 'home.setups.auth.requestIntro' | translate }}</p>
       @if (sent()) {
         <div class="setup-alert is-success" role="status">
@@ -40,7 +46,13 @@
       }
     } @else if (mode === 'invitation') {
       <p class="setup-eyebrow">{{ 'home.setups.auth.invitationEyebrow' | translate }}</p>
-      <h1 id="setup-auth-title">{{ 'home.setups.auth.invitationTitle' | translate }}</h1>
+      <h1
+        id="setup-auth-title"
+        class="display-title setup-display-title"
+        [attr.data-title]="'home.setups.auth.invitationTitle' | translate"
+      >
+        {{ 'home.setups.auth.invitationTitle' | translate }}
+      </h1>
       @if (errorMessage()) {
         <div class="setup-alert is-error" role="alert">{{ errorMessage() }}</div>
       } @else if (invitation(); as data) {
@@ -63,7 +75,13 @@
       }
     } @else {
       <p class="setup-eyebrow">{{ 'home.setups.auth.loginEyebrow' | translate }}</p>
-      <h1 id="setup-auth-title">{{ 'home.setups.auth.loginTitle' | translate }}</h1>
+      <h1
+        id="setup-auth-title"
+        class="display-title setup-display-title"
+        [attr.data-title]="'home.setups.auth.loginTitle' | translate"
+      >
+        {{ 'home.setups.auth.loginTitle' | translate }}
+      </h1>
       <p>{{ 'home.setups.auth.loginIntro' | translate }}</p>
       @if (errorMessage()) {
         <div class="setup-alert is-error" role="alert">{{ errorMessage() }}</div>

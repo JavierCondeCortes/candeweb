@@ -657,6 +657,46 @@ function migrate(db) {
   db.prepare('INSERT OR IGNORE INTO schema_migrations (version, applied_at) VALUES (18, ?)').run(
     now(),
   );
+
+  const migration19Applied = db.prepare('SELECT 1 FROM schema_migrations WHERE version = 19').get();
+  if (!migration19Applied) {
+    const setupColumns = db.prepare('PRAGMA table_info(setups)').all();
+    if (!setupColumns.some((column) => column.name === 'season_number')) {
+      db.exec(
+        'ALTER TABLE setups ADD COLUMN season_number INTEGER CHECK (season_number IS NULL OR season_number BETWEEN 1 AND 99);',
+      );
+    }
+    if (!setupColumns.some((column) => column.name === 'week_number')) {
+      db.exec(
+        'ALTER TABLE setups ADD COLUMN week_number INTEGER CHECK (week_number IS NULL OR week_number BETWEEN 1 AND 99);',
+      );
+    }
+    if (!setupColumns.some((column) => column.name === 'season_year')) {
+      db.exec(
+        'ALTER TABLE setups ADD COLUMN season_year INTEGER CHECK (season_year IS NULL OR season_year BETWEEN 2000 AND 2100);',
+      );
+    }
+
+    const setupFileColumns = db.prepare('PRAGMA table_info(setup_files)').all();
+    if (!setupFileColumns.some((column) => column.name === 'session_type')) {
+      db.exec(`
+        ALTER TABLE setup_files ADD COLUMN session_type TEXT NOT NULL DEFAULT 'other' CHECK (
+          session_type IN (
+            'race', 'qualifying', 'wet', 'endurance', 'endurance_safe',
+            'qualifying_endurance', 'qualifying_safe', 'race_endurance', 'race_safe', 'other'
+          )
+        );
+      `);
+      db.exec(`
+        UPDATE setup_files
+        SET session_type = COALESCE(
+          (SELECT s.session_type FROM setups s WHERE s.id = setup_files.setup_id),
+          'other'
+        );
+      `);
+    }
+    db.prepare('INSERT INTO schema_migrations (version, applied_at) VALUES (19, ?)').run(now());
+  }
 }
 
 function seed(db) {

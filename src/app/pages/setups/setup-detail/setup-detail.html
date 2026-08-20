@@ -6,9 +6,15 @@
   <section class="setup-page-heading" aria-labelledby="setup-detail-title">
     <div>
       <p class="setup-eyebrow">
-        {{ item.simulator }} // {{ 'home.setups.sessionType.' + item.sessionType | translate }}
+        {{ item.simulator }} // {{ periodLabel(item) }}
       </p>
-      <h1 id="setup-detail-title">{{ item.title }}</h1>
+      <h1
+        id="setup-detail-title"
+        class="display-title setup-display-title"
+        [attr.data-title]="item.title"
+      >
+        {{ item.title }}
+      </h1>
       <p>
         {{ item.car }} · {{ item.track }}
         @if (item.configuration) {
@@ -70,7 +76,7 @@
           }
           @if (item.status === 'published') {
             <button
-              class="setup-button"
+              class="setup-button is-archive"
               type="button"
               (click)="action('archive')"
               [disabled]="busy()"
@@ -101,6 +107,7 @@
         @for (file of item.files; track file.id) {
           <article class="setup-file-row">
             <div>
+              <span class="setup-file-session">{{ sessionTypeLabel(file) }}</span>
               <strong>v{{ file.versionNumber }} · {{ file.originalName }}</strong>
               <p>{{ formatBytes(file.byteSize) }} · {{ file.uploadedAt | date: 'mediumDate' }}</p>
               @if (file.notes) {

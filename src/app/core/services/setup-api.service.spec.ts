@@ -37,11 +37,15 @@ describe('SetupApiService', () => {
       type: 'application/octet-stream',
     });
     service
-      .uploadFile('setup/id', setupFile, { notes: 'Versión estable', retentionDays: 90 })
+      .uploadFile('setup/id', setupFile, {
+        sessionType: 'race_safe',
+        notes: 'Versión estable',
+        retentionDays: 90,
+      })
       .subscribe();
 
     const request = http.expectOne(
-      '/api/setups/setup%2Fid/files?fileName=Spa+driver%27s+setup.sto&notes=Versi%C3%B3n+estable&retentionDays=90',
+      '/api/setups/setup%2Fid/files?fileName=Spa+driver%27s+setup.sto&sessionType=race_safe&notes=Versi%C3%B3n+estable&retentionDays=90',
     );
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toBe(setupFile);

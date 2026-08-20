@@ -401,7 +401,7 @@
     "viewPublic": "View public page",
     "feature": "Show as current",
     "synchronize": "Synchronize",
-    "confirmArchive": "Archive {{name}}? It will no longer be featured but will remain available in the public archive.",
+    "confirmArchive": "Archive {{name}}? It will no longer be featured and will be hidden from the public website.",
     "syncing": "Synchronizing with Fat Cat Race…",
     "savingChange": "Saving change…",
     "synced": "Sporting data synchronized.",

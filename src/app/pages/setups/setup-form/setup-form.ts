@@ -31,9 +31,12 @@ export class SetupForm implements OnInit {
     car: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
     track: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
     configuration: ['', [Validators.maxLength(100)]],
-    sessionType: ['race' as SetupSessionType, [Validators.required]],
+    season: [1, [Validators.required, Validators.min(1), Validators.max(99)]],
+    week: [1, [Validators.required, Validators.min(1), Validators.max(99)]],
+    year: [new Date().getFullYear(), [Validators.required, Validators.min(2000), Validators.max(2100)]],
     description: ['', [Validators.maxLength(1000)]],
     tags: [''],
+    fileSessionType: ['race' as SetupSessionType, [Validators.required]],
     notes: ['', [Validators.maxLength(500)]],
     retentionDays: ['90'],
   });
@@ -54,7 +57,9 @@ export class SetupForm implements OnInit {
             car: setup.car,
             track: setup.track,
             configuration: setup.configuration ?? '',
-            sessionType: setup.sessionType,
+            season: setup.season ?? 1,
+            week: setup.week ?? 1,
+            year: setup.year ?? new Date().getFullYear(),
             description: setup.description ?? '',
             tags: setup.tags.join(', '),
           });
@@ -96,7 +101,9 @@ export class SetupForm implements OnInit {
       car: value.car,
       track: value.track,
       configuration: value.configuration,
-      sessionType: value.sessionType,
+      season: value.season,
+      week: value.week,
+      year: value.year,
       description: value.description,
       tags: value.tags
         .split(',')
@@ -114,6 +121,7 @@ export class SetupForm implements OnInit {
           if (!file) return of({ setup });
           const parsedRetention = Number(value.retentionDays);
           return this.api.uploadFile(setup.id, file, {
+            sessionType: value.fileSessionType,
             notes: value.notes,
             retentionDays:
               this.canManage() && Number.isInteger(parsedRetention) && parsedRetention > 0

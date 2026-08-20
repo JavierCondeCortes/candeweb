@@ -104,9 +104,10 @@ Setups no elimina la cuenta si esa persona conserva otros permisos.
 
 ## Modelo de contenido
 
-Un **setup** es el registro lógico que describe para qué simulador, coche y circuito sirve. Un
-**archivo de setup** es una versión descargable de ese registro. Separarlos permite actualizar un
-setup sin perder el historial ni sobrescribir el archivo anterior.
+Un **setup** funciona como una carpeta lógica para un simulador, coche, circuito, temporada, semana
+y año. Un **archivo de setup** es una versión descargable con su propio tipo de sesión. Separarlos
+permite guardar, por ejemplo, Qualy y Race de la misma semana sin duplicar la carpeta ni sobrescribir
+versiones anteriores.
 
 ### Setup
 
@@ -118,7 +119,9 @@ setup sin perder el historial ni sobrescribir el archivo anterior.
 | `car`           | Texto           | Obligatorio                                         |
 | `track`         | Texto           | Obligatorio                                         |
 | `configuration` | Texto o `null`  | Trazado o variante, si procede                      |
-| `session_type`  | Enum            | `race`, `qualifying`, `wet`, `endurance` u `other`  |
+| `season_number` | Entero          | Temporada; entre 1 y 99                             |
+| `week_number`   | Entero          | Semana; entre 1 y 99                                |
+| `season_year`   | Entero          | Año de la temporada; entre 2000 y 2100              |
 | `description`   | Texto o `null`  | Texto plano; máximo recomendado de 1.000 caracteres |
 | `tags`          | Lista           | Normalizadas y limitadas                            |
 | `status`        | Enum            | `draft`, `published`, `archived` o `expired`        |
@@ -141,6 +144,7 @@ setup sin perder el historial ni sobrescribir el archivo anterior.
 | `mime_type`       | Texto           | Declarado en la subida; la descarga fuerza tipo binario     |
 | `byte_size`       | Entero          | Validado antes de guardar                                   |
 | `checksum_sha256` | Texto           | Integridad, duplicados y auditoría                          |
+| `session_type`    | Enum            | Tipo de sesión específico de esta versión                   |
 | `notes`           | Texto o `null`  | Cambios de la versión                                       |
 | `uploaded_by`     | Cuenta          | Autor de la subida                                          |
 | `uploaded_at`     | Fecha           | Punto de partida de la retención                            |
@@ -148,6 +152,10 @@ setup sin perder el historial ni sobrescribir el archivo anterior.
 | `expires_at`      | Fecha o `null`  | `uploaded_at + retention_days`                              |
 | `download_count`  | Entero          | Métrica operativa, no pública                               |
 | `deleted_at`      | Fecha o `null`  | Momento de retirada física o lógica                         |
+
+Los tipos de sesión disponibles son `race`, `qualifying`, `wet`, `endurance`, `endurance_safe`,
+`qualifying_endurance`, `qualifying_safe`, `race_endurance`, `race_safe` y `other`. El tipo se pide
+al subir cada archivo, no al crear la carpeta.
 
 ## Formatos y validación
 
@@ -241,6 +249,9 @@ PATCH  /api/setup-access/users/:id
 POST   /api/setup-access/invitations/accept
 ```
 
+La subida binaria a `POST /api/setups/:id/files` exige `sessionType` en la query junto a
+`fileName`; `notes` y `retentionDays` continúan siendo opcionales.
+
 Las operaciones mutables requieren CSRF. Las subidas deben ser binarias o `multipart/form-data`, no
 Base64, para evitar aumentar el tamaño y repetir el problema de límites del proxy.
 
@@ -274,14 +285,15 @@ Owner y admin obtienen sus capacidades por rol; no es necesario crear filas redu
 - Encabezado breve que explique que es una biblioteca privada de la comunidad.
 - Búsqueda por coche, circuito, simulador y autor.
 - Filtros visibles y botón para limpiar filtros.
-- Tarjetas o filas compactas con título, coche, circuito, tipo de sesión, versión y caducidad.
+- Tarjetas o filas compactas con título, coche, circuito, temporada, semana, año y versiones.
 - Estado vacío útil cuando no existan setups o no haya coincidencias.
 - Aviso destacado para archivos próximos a caducar sin depender solo del color.
 
 ### Detalle
 
-- Jerarquía: simulador → coche → circuito → tipo de sesión.
+- Jerarquía: simulador → coche → circuito → temporada → semana → año.
 - Descripción, autor, fecha de actualización y lista de versiones.
+- Cada versión muestra su tipo de sesión antes del nombre del archivo.
 - Botón `Descargar setup` con nombre y peso del archivo antes de iniciar la descarga.
 - Fecha de eliminación expresada de forma absoluta: `Se elimina el 20 de septiembre de 2026`.
 - Checksum disponible para quien necesite verificar la descarga.

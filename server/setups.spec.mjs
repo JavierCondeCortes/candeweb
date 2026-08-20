@@ -170,10 +170,25 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
     });
     assert.equal(created.status, 201);
     const setupId = created.data.setup.id;
+    assert.equal(created.data.setup.season, 4);
+    assert.equal(created.data.setup.week, 12);
+    assert.equal(created.data.setup.year, 2026);
     const setupBytes = Buffer.from('[SPRINGS]\nfront=4\nrear=6\n');
+    const missingSessionType = await binaryRequest(
+      baseUrl,
+      `/api/setups/${setupId}/files?fileName=missing-session.sto`,
+      {
+        cookie: adminCookie,
+        csrf: adminCsrf,
+        contentType: 'application/octet-stream',
+        body: setupBytes,
+      },
+    );
+    assert.equal(missingSessionType.status, 422);
+    assert.equal(missingSessionType.data.error.code, 'INVALID_SESSION_TYPE');
     const uploaded = await binaryRequest(
       baseUrl,
-      `/api/setups/${setupId}/files?fileName=mazda-spa.sto&notes=Versi%C3%B3n+estable&retentionDays=90`,
+      `/api/setups/${setupId}/files?fileName=mazda-spa.sto&sessionType=qualifying&notes=Versi%C3%B3n+estable&retentionDays=90`,
       {
         cookie: adminCookie,
         csrf: adminCsrf,
@@ -182,8 +197,33 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
       },
     );
     assert.equal(uploaded.status, 201);
+    assert.equal(uploaded.data.file.sessionType, 'qualifying');
     assert.equal(uploaded.data.file.retentionDays, 90);
     assert.equal(existsSync(join(setupDir, setupId, `${uploaded.data.file.id}.sto`)), true);
+
+    const uploadedRaceSafe = await binaryRequest(
+      baseUrl,
+      `/api/setups/${setupId}/files?fileName=mazda-spa-race-safe.sto&sessionType=race_safe&retentionDays=90`,
+      {
+        cookie: adminCookie,
+        csrf: adminCsrf,
+        contentType: 'application/octet-stream',
+        body: Buffer.from('[SPRINGS]\nfront=3\nrear=5\n'),
+      },
+    );
+    assert.equal(uploadedRaceSafe.status, 201);
+    assert.equal(uploadedRaceSafe.data.file.versionNumber, 2);
+    assert.equal(uploadedRaceSafe.data.file.sessionType, 'race_safe');
+    assert.deepEqual(
+      new Set(uploadedRaceSafe.data.setup.files.map((file) => file.sessionType)),
+      new Set(['qualifying', 'race_safe']),
+    );
+    const removedRaceSafe = await jsonRequest(
+      baseUrl,
+      `/api/setups/${setupId}/files/${uploadedRaceSafe.data.file.id}`,
+      { method: 'DELETE', cookie: adminCookie, csrf: adminCsrf },
+    );
+    assert.equal(removedRaceSafe.status, 204);
 
     const updated = await jsonRequest(baseUrl, `/api/setups/${setupId}`, {
       method: 'PATCH',
@@ -192,7 +232,7 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
       body: {
         ...setupInput('Mazda MX-5 · Spa actualizado'),
         description: 'Ajustado después de probar la primera versión.',
-        updatedAt: uploaded.data.setup.updatedAt,
+        updatedAt: uploadedRaceSafe.data.setup.updatedAt,
       },
     });
     assert.equal(updated.status, 200);
@@ -269,7 +309,7 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
     assert.equal(contributorDraft.status, 201);
     const contributorUpload = await binaryRequest(
       baseUrl,
-      `/api/setups/${contributorDraft.data.setup.id}/files?fileName=pilot.sto&retentionDays=365`,
+      `/api/setups/${contributorDraft.data.setup.id}/files?fileName=pilot.sto&sessionType=wet&retentionDays=365`,
       { cookie: userCookie, csrf: userCsrf, body: Buffer.from('pilot setup') },
     );
     assert.equal(contributorUpload.status, 201);
@@ -344,7 +384,9 @@ function setupInput(title) {
     car: 'Mazda MX-5',
     track: 'Spa-Francorchamps',
     configuration: 'Grand Prix',
-    sessionType: 'race',
+    season: 4,
+    week: 12,
+    year: 2026,
     description: 'Setup estable para carrera.',
     tags: ['baseline', 'race'],
   };

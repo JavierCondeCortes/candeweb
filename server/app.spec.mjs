@@ -578,6 +578,31 @@ test('administra contenidos y cuentas con propietario, invitación y TOTP indepe
       settingsWithNextChampionship.data.featuredChampionshipId,
       nextChampionship.data.championship.id,
     );
+    const archivedNextChampionship = await jsonRequest(
+      baseUrl,
+      `/api/admin/championships/${nextChampionship.data.championship.id}/archive`,
+      { method: 'POST', cookie: adminCookie, csrf: adminCsrf, body: {} },
+    );
+    assert.equal(archivedNextChampionship.status, 200);
+    assert.equal(archivedNextChampionship.data.championship.status, 'archived');
+    assert.equal(archivedNextChampionship.data.championship.isFeatured, false);
+
+    const championshipsAfterArchive = await jsonRequest(baseUrl, '/api/public/championships');
+    assert.equal(
+      championshipsAfterArchive.data.championships.some(
+        (championship) => championship.id === nextChampionship.data.championship.id,
+      ),
+      false,
+    );
+    const archivedPublicDetail = await jsonRequest(
+      baseUrl,
+      `/api/public/championships/${nextChampionship.data.championship.slug}`,
+    );
+    assert.equal(archivedPublicDetail.status, 404);
+    const settingsAfterArchive = await jsonRequest(baseUrl, '/api/public/site-settings');
+    assert.equal(settingsAfterArchive.data.featuredChampionshipId, null);
+    assert.equal(settingsAfterArchive.data.featuredChampionship, null);
+
     const restoredNewEra = await jsonRequest(
       baseUrl,
       `/api/admin/championships/${seededChampionship.id}/feature`,

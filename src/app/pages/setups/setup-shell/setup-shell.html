@@ -1,23 +1,14 @@
 <a class="skip-link" href="#setup-content">{{ 'home.setups.shell.skip' | translate }}</a>
 
 <div class="setup-app">
-  <header class="setup-header">
+  <header class="setup-header" [class.menu-open]="menuOpen()">
     <a
       class="setup-brand"
       routerLink="/setups"
       [attr.aria-label]="'home.setups.shell.homeLabel' | translate"
     >
-      CND<span>///</span> SETUPS
+      CANDE<span>SETUPS</span>
     </a>
-    <button
-      class="setup-menu-button"
-      type="button"
-      [attr.aria-expanded]="menuOpen()"
-      aria-controls="setup-navigation"
-      (click)="menuOpen.set(!menuOpen())"
-    >
-      {{ 'home.setups.shell.menu' | translate }}
-    </button>
     <nav
       id="setup-navigation"
       class="setup-nav"
@@ -27,29 +18,55 @@
       <a
         routerLink="/setups"
         routerLinkActive="is-active"
+        ariaCurrentWhenActive="page"
         [routerLinkActiveOptions]="{ exact: true }"
         (click)="closeMenu()"
       >
         {{ 'home.setups.shell.catalog' | translate }}
       </a>
       @if (session()?.account?.canUploadSetups) {
-        <a routerLink="/setups/nuevo" routerLinkActive="is-active" (click)="closeMenu()">{{
-          'home.setups.shell.newSetup' | translate
-        }}</a>
+        <a
+          routerLink="/setups/nuevo"
+          routerLinkActive="is-active"
+          ariaCurrentWhenActive="page"
+          (click)="closeMenu()"
+          >{{ 'home.setups.shell.newSetup' | translate }}</a
+        >
       }
       @if (session()?.account?.role === 'owner' || session()?.account?.role === 'admin') {
-        <a routerLink="/setups/usuarios" routerLinkActive="is-active" (click)="closeMenu()">{{
-          'home.setups.shell.accesses' | translate
-        }}</a>
+        <a
+          routerLink="/setups/usuarios"
+          routerLinkActive="is-active"
+          ariaCurrentWhenActive="page"
+          (click)="closeMenu()"
+          >{{ 'home.setups.shell.accesses' | translate }}</a
+        >
       }
       <a routerLink="/" (click)="closeMenu()">{{ 'home.setups.shell.website' | translate }}</a>
+      <button class="setup-nav-logout" type="button" (click)="logout()">
+        {{ 'home.setups.shell.logout' | translate }}
+      </button>
     </nav>
     <div class="setup-account">
+      <app-language-switcher class="setup-language-control" />
       @if (session()?.account; as account) {
         <span>{{ account.displayName }}</span>
       }
-      <app-language-switcher />
-      <button type="button" (click)="logout()">{{ 'home.setups.shell.logout' | translate }}</button>
+      <button class="setup-desktop-logout" type="button" (click)="logout()">
+        {{ 'home.setups.shell.logout' | translate }}
+      </button>
+
+      <button
+        class="setup-menu-button"
+        type="button"
+        aria-controls="setup-navigation"
+        [attr.aria-expanded]="menuOpen()"
+        [attr.aria-label]="
+          (menuOpen() ? 'home.setups.common.close' : 'home.setups.shell.menu') | translate
+        "
+        (click)="menuOpen.set(!menuOpen())"
+      ><span></span><span></span>
+      </button>
     </div>
   </header>
 

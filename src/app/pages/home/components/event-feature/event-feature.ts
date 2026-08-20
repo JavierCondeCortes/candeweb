@@ -19,9 +19,15 @@ export class EventFeature {
   private readonly i18n = inject(I18nService);
   readonly mediaMode = signal<'poster' | 'video'>('poster');
   readonly event$ = this.content.getSiteSettings().pipe(
-    map((settings) => settings.featuredChampionship ?? fallbackChampionship),
-    catchError(() => of(fallbackChampionship)),
+    map((settings) => settings.featuredChampionship),
+    catchError(() => of(null)),
   );
+
+  eventUrl(event: ChampionshipContent): string {
+    return event.status === 'finished' && event.externalTournamentId
+      ? `/candeonatos/${event.externalTournamentId}`
+      : '/candeonato';
+  }
 
   statusLabel(status: ChampionshipContent['status']): string {
     return this.i18n.translate(`home.event.status.${status}`);
@@ -81,37 +87,3 @@ export class EventFeature {
     }
   }
 }
-
-const fallbackChampionship: ChampionshipContent = {
-  id: 'fallback',
-  externalTournamentId: 42,
-  slug: 'candeonato-new-era',
-  name: 'Candeonato New Era',
-  editionNumber: 8,
-  subtitle: 'New Era Edition',
-  season: '2026',
-  summary: null,
-  description: null,
-  descriptionEn: null,
-  summaryEn: null,
-  coverUrl: '/media/hero-poster.webp',
-  coverMobileUrl: '/media/hero-poster-mobile.webp',
-  coverAlt: null,
-  coverAltEn: null,
-  backgroundVideoUrl: '/media/hero-optimized.mp4',
-  backgroundVideoMimeType: 'video/mp4',
-  startAt: null,
-  endAt: null,
-  registrationUrl: null,
-  rulesUrl: null,
-  status: 'finished',
-  isFeatured: true,
-  displayOrder: 0,
-  publishedAt: null,
-  lastSyncedAt: null,
-  syncStatus: 'never',
-  syncError: null,
-  createdAt: '',
-  updatedAt: '',
-  updatedByName: null,
-};
