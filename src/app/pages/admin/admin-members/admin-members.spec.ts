@@ -20,6 +20,7 @@ describe('AdminMembers', () => {
       instagramUrl: null,
       youtubeUrl: null,
       xUrl: null,
+      discordUrl: null,
       websiteUrl: null,
       displayOrder: 0,
       isFeatured: true,

@@ -50,6 +50,7 @@ export function validateMember(input, { publishing = false } = {}) {
     instagramUrl: socialUrl(input.instagramUrl, 'instagram.com', 'instagramUrl', fields),
     youtubeUrl: socialUrl(input.youtubeUrl, 'youtube.com', 'youtubeUrl', fields, ['youtu.be']),
     xUrl: socialUrl(input.xUrl, 'x.com', 'xUrl', fields, ['twitter.com']),
+    discordUrl: socialUrl(input.discordUrl, 'discord.com', 'discordUrl', fields, ['discord.gg']),
     websiteUrl: optionalHttpsUrl(input.websiteUrl, 'websiteUrl', fields),
     displayOrder: nonNegativeInteger(input.displayOrder, 'displayOrder', fields),
     isFeatured: Boolean(input.isFeatured),

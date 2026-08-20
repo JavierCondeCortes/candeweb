@@ -76,6 +76,7 @@
     "previous": "Ver piloto anterior",
     "next": "Ver piloto siguiente",
     "position": "Piloto {{current}} de {{total}}",
+    "discordLabel": "Discord de {{name}}",
     "website": "Web",
     "websiteLabel": "Web de {{name}}",
     "newTab": "se abre en una pestaña nueva"

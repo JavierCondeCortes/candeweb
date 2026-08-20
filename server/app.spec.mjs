@@ -414,6 +414,7 @@ test('administra contenidos y cuentas con propietario, invitación y TOTP indepe
         photoAlt: 'Andrea en el paddock del equipo',
         photoConsentConfirmed: false,
         twitchUrl: 'https://www.twitch.tv/candemorracingteam',
+        discordUrl: 'https://discord.gg/j22XuDEfMk',
         websiteUrl: 'https://example.com/andrea',
       },
     });
@@ -452,6 +453,7 @@ test('administra contenidos y cuentas con propietario, invitación y TOTP indepe
       true,
     );
     const publicAndrea = publicMembers.data.members.find((member) => member.name === 'Andrea Real');
+    assert.equal(publicAndrea.discordUrl, 'https://discord.gg/j22XuDEfMk');
     assert.equal(publicAndrea.websiteUrl, 'https://example.com/andrea');
     assert.equal('photoConsentConfirmed' in publicAndrea, false);
     assert.equal('updatedByName' in publicAndrea, false);

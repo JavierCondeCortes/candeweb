@@ -64,6 +64,7 @@ function migrate(db) {
       instagram_url TEXT,
       youtube_url TEXT,
       x_url TEXT,
+      discord_url TEXT,
       website_url TEXT,
       display_order INTEGER NOT NULL DEFAULT 0 CHECK (display_order >= 0),
       is_featured INTEGER NOT NULL DEFAULT 0 CHECK (is_featured IN (0, 1)),
@@ -751,6 +752,15 @@ function migrate(db) {
     }
     db.prepare('INSERT INTO schema_migrations (version, applied_at) VALUES (22, ?)').run(now());
   }
+
+  const migration23Applied = db.prepare('SELECT 1 FROM schema_migrations WHERE version = 23').get();
+  if (!migration23Applied) {
+    const memberColumns = db.prepare('PRAGMA table_info(team_members)').all();
+    if (!memberColumns.some((column) => column.name === 'discord_url')) {
+      db.exec('ALTER TABLE team_members ADD COLUMN discord_url TEXT;');
+    }
+    db.prepare('INSERT INTO schema_migrations (version, applied_at) VALUES (23, ?)').run(now());
+  }
 }
 
 function seed(db) {
@@ -921,6 +931,7 @@ export function memberFromRow(row) {
     instagramUrl: row.instagram_url,
     youtubeUrl: row.youtube_url,
     xUrl: row.x_url,
+    discordUrl: row.discord_url,
     websiteUrl: row.website_url,
     displayOrder: row.display_order,
     isFeatured: asBoolean(row.is_featured),

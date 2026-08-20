@@ -126,7 +126,7 @@
               <td>
                 {{ (member.isFeatured ? 'admin.common.yes' : 'admin.common.no') | translate }}
               </td>
-              <td>{{ member.twitchUrl ? 'Twitch' : ('admin.members.noSocials' | translate) }}</td>
+              <td>{{ socialLabels(member) }}</td>
               <td>
                 <div class="admin-row-actions">
                   <a [routerLink]="['/admin/miembros', member.id]">{{

@@ -195,6 +195,19 @@
           }
         </label>
         <label>
+          <span>Discord</span>
+          <input
+            type="url"
+            formControlName="discordUrl"
+            placeholder="https://discord.gg/…"
+            [attr.aria-invalid]="fieldErrors()['discordUrl'] ? 'true' : null"
+            [attr.aria-describedby]="fieldErrors()['discordUrl'] ? 'member-discord-error' : null"
+          />
+          @if (fieldErrors()['discordUrl']; as error) {
+            <small id="member-discord-error" class="field-error">{{ error }}</small>
+          }
+        </label>
+        <label>
           <span>{{ 'admin.memberForm.website' | translate }}</span>
           <input
             type="url"
@@ -286,6 +299,9 @@
             }
             @if (form.controls.xUrl.value) {
               <span>X</span>
+            }
+            @if (form.controls.discordUrl.value) {
+              <span>Discord</span>
             }
             @if (form.controls.websiteUrl.value) {
               <span>{{ 'admin.memberForm.website' | translate }}</span>

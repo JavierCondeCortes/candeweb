@@ -207,6 +207,7 @@ administrador publique un registro real.
 | `instagram_url`           | URL o `null`   | No          | Solo HTTPS y dominio esperado                               |
 | `youtube_url`             | URL o `null`   | No          | Solo HTTPS y dominio esperado                               |
 | `x_url`                   | URL o `null`   | No          | Solo HTTPS y dominio esperado                               |
+| `discord_url`             | URL o `null`   | No          | Solo HTTPS en `discord.com` o `discord.gg`                  |
 | `website_url`             | URL o `null`   | No          | Web personal o profesional; solo HTTPS                      |
 | `display_order`           | Entero         | Sí          | Cero o positivo; reordenable desde la lista                 |
 | `is_featured`             | Booleano       | Sí          | Decide si aparece en la portada                             |

@@ -92,6 +92,7 @@
                       member.instagramUrl ||
                       member.youtubeUrl ||
                       member.xUrl ||
+                      member.discordUrl ||
                       member.websiteUrl
                     ) {
                       <div class="team-card-socials">
@@ -141,6 +142,21 @@
                             rel="noopener noreferrer"
                           >
                             X <span aria-hidden="true">↗</span>
+                          </a>
+                        }
+                        @if (member.discordUrl) {
+                          <a
+                            [href]="member.discordUrl"
+                            [attr.aria-label]="
+                              ('home.team.discordLabel' | translate: { name: member.name }) +
+                              ' (' +
+                              ('home.team.newTab' | translate) +
+                              ')'
+                            "
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            Discord <span aria-hidden="true">↗</span>
                           </a>
                         }
                         @if (member.websiteUrl) {

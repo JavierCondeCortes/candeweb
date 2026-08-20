@@ -62,7 +62,7 @@ const BASE_SECURITY_HEADERS = {
 };
 const MEMBER_COLUMNS = `
   id, slug, name, alias, role_label, bio, photo_url, photo_alt, photo_consent_confirmed,
-  twitch_url, instagram_url, youtube_url, x_url, website_url, display_order, is_featured, is_demo, status,
+  twitch_url, instagram_url, youtube_url, x_url, discord_url, website_url, display_order, is_featured, is_demo, status,
   published_at, created_at, updated_at, updated_by_name, deleted_at
 `;
 const CHAMPIONSHIP_COLUMNS = `
@@ -1858,9 +1858,9 @@ function runMemberInsert(db, id, member, timestamp, actorName) {
   db.prepare(
     `INSERT INTO team_members (
       id, slug, name, alias, role_label, bio, photo_url, photo_alt, photo_consent_confirmed,
-      twitch_url, instagram_url, youtube_url, x_url, website_url, display_order, is_featured,
+      twitch_url, instagram_url, youtube_url, x_url, discord_url, website_url, display_order, is_featured,
       is_demo, status, published_at, created_at, updated_at, updated_by_name
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   ).run(
     id,
     member.slug,
@@ -1875,6 +1875,7 @@ function runMemberInsert(db, id, member, timestamp, actorName) {
     member.instagramUrl,
     member.youtubeUrl,
     member.xUrl,
+    member.discordUrl,
     member.websiteUrl,
     member.displayOrder,
     member.isFeatured ? 1 : 0,
@@ -1893,7 +1894,7 @@ function runMemberUpdate(db, id, member, actorName) {
     `UPDATE team_members SET
       slug = ?, name = ?, alias = ?, role_label = ?, bio = ?, photo_url = ?, photo_alt = ?,
       photo_consent_confirmed = ?, twitch_url = ?, instagram_url = ?, youtube_url = ?, x_url = ?,
-      website_url = ?, display_order = ?, is_featured = ?, is_demo = ?, status = ?,
+      discord_url = ?, website_url = ?, display_order = ?, is_featured = ?, is_demo = ?, status = ?,
       published_at = CASE WHEN ? = 'published' THEN COALESCE(published_at, ?) ELSE published_at END,
       updated_at = ?, updated_by_name = ? WHERE id = ?`,
   ).run(
@@ -1909,6 +1910,7 @@ function runMemberUpdate(db, id, member, actorName) {
     member.instagramUrl,
     member.youtubeUrl,
     member.xUrl,
+    member.discordUrl,
     member.websiteUrl,
     member.displayOrder,
     member.isFeatured ? 1 : 0,

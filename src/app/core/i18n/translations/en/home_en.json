@@ -76,6 +76,7 @@
     "previous": "View previous driver",
     "next": "View next driver",
     "position": "Driver {{current}} of {{total}}",
+    "discordLabel": "{{name}}'s Discord",
     "website": "Website",
     "websiteLabel": "{{name}}'s website",
     "newTab": "opens in a new tab"
