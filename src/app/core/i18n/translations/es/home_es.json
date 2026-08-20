@@ -75,7 +75,10 @@
     "carouselLabel": "Carrusel de pilotos de Candemor",
     "previous": "Ver piloto anterior",
     "next": "Ver piloto siguiente",
-    "position": "Piloto {{current}} de {{total}}"
+    "position": "Piloto {{current}} de {{total}}",
+    "website": "Web",
+    "websiteLabel": "Web de {{name}}",
+    "newTab": "se abre en una pestaña nueva"
   },
   "content": {
     "eyebrow": "Contenido Candemor",
@@ -130,6 +133,62 @@
     "error": "No podemos mostrar los colaboradores ahora.",
     "empty": "Estamos preparando este espacio para nuestros próximos colaboradores.",
     "listLabel": "Sponsors y colaboradores de Candemor"
+  },
+  "access": {
+    "meta": {
+      "login": "Acceso privado · Candemor",
+      "request": "Solicitar acceso · Candemor",
+      "invitation": "Aceptar invitación · Candemor"
+    },
+    "loginEyebrow": "Zona privada",
+    "loginTitle": "Acceso",
+    "loginIntro": "Utiliza tu cuenta única para entrar en Setups y pinturas.",
+    "requestEyebrow": "Comunidad",
+    "requestTitle": "Solicitar acceso",
+    "requestIntro": "Envía tu solicitud. Owner o admin decidirán qué zonas privadas puedes utilizar.",
+    "sentTitle": "Solicitud enviada",
+    "sentText": "Revisaremos la solicitud antes de generar una invitación privada.",
+    "backHome": "Volver al inicio",
+    "name": "Nombre visible",
+    "email": "Correo",
+    "password": "Contraseña",
+    "mfaCode": "Código TOTP o de recuperación",
+    "sendRequest": "Enviar solicitud",
+    "haveAccess": "Ya tengo acceso",
+    "invitationEyebrow": "Invitación privada",
+    "invitationTitle": "Crear cuenta",
+    "newPassword": "Nueva contraseña",
+    "passwordHelp": "Mínimo 12 caracteres.",
+    "activate": "Crear cuenta y configurar TOTP",
+    "mfaIntro": "Escanea el QR con tu aplicación de autenticación y confirma el código de seis cifras.",
+    "qrAlt": "Código QR para configurar TOTP",
+    "confirmMfa": "Confirmar TOTP",
+    "recoveryTitle": "Guarda tus códigos de recuperación",
+    "recoveryHelp": "Cada código sirve una sola vez. Guárdalos fuera de esta web.",
+    "continue": "Continuar",
+    "login": "Entrar",
+    "noAccess": "¿Todavía no tienes permiso?",
+    "requestLink": "Solicitar acceso"
+  },
+  "privateNav": {
+    "label": "Navegación de bibliotecas privadas",
+    "setups": "Setups",
+    "skins": "pinturas"
+  },
+  "skins": {
+    "meta": { "title": "pinturas privadas · Candemor" },
+    "skip": "Saltar al catálogo de pinturas",
+    "homeLabel": "CandePaints, catálogo",
+    "navLabel": "Navegación de pinturas",
+    "catalog": "Catálogo",
+    "manage": "Subir pintura",
+    "eyebrow": "Biblioteca privada",
+    "title": "CandePaints",
+    "intro": "pinturas seleccionadas por Candemor para las cuentas autorizadas de la comunidad.",
+    "empty": "Todavía no hay pinturas publicadas.",
+    "listLabel": "Catálogo privado de pinturas",
+    "open": "Ver pintura",
+    "openLabel": "Ver la pintura de {{name}} (se abre en una pestaña nueva)"
   },
   "setups": {
     "meta": {
@@ -314,6 +373,7 @@
     "secondaryNav": "Navegación secundaria",
     "history": "Historial de Candeonatos",
     "setups": "Setups privados",
+    "skins": "pinturas privadas",
     "contact": "Contacto",
     "legal": "© {{year}} Candemor Racing Team · Contenido externo sujeto a disponibilidad."
   }

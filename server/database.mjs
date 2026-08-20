@@ -64,6 +64,7 @@ function migrate(db) {
       instagram_url TEXT,
       youtube_url TEXT,
       x_url TEXT,
+      website_url TEXT,
       display_order INTEGER NOT NULL DEFAULT 0 CHECK (display_order >= 0),
       is_featured INTEGER NOT NULL DEFAULT 0 CHECK (is_featured IN (0, 1)),
       is_demo INTEGER NOT NULL DEFAULT 0 CHECK (is_demo IN (0, 1)),
@@ -697,6 +698,59 @@ function migrate(db) {
     }
     db.prepare('INSERT INTO schema_migrations (version, applied_at) VALUES (19, ?)').run(now());
   }
+
+  const migration20Applied = db.prepare('SELECT 1 FROM schema_migrations WHERE version = 20').get();
+  if (!migration20Applied) {
+    const memberColumns = db.prepare('PRAGMA table_info(team_members)').all();
+    if (!memberColumns.some((column) => column.name === 'website_url')) {
+      db.exec('ALTER TABLE team_members ADD COLUMN website_url TEXT;');
+    }
+    db.prepare('INSERT INTO schema_migrations (version, applied_at) VALUES (20, ?)').run(now());
+  }
+
+  const migration21Applied = db.prepare('SELECT 1 FROM schema_migrations WHERE version = 21').get();
+  if (!migration21Applied) {
+    const accountColumns = db.prepare('PRAGMA table_info(admin_profiles)').all();
+    if (!accountColumns.some((column) => column.name === 'can_access_skins')) {
+      db.exec(
+        'ALTER TABLE admin_profiles ADD COLUMN can_access_skins INTEGER NOT NULL DEFAULT 0 CHECK (can_access_skins IN (0, 1));',
+      );
+    }
+    db.exec(`
+      UPDATE admin_profiles SET can_access_skins = 1
+      WHERE account_type = 'administrator' OR is_owner = 1;
+
+      CREATE TABLE IF NOT EXISTS skins (
+        id TEXT PRIMARY KEY,
+        car_name TEXT NOT NULL,
+        image_url TEXT NOT NULL,
+        image_alt TEXT NOT NULL,
+        target_url TEXT NOT NULL,
+        display_order INTEGER NOT NULL DEFAULT 0 CHECK (display_order >= 0),
+        status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
+        published_at TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        updated_by_name TEXT,
+        deleted_at TEXT
+      );
+
+      CREATE INDEX IF NOT EXISTS skins_catalog
+        ON skins(status, display_order, car_name);
+    `);
+    db.prepare('INSERT INTO schema_migrations (version, applied_at) VALUES (21, ?)').run(now());
+  }
+
+  const migration22Applied = db.prepare('SELECT 1 FROM schema_migrations WHERE version = 22').get();
+  if (!migration22Applied) {
+    const invitationColumns = db.prepare('PRAGMA table_info(setup_invitations)').all();
+    if (!invitationColumns.some((column) => column.name === 'grants_setup_access')) {
+      db.exec(
+        'ALTER TABLE setup_invitations ADD COLUMN grants_setup_access INTEGER NOT NULL DEFAULT 1 CHECK (grants_setup_access IN (0, 1));',
+      );
+    }
+    db.prepare('INSERT INTO schema_migrations (version, applied_at) VALUES (22, ?)').run(now());
+  }
 }
 
 function seed(db) {
@@ -867,6 +921,7 @@ export function memberFromRow(row) {
     instagramUrl: row.instagram_url,
     youtubeUrl: row.youtube_url,
     xUrl: row.x_url,
+    websiteUrl: row.website_url,
     displayOrder: row.display_order,
     isFeatured: asBoolean(row.is_featured),
     isDemo: asBoolean(row.is_demo),
@@ -887,6 +942,23 @@ export function sponsorFromRow(row) {
     logoUrl: row.logo_url,
     logoAlt: row.logo_alt,
     websiteUrl: row.website_url,
+    displayOrder: row.display_order,
+    status: row.status,
+    publishedAt: row.published_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    updatedByName: row.updated_by_name,
+  };
+}
+
+export function skinFromRow(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    carName: row.car_name,
+    imageUrl: row.image_url,
+    imageAlt: row.image_alt,
+    targetUrl: row.target_url,
     displayOrder: row.display_order,
     status: row.status,
     publishedAt: row.published_at,

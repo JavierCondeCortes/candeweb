@@ -83,6 +83,7 @@ export class Hero implements AfterViewInit, OnDestroy {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
+      timeZone: 'Europe/Madrid',
     })
       .format(new Date(this.startAt()))
       .replaceAll('/', ' · '),

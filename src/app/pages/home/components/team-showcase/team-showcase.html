@@ -88,7 +88,11 @@
                       <p>{{ member.roleLabel }}</p>
                     }
                     @if (
-                      member.twitchUrl || member.instagramUrl || member.youtubeUrl || member.xUrl
+                      member.twitchUrl ||
+                      member.instagramUrl ||
+                      member.youtubeUrl ||
+                      member.xUrl ||
+                      member.websiteUrl
                     ) {
                       <div class="team-card-socials">
                         @if (member.twitchUrl) {
@@ -137,6 +141,22 @@
                             rel="noopener noreferrer"
                           >
                             X <span aria-hidden="true">↗</span>
+                          </a>
+                        }
+                        @if (member.websiteUrl) {
+                          <a
+                            [href]="member.websiteUrl"
+                            [attr.aria-label]="
+                              ('home.team.websiteLabel' | translate: { name: member.name }) +
+                              ' (' +
+                              ('home.team.newTab' | translate) +
+                              ')'
+                            "
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {{ 'home.team.website' | translate }}
+                            <span aria-hidden="true">↗</span>
                           </a>
                         }
                       </div>

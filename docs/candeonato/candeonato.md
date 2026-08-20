@@ -55,6 +55,13 @@
   - Añadir etiquetas accesibles para días, horas, minutos y segundos.
   - Ocultar el formato decorativo a lectores de pantalla.
 
+- [x] Unificar la zona horaria del panel y el contador.
+  - La fecha introducida en administración representa hora española peninsular (`Europe/Madrid`).
+  - Convertirla a UTC al guardar y calcular la diferencia contra ese instante, sin ajustes manuales.
+  - Al editar o presentar la fecha, convertirla de nuevo a `Europe/Madrid`.
+  - Respetar automáticamente CET (`UTC+1`) y CEST (`UTC+2`) para que la hora pública coincida con
+    la marcada en el panel durante todo el año.
+
 - [x] Añadir acciones principales.
   - Botón principal: `Inscribirme`.
   - Acción secundaria: `Ver reglas`.

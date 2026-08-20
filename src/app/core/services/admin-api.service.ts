@@ -16,6 +16,12 @@ import {
   TeamMemberContent,
   TournamentSourceSummary,
 } from '../models/content-admin.model';
+import {
+  ManagedSetupAccount,
+  SetupAccessRequest,
+  SetupInvitation,
+} from '../models/setup.model';
+import { SkinContent, SkinInput } from '../models/skin.model';
 
 type MemberInput = Omit<
   TeamMemberContent,
@@ -151,6 +157,41 @@ export class AdminApiService {
 
   getSponsors() {
     return this.http.get<{ sponsors: SponsorContent[] }>('/api/admin/sponsors', this.options());
+  }
+
+  getSkins() {
+    return this.http.get<{ skins: SkinContent[] }>('/api/admin/skins', this.options());
+  }
+
+  getSkin(id: string) {
+    return this.http.get<{ skin: SkinContent }>(
+      `/api/admin/skins/${encodeURIComponent(id)}`,
+      this.options(),
+    );
+  }
+
+  createSkin(skin: SkinInput) {
+    return this.http.post<{ skin: SkinContent }>('/api/admin/skins', skin, this.options(true));
+  }
+
+  updateSkin(id: string, skin: SkinInput) {
+    return this.http.patch<{ skin: SkinContent }>(
+      `/api/admin/skins/${encodeURIComponent(id)}`,
+      skin,
+      this.options(true),
+    );
+  }
+
+  deleteSkin(id: string) {
+    return this.http.delete<void>(`/api/admin/skins/${encodeURIComponent(id)}`, this.options(true));
+  }
+
+  skinAction(id: string, action: 'publish' | 'archive') {
+    return this.http.post<{ skin: SkinContent }>(
+      `/api/admin/skins/${encodeURIComponent(id)}/${action}`,
+      {},
+      this.options(true),
+    );
   }
 
   getSponsor(id: string) {
@@ -307,7 +348,54 @@ export class AdminApiService {
     );
   }
 
-  async uploadImage(file: File, kind: 'member' | 'championship' | 'sponsor', altText = '') {
+  getAccessManagement() {
+    return this.http.get<{
+      users: ManagedSetupAccount[];
+      requests: SetupAccessRequest[];
+      storage: { usedBytes: number; expiringFiles: number };
+    }>('/api/access/users', this.options());
+  }
+
+  approveProductAccessRequest(id: string) {
+    return this.http.post<{ invitation: SetupInvitation | null }>(
+      `/api/access/requests/${encodeURIComponent(id)}/approve`,
+      {},
+      this.options(true),
+    );
+  }
+
+  rejectProductAccessRequest(id: string) {
+    return this.http.post<void>(
+      `/api/access/requests/${encodeURIComponent(id)}/reject`,
+      {},
+      this.options(true),
+    );
+  }
+
+  updateProductPermissions(
+    id: string,
+    permissions: {
+      canAccessSkins: boolean;
+      canAccessSetups: boolean;
+      canUploadSetups: boolean;
+    },
+  ) {
+    return this.http.patch<{ user: ManagedSetupAccount }>(
+      `/api/access/users/${encodeURIComponent(id)}`,
+      permissions,
+      this.options(true),
+    );
+  }
+
+  setProductAccountActive(id: string, active: boolean) {
+    return this.http.post<{ user: ManagedSetupAccount }>(
+      `/api/access/users/${encodeURIComponent(id)}/${active ? 'restore' : 'revoke'}`,
+      {},
+      this.options(true),
+    );
+  }
+
+  async uploadImage(file: File, kind: 'member' | 'championship' | 'sponsor' | 'skin', altText = '') {
     return this.uploadMedia<{ publicUrl: string }>(file, kind, altText);
   }
 

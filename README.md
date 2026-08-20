@@ -24,7 +24,9 @@ Los datos locales se guardan en `server/data/` y no se publican en Git.
 El footer enlaza a `/setups`, una biblioteca privada. Las personas pueden solicitar acceso; owner o
 admin aprueban la invitación y deciden por separado si la cuenta solo descarga o también puede
 crear borradores y subir versiones. Los binarios se guardan fuera de las rutas públicas en
-`server/data/setups` y owner/admin pueden asignarles una caducidad automática.
+`server/data/setups` y owner/admin pueden asignarles una caducidad automática. La evolución
+implementada añade `/skins` y centraliza en `/admin/accesos` los permisos independientes de ambos
+productos.
 
 Comandos separados:
 
@@ -97,8 +99,9 @@ Por defecto la copia de SQLite se guarda en `server/data/backups/`. En un despli
 copiarse además el directorio `server/data/` completo a una ubicación externa; así se incluyen los
 setups privados y el resto de archivos administrados.
 
-La administración editorial se documenta en [`docs/admin/admin.md`](docs/admin/admin.md) y la
-biblioteca privada en [`docs/setups/setups.md`](docs/setups/setups.md).
+La administración editorial se documenta en [`docs/admin/admin.md`](docs/admin/admin.md), los
+permisos en [`docs/accesos/accesos.md`](docs/accesos/accesos.md) y las bibliotecas privadas en
+[`docs/setups/setups.md`](docs/setups/setups.md) y [`docs/skins/skins.md`](docs/skins/skins.md).
 
 ## Despliegue
 

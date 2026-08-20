@@ -1,0 +1,69 @@
+<header class="setup-header" [class.menu-open]="menuOpen()">
+  <a class="setup-brand" [routerLink]="brandRoute()" [attr.aria-label]="brandLabel() | translate">
+    CANDE<span>{{ brandSuffix() }}</span>
+  </a>
+
+  <nav
+    [id]="navigationId()"
+    class="setup-nav"
+    [class.is-open]="menuOpen()"
+    [attr.aria-label]="'home.privateNav.label' | translate"
+  >
+    @if (session()?.account?.canAccessSetups) {
+      <a
+        routerLink="/setups"
+        routerLinkActive="is-active"
+        ariaCurrentWhenActive="page"
+        [routerLinkActiveOptions]="{ exact: true }"
+        (click)="closeMenu()"
+      >{{ 'home.privateNav.setups' | translate }}</a>
+    }
+    @if (session()?.account?.canUploadSetups) {
+      <a
+        routerLink="/setups/nuevo"
+        routerLinkActive="is-active"
+        ariaCurrentWhenActive="page"
+        (click)="closeMenu()"
+      >{{ 'home.setups.shell.newSetup' | translate }}</a>
+    }
+    
+    @if (session()?.account?.canAccessSkins) {
+      <a
+        routerLink="/skins"
+        routerLinkActive="is-active"
+        ariaCurrentWhenActive="page"
+        [routerLinkActiveOptions]="{ exact: true }"
+        (click)="closeMenu()"
+      >{{ 'home.privateNav.skins' | translate }}</a>
+    }
+    
+    @if (session()?.account?.role === 'owner' || session()?.account?.role === 'admin') {
+      <a routerLink="/admin/skins" (click)="closeMenu()">{{ 'home.skins.manage' | translate }}</a>
+      <a routerLink="/admin/accesos" (click)="closeMenu()">{{ 'home.setups.shell.accesses' | translate }}</a>
+    }
+    <a routerLink="/" (click)="closeMenu()">{{ 'home.setups.shell.website' | translate }}</a>
+    <button class="setup-nav-logout" type="button" (click)="logout()">
+      {{ 'home.setups.shell.logout' | translate }}
+    </button>
+  </nav>
+
+  <div class="setup-account">
+    <app-language-switcher class="setup-language-control" />
+    @if (session()?.account; as account) {
+      <span>{{ account.displayName }}</span>
+    }
+    <button class="setup-desktop-logout" type="button" (click)="logout()">
+      {{ 'home.setups.shell.logout' | translate }}
+    </button>
+    <button
+      class="setup-menu-button"
+      type="button"
+      [attr.aria-controls]="navigationId()"
+      [attr.aria-expanded]="menuOpen()"
+      [attr.aria-label]="
+        (menuOpen() ? 'home.setups.common.close' : 'home.setups.shell.menu') | translate
+      "
+      (click)="toggleMenu()"
+    ><span></span><span></span></button>
+  </div>
+</header>

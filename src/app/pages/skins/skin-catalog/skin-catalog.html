@@ -1,0 +1,21 @@
+<a class="skip-link" href="#skin-content">{{ 'home.skins.skip' | translate }}</a>
+<div class="setup-app skin-app">
+  <app-private-library-navbar
+    library="skins"
+    [session]="session()"
+    (logoutRequested)="logout()"
+  ></app-private-library-navbar>
+  <main id="skin-content" class="setup-content" tabindex="-1">
+    <section class="setup-hero"><p class="setup-eyebrow">{{ 'home.skins.eyebrow' | translate }}</p><h1 class="display-title setup-display-title" [attr.data-title]="'home.skins.title' | translate">{{ 'home.skins.title' | translate }}</h1><p>{{ 'home.skins.intro' | translate }}</p></section>
+    @if (errorMessage()) { <div class="setup-alert is-error" role="alert">{{ errorMessage() }}</div> }
+    @if (loading()) { <p role="status">{{ 'home.setups.common.loading' | translate }}</p> } @else if (!skins().length) {
+      <div class="setup-empty"><p>{{ 'home.skins.empty' | translate }}</p></div>
+    } @else {
+      <section class="skin-grid" [attr.aria-label]="'home.skins.listLabel' | translate">
+        @for (skin of skins(); track skin.id) {
+          <article class="skin-card"><div class="skin-card-media"><img [src]="skin.imageUrl" [alt]="skin.imageAlt" loading="lazy" /></div><div class="skin-card-copy"><p class="setup-eyebrow">Skin</p><h2>{{ skin.carName }}</h2><a class="setup-button is-primary" [href]="skin.targetUrl" target="_blank" rel="noopener noreferrer" [attr.aria-label]="'home.skins.openLabel' | translate: { name: skin.carName }">{{ 'home.skins.open' | translate }} <span aria-hidden="true">↗</span></a></div></article>
+        }
+      </section>
+    }
+  </main>
+</div>

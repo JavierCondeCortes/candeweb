@@ -194,6 +194,18 @@
             <small id="member-x-error" class="field-error">{{ error }}</small>
           }
         </label>
+        <label>
+          <span>{{ 'admin.memberForm.website' | translate }}</span>
+          <input
+            type="url"
+            formControlName="websiteUrl"
+            [attr.aria-invalid]="fieldErrors()['websiteUrl'] ? 'true' : null"
+            [attr.aria-describedby]="fieldErrors()['websiteUrl'] ? 'member-website-error' : null"
+          />
+          @if (fieldErrors()['websiteUrl']; as error) {
+            <small id="member-website-error" class="field-error">{{ error }}</small>
+          }
+        </label>
       </div>
     </section>
 
@@ -274,6 +286,9 @@
             }
             @if (form.controls.xUrl.value) {
               <span>X</span>
+            }
+            @if (form.controls.websiteUrl.value) {
+              <span>{{ 'admin.memberForm.website' | translate }}</span>
             }
           </div>
         </div>

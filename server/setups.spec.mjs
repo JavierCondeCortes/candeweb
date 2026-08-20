@@ -102,12 +102,12 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
     const adminCookie = sessionCookieFrom(adminLogin.response);
     const adminCsrf = adminLogin.data.csrfToken;
 
-    const accessRequest = await jsonRequest(baseUrl, '/api/setup-access/requests', {
+    const accessRequest = await jsonRequest(baseUrl, '/api/access/requests', {
       method: 'POST',
       body: { displayName: 'Piloto Invitado', email: 'piloto@candemor.test' },
     });
     assert.equal(accessRequest.status, 202);
-    const accessManagement = await jsonRequest(baseUrl, '/api/setup-access/users', {
+    const accessManagement = await jsonRequest(baseUrl, '/api/access/users', {
       cookie: adminCookie,
     });
     assert.equal(accessManagement.status, 200);
@@ -123,30 +123,54 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
 
     const approval = await jsonRequest(
       baseUrl,
-      `/api/setup-access/requests/${accessManagement.data.requests[0].id}/approve`,
+      `/api/access/requests/${accessManagement.data.requests[0].id}/approve`,
       { method: 'POST', cookie: adminCookie, csrf: adminCsrf, body: {} },
     );
     assert.equal(approval.status, 201);
-    assert.match(approval.data.invitation.path, /^\/setups\/aceptar-invitacion\?token=/);
+    assert.match(approval.data.invitation.path, /^\/aceptar-invitacion\?token=/);
     const invitationToken = new URL(approval.data.invitation.path, baseUrl).searchParams.get(
       'token',
     );
     const verified = await jsonRequest(
       baseUrl,
-      `/api/setup-access/invitations/verify?token=${encodeURIComponent(invitationToken)}`,
+      `/api/access/invitations/verify?token=${encodeURIComponent(invitationToken)}`,
     );
     assert.equal(verified.status, 200);
     assert.equal(verified.data.invitation.email, 'piloto@candemor.test');
 
-    const accepted = await jsonRequest(baseUrl, '/api/setup-access/invitations/accept', {
+    const accepted = await jsonRequest(baseUrl, '/api/access/invitations/accept', {
       method: 'POST',
       body: { token: invitationToken, password: 'password-piloto-123' },
     });
     assert.equal(accepted.status, 201);
     assert.equal(accepted.data.account.role, 'user');
+    assert.equal(accepted.data.account.canAccessSetups, false);
+    assert.equal(accepted.data.account.canAccessSkins, false);
     assert.equal(accepted.data.account.canUploadSetups, false);
     const userCookie = sessionCookieFrom(accepted.response);
     const userCsrf = accepted.data.csrfToken;
+
+    const blockedBeforeMfa = await jsonRequest(baseUrl, '/api/setups', {
+      cookie: userCookie,
+    });
+    assert.equal(blockedBeforeMfa.status, 403);
+    assert.equal(blockedBeforeMfa.data.error.code, 'MFA_SETUP_REQUIRED');
+    const userMfa = await jsonRequest(baseUrl, '/api/access/mfa/setup', {
+      method: 'POST',
+      cookie: userCookie,
+      csrf: userCsrf,
+      body: {},
+    });
+    assert.equal(userMfa.status, 200);
+    assert.match(userMfa.data.qrCodeDataUrl, /^data:image\/png;base64,/);
+    const userMfaConfirm = await jsonRequest(baseUrl, '/api/access/mfa/confirm', {
+      method: 'POST',
+      cookie: userCookie,
+      csrf: userCsrf,
+      body: { code: totpCode(userMfa.data.secret) },
+    });
+    assert.equal(userMfaConfirm.status, 200);
+    assert.equal(userMfaConfirm.data.recoveryCodes.length, 8);
 
     const blockedAdmin = await jsonRequest(baseUrl, '/api/admin/dashboard', {
       cookie: userCookie,
@@ -160,7 +184,7 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
       body: setupInput('Setup bloqueado'),
     });
     assert.equal(blockedCreate.status, 403);
-    assert.equal(blockedCreate.data.error.code, 'SETUP_UPLOAD_REQUIRED');
+    assert.equal(blockedCreate.data.error.code, 'SETUP_ACCESS_REQUIRED');
 
     const created = await jsonRequest(baseUrl, '/api/setups', {
       method: 'POST',
@@ -266,6 +290,21 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
     const anonymousCatalog = await jsonRequest(baseUrl, '/api/setups');
     assert.equal(anonymousCatalog.status, 401);
 
+    const managedUser = (
+      await jsonRequest(baseUrl, '/api/access/users', { cookie: adminCookie })
+    ).data.users.find((user) => user.email === 'piloto@candemor.test');
+    assert.equal(managedUser.canAccessSetups, false);
+    assert.equal(managedUser.canAccessSkins, false);
+    const setupReader = await jsonRequest(baseUrl, `/api/access/users/${managedUser.id}`, {
+      method: 'PATCH',
+      cookie: adminCookie,
+      csrf: adminCsrf,
+      body: { canAccessSkins: false, canAccessSetups: true, canUploadSetups: false },
+    });
+    assert.equal(setupReader.status, 200);
+    assert.equal(setupReader.data.user.canAccessSetups, true);
+    assert.equal(setupReader.data.user.canUploadSetups, false);
+
     const userCatalog = await jsonRequest(baseUrl, '/api/setups', { cookie: userCookie });
     assert.equal(userCatalog.status, 200);
     assert.equal(userCatalog.data.setups.length, 1);
@@ -284,17 +323,47 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
     );
     assert.equal(anonymousDownload.status, 401);
 
-    const managedUser = (
-      await jsonRequest(baseUrl, '/api/setup-access/users', { cookie: adminCookie })
-    ).data.users.find((user) => user.email === 'piloto@candemor.test');
-    const contributor = await jsonRequest(baseUrl, `/api/setup-access/users/${managedUser.id}`, {
+    assert.equal(managedUser.canAccessSkins, false);
+    const blockedSkins = await jsonRequest(baseUrl, '/api/skins', { cookie: userCookie });
+    assert.equal(blockedSkins.status, 403);
+    assert.equal(blockedSkins.data.error.code, 'SKIN_ACCESS_REQUIRED');
+
+    const skinDraft = await jsonRequest(baseUrl, '/api/admin/skins', {
+      method: 'POST',
+      cookie: adminCookie,
+      csrf: adminCsrf,
+      body: {
+        carName: 'Mazda MX-5 Cup',
+        imageUrl: '/uploads/mazda-skin.webp',
+        imageAlt: 'Mazda MX-5 con la skin de Candemor',
+        targetUrl: 'https://example.com/skins/mazda-mx5',
+        displayOrder: 0,
+        status: 'draft',
+      },
+    });
+    assert.equal(skinDraft.status, 201);
+    const publishedSkin = await jsonRequest(
+      baseUrl,
+      `/api/admin/skins/${skinDraft.data.skin.id}/publish`,
+      { method: 'POST', cookie: adminCookie, csrf: adminCsrf, body: {} },
+    );
+    assert.equal(publishedSkin.status, 200);
+    assert.equal(publishedSkin.data.skin.status, 'published');
+
+    const contributor = await jsonRequest(baseUrl, `/api/access/users/${managedUser.id}`, {
       method: 'PATCH',
       cookie: adminCookie,
       csrf: adminCsrf,
-      body: { canAccessSetups: true, canUploadSetups: true },
+      body: { canAccessSkins: true, canAccessSetups: true, canUploadSetups: true },
     });
     assert.equal(contributor.status, 200);
+    assert.equal(contributor.data.user.canAccessSkins, true);
     assert.equal(contributor.data.user.canUploadSetups, true);
+
+    const userSkins = await jsonRequest(baseUrl, '/api/skins', { cookie: userCookie });
+    assert.equal(userSkins.status, 200);
+    assert.equal(userSkins.data.skins[0].carName, 'Mazda MX-5 Cup');
+    assert.equal(userSkins.data.skins[0].targetUrl, 'https://example.com/skins/mazda-mx5');
 
     const refreshedUserSession = await jsonRequest(baseUrl, '/api/setup-access/session', {
       cookie: userCookie,
@@ -369,6 +438,30 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
       managementAfterRevoke.data.users.some(
         (user) => user.email === 'piloto@candemor.test' && !user.canAccessSetups,
       ),
+      true,
+    );
+    const revokedAccount = await jsonRequest(
+      baseUrl,
+      `/api/access/users/${managedUser.id}/revoke`,
+      { method: 'POST', cookie: adminCookie, csrf: adminCsrf, body: {} },
+    );
+    assert.equal(revokedAccount.status, 200);
+    assert.equal(revokedAccount.data.user.active, false);
+    const invalidatedAccessSession = await jsonRequest(baseUrl, '/api/access/session', {
+      cookie: userCookie,
+    });
+    assert.equal(invalidatedAccessSession.data.authenticated, false);
+    const restoredAccount = await jsonRequest(
+      baseUrl,
+      `/api/access/users/${managedUser.id}/restore`,
+      { method: 'POST', cookie: adminCookie, csrf: adminCsrf, body: {} },
+    );
+    assert.equal(restoredAccount.status, 200);
+    assert.equal(restoredAccount.data.user.active, true);
+    assert.equal(
+      app.db
+        .prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action LIKE 'access.%'")
+        .get().count >= 5,
       true,
     );
   } finally {

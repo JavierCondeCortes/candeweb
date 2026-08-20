@@ -187,8 +187,12 @@ Usar una composición asimétrica de texto e imagen. Evitar tres tarjetas idént
 - Rol dentro de la comunidad.
 - Descripción breve, máximo dos líneas.
 - Enlace de Twitch solo si existe.
+- Enlace `Web` solo si existe, para una página personal o profesional HTTPS.
 - Estado `En directo` si la integración lo confirma.
 - Redes adicionales únicamente si son relevantes.
+
+El enlace se presentará con el texto accesible `Web de {nombre}` y no como una URL desnuda. Si se
+abre en otra pestaña, se indicará visualmente y utilizará `noopener` y `noreferrer`.
 
 ### Interacción recomendada
 

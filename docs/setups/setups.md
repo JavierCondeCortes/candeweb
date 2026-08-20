@@ -12,6 +12,11 @@ El enlace `Setups` aparecerá en el footer compartido de la web y llevará a `/s
 visible para todo el mundo, pero el catálogo, sus metadatos y las descargas exigirán autenticación y
 permiso explícito.
 
+Setups y Skins utilizan el mismo componente de navegación para las cuentas autenticadas. El menú
+muestra ambas bibliotecas cuando la cuenta dispone de los dos permisos y oculta únicamente los
+destinos no autorizados. Idioma, usuario, menú móvil, administración y cierre de sesión conservan
+el mismo orden y comportamiento en las dos rutas.
+
 ## Principios de diseño
 
 1. **Una sola identidad por persona.** Una cuenta existente de owner o admin sirve también para
@@ -28,10 +33,10 @@ permiso explícito.
 
 ## Roles y permisos
 
-La implementación amplía `admin_profiles` con `account_type`, `can_access_setups` y
-`can_upload_setups`. Así conserva las cuentas y sesiones existentes sin una migración destructiva y
-mantiene separados el acceso a `/admin` y el acceso a `/setups`. Una tabla general `accounts` sigue
-siendo una posible evolución si aparecen más zonas privadas.
+La implementación actual amplía `admin_profiles` con `account_type`, `can_access_setups`,
+`can_upload_setups` y `can_access_skins`, y centraliza la administración en
+la [gestión centralizada de accesos](../accesos/accesos.md), conservando las cuentas y sesiones
+existentes sin una migración destructiva.
 
 | Capacidad                                        | Owner | Admin | Usuario autorizado | Colaborador autorizado |
 | ------------------------------------------------ | :---: | :---: | :----------------: | :--------------------: |
@@ -62,7 +67,7 @@ administrativo completo.
 1. La persona entra en `/setups` desde el footer.
 2. Si no tiene sesión, puede iniciar sesión o solicitar acceso.
 3. Envía nombre visible y correo desde `/setups/solicitar-acceso`.
-4. Owner o admin acepta o rechaza la solicitud desde `/setups/usuarios`.
+4. Owner o admin acepta o rechaza la solicitud desde `/admin/accesos`.
 5. Al aprobarla se genera una invitación privada, de un solo uso y con caducidad de 24 horas.
 6. La persona define su propia contraseña y activa su cuenta.
 7. Entra al catálogo con permiso de descarga.
@@ -73,11 +78,9 @@ Setups no elimina la cuenta si esa persona conserva otros permisos.
 
 ### Segundo factor
 
-- Owner y admin mantienen TOTP obligatorio, como en el panel actual.
-- Se recomienda exigir TOTP también a colaboradores, porque pueden introducir archivos en el
-  servidor.
-- Para usuarios de solo lectura y descarga puede ser opcional en el MVP, aunque debe poder activarse.
+- Todas las cuentas configuran TOTP obligatorio durante su alta.
 - Cada cuenta conserva su propio secreto TOTP y sus propios códigos de recuperación.
+- La misma configuración protege Setups, Skins y cualquier futura zona privada.
 
 ### Sesiones
 
@@ -97,10 +100,12 @@ Setups no elimina la cuenta si esa persona conserva otros permisos.
 | `/setups/:id`                                                                                      | Cuenta autorizada         | Detalle, versiones y descarga                |
 | `/setups/nuevo`                                                                                    | Colaborador, admin, owner | Crear borrador y subir archivo               |
 | `/setups/:id/editar`                                                                               | Según propiedad y permiso | Editar metadatos o añadir versión            |
-| `/setups/usuarios`                                                                                 | Admin y owner             | Solicitudes, accesos y colaboradores         |
-| Si en el futuro se generaliza el acceso, `/setups/acceso` puede convertirse en `/acceso` y servir  |
-| también al panel administrativo sin duplicar componentes. El MVP elimina el binario al vencer, por |
-| lo que todavía no incluye una ruta de papelera.                                                    |
+| `/admin/accesos`                                                                                   | Admin y owner             | Permisos centralizados de Setups y Skins     |
+
+`/setups/usuarios` se conserva temporalmente como redirección a `/admin/accesos`. El inicio de
+sesión puede seguir entrando desde `/setups/acceso`, pero la identidad, TOTP y sesión son comunes a
+las demás zonas privadas. El MVP elimina el binario al vencer, por lo que todavía no incluye una
+ruta de papelera.
 
 ## Modelo de contenido
 
@@ -304,8 +309,10 @@ Owner y admin obtienen sus capacidades por rol; no es necesario crear filas redu
 - Resumen de permisos antes de publicar.
 - Confirmación explícita al archivar o eliminar.
 - Cambio de retención con una vista previa de la fecha resultante.
-- Tabla de solicitudes con nombre, correo, fecha y acciones claras.
-- Diferenciar visualmente `Acceso`, `Puede subir` y `Admin`; nunca resumirlos en un único estado.
+- La tabla de solicitudes y permisos vive en `/admin/accesos` y muestra nombre, correo, fecha y
+  acciones claras.
+- Diferenciar visualmente `Acceso a Skins`, `Acceso a Setups`, `Puede subir Setups` y `Admin`;
+  nunca resumirlos en un único estado.
 
 ### Accesibilidad
 

@@ -75,7 +75,10 @@
     "carouselLabel": "Candemor drivers carousel",
     "previous": "View previous driver",
     "next": "View next driver",
-    "position": "Driver {{current}} of {{total}}"
+    "position": "Driver {{current}} of {{total}}",
+    "website": "Website",
+    "websiteLabel": "{{name}}'s website",
+    "newTab": "opens in a new tab"
   },
   "content": {
     "eyebrow": "Candemor content",
@@ -130,6 +133,62 @@
     "error": "We cannot display our partners right now.",
     "empty": "We are preparing this space for our future partners.",
     "listLabel": "Candemor sponsors and partners"
+  },
+  "access": {
+    "meta": {
+      "login": "Private access · Candemor",
+      "request": "Request access · Candemor",
+      "invitation": "Accept invitation · Candemor"
+    },
+    "loginEyebrow": "Private area",
+    "loginTitle": "Access",
+    "loginIntro": "Use your single account to enter Setups and Skins.",
+    "requestEyebrow": "Community",
+    "requestTitle": "Request access",
+    "requestIntro": "Send your request. An owner or admin will decide which private areas you may use.",
+    "sentTitle": "Request sent",
+    "sentText": "We will review the request before generating a private invitation.",
+    "backHome": "Back to home",
+    "name": "Display name",
+    "email": "Email",
+    "password": "Password",
+    "mfaCode": "TOTP or recovery code",
+    "sendRequest": "Send request",
+    "haveAccess": "I already have access",
+    "invitationEyebrow": "Private invitation",
+    "invitationTitle": "Create account",
+    "newPassword": "New password",
+    "passwordHelp": "At least 12 characters.",
+    "activate": "Create account and configure TOTP",
+    "mfaIntro": "Scan the QR with your authenticator app and confirm the six-digit code.",
+    "qrAlt": "QR code for configuring TOTP",
+    "confirmMfa": "Confirm TOTP",
+    "recoveryTitle": "Save your recovery codes",
+    "recoveryHelp": "Each code works once. Store them outside this website.",
+    "continue": "Continue",
+    "login": "Sign in",
+    "noAccess": "Do not have permission yet?",
+    "requestLink": "Request access"
+  },
+  "privateNav": {
+    "label": "Private libraries navigation",
+    "setups": "Setups",
+    "skins": "Skins"
+  },
+  "skins": {
+    "meta": { "title": "Private skins · Candemor" },
+    "skip": "Skip to the skins catalog",
+    "homeLabel": "CandeSkins catalog",
+    "navLabel": "Skins navigation",
+    "catalog": "Catalog",
+    "manage": "Manage",
+    "eyebrow": "Private library",
+    "title": "CandeSkins",
+    "intro": "Skins selected by Candemor for authorized community accounts.",
+    "empty": "There are no published skins yet.",
+    "listLabel": "Private skins catalog",
+    "open": "View skin",
+    "openLabel": "View the {{name}} skin (opens in a new tab)"
   },
   "setups": {
     "meta": {
@@ -314,6 +373,7 @@
     "secondaryNav": "Secondary navigation",
     "history": "Candeonato history",
     "setups": "Private setups",
+    "skins": "Private skins",
     "contact": "Contact",
     "legal": "© {{year}} Candemor Racing Team · External content subject to availability."
   }

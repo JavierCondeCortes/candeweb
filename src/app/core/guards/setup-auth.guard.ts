@@ -10,9 +10,9 @@ export const setupAuthGuard: CanActivateFn = (_route, state) => {
     map((session) =>
       session.authenticated
         ? true
-        : router.createUrlTree(['/setups/acceso'], { queryParams: { returnUrl: state.url } }),
+        : router.createUrlTree(['/acceso'], { queryParams: { returnUrl: state.url } }),
     ),
-    catchError(() => of(router.createUrlTree(['/setups/acceso']))),
+    catchError(() => of(router.createUrlTree(['/acceso']))),
   );
 };
 
@@ -25,7 +25,7 @@ export const setupManagerGuard: CanActivateFn = () => {
         ? true
         : router.createUrlTree(['/setups']),
     ),
-    catchError(() => of(router.createUrlTree(['/setups/acceso']))),
+    catchError(() => of(router.createUrlTree(['/acceso']))),
   );
 };
 
@@ -34,6 +34,6 @@ export const setupUploaderGuard: CanActivateFn = () => {
   const router = inject(Router);
   return api.refreshSession().pipe(
     map((session) => (session.account?.canUploadSetups ? true : router.createUrlTree(['/setups']))),
-    catchError(() => of(router.createUrlTree(['/setups/acceso']))),
+    catchError(() => of(router.createUrlTree(['/acceso']))),
   );
 };

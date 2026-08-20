@@ -305,7 +305,7 @@
         <label
           ><span>{{ 'admin.championshipForm.start' | translate }}</span
           ><input type="datetime-local" formControlName="startAt"
-        /></label>
+          /><small>{{ 'admin.championshipForm.timezoneHelp' | translate }}</small></label>
         <label>
           <span>{{ 'admin.championshipForm.end' | translate }}</span
           ><input
@@ -314,6 +314,7 @@
             [attr.aria-invalid]="fieldErrors()['endAt'] ? 'true' : null"
             [attr.aria-describedby]="fieldErrors()['endAt'] ? 'championship-end-error' : null"
           />
+          <small>{{ 'admin.championshipForm.timezoneHelp' | translate }}</small>
           @if (fieldErrors()['endAt']; as error) {
             <small id="championship-end-error" class="field-error">{{ error }}</small>
           }

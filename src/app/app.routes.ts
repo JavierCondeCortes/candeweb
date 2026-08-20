@@ -2,9 +2,9 @@ import { Routes } from '@angular/router';
 import { adminAuthGuard } from './core/guards/admin-auth.guard';
 import { adminOwnerGuard } from './core/guards/admin-owner.guard';
 import { pendingChangesGuard } from './core/guards/pending-changes.guard';
+import { skinAuthGuard } from './core/guards/skin-auth.guard';
 import {
   setupAuthGuard,
-  setupManagerGuard,
   setupUploaderGuard,
 } from './core/guards/setup-auth.guard';
 
@@ -38,24 +38,46 @@ export const routes: Routes = [
   },
   {
     path: 'setups/acceso',
-    title: 'home.setups.meta.login',
-    data: { mode: 'login' },
-    loadComponent: () =>
-      import('./pages/setups/setup-auth/setup-auth').then((module) => module.SetupAuth),
+    redirectTo: '/acceso',
+    pathMatch: 'full',
   },
   {
     path: 'setups/solicitar-acceso',
-    title: 'home.setups.meta.request',
-    data: { mode: 'request' },
-    loadComponent: () =>
-      import('./pages/setups/setup-auth/setup-auth').then((module) => module.SetupAuth),
+    redirectTo: '/solicitar-acceso',
+    pathMatch: 'full',
   },
   {
     path: 'setups/aceptar-invitacion',
-    title: 'home.setups.meta.invitation',
+    redirectTo: '/aceptar-invitacion',
+    pathMatch: 'full',
+  },
+  {
+    path: 'acceso',
+    title: 'home.access.meta.login',
+    data: { mode: 'login' },
+    loadComponent: () =>
+      import('./pages/access/access-auth/access-auth').then((module) => module.AccessAuth),
+  },
+  {
+    path: 'solicitar-acceso',
+    title: 'home.access.meta.request',
+    data: { mode: 'request' },
+    loadComponent: () =>
+      import('./pages/access/access-auth/access-auth').then((module) => module.AccessAuth),
+  },
+  {
+    path: 'aceptar-invitacion',
+    title: 'home.access.meta.invitation',
     data: { mode: 'invitation' },
     loadComponent: () =>
-      import('./pages/setups/setup-auth/setup-auth').then((module) => module.SetupAuth),
+      import('./pages/access/access-auth/access-auth').then((module) => module.AccessAuth),
+  },
+  {
+    path: 'skins',
+    title: 'home.skins.meta.title',
+    canActivate: [skinAuthGuard],
+    loadComponent: () =>
+      import('./pages/skins/skin-catalog/skin-catalog').then((module) => module.SkinCatalog),
   },
   {
     path: 'setups',
@@ -81,10 +103,8 @@ export const routes: Routes = [
       },
       {
         path: 'usuarios',
-        title: 'home.setups.meta.users',
-        canActivate: [setupManagerGuard],
-        loadComponent: () =>
-          import('./pages/setups/setup-users/setup-users').then((module) => module.SetupUsers),
+        redirectTo: '/admin/accesos',
+        pathMatch: 'full',
       },
       {
         path: ':id/editar',
@@ -194,6 +214,38 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/admin/admin-sponsor-form/admin-sponsor-form').then(
             (module) => module.AdminSponsorForm,
+          ),
+      },
+      {
+        path: 'skins',
+        title: 'admin.meta.skins',
+        loadComponent: () =>
+          import('./pages/admin/admin-skins/admin-skins').then((module) => module.AdminSkins),
+      },
+      {
+        path: 'skins/nueva',
+        title: 'admin.meta.newSkin',
+        canDeactivate: [pendingChangesGuard],
+        loadComponent: () =>
+          import('./pages/admin/admin-skin-form/admin-skin-form').then(
+            (module) => module.AdminSkinForm,
+          ),
+      },
+      {
+        path: 'skins/:id',
+        title: 'admin.meta.editSkin',
+        canDeactivate: [pendingChangesGuard],
+        loadComponent: () =>
+          import('./pages/admin/admin-skin-form/admin-skin-form').then(
+            (module) => module.AdminSkinForm,
+          ),
+      },
+      {
+        path: 'accesos',
+        title: 'admin.meta.accesses',
+        loadComponent: () =>
+          import('./pages/admin/admin-accesses/admin-accesses').then(
+            (module) => module.AdminAccesses,
           ),
       },
       {
