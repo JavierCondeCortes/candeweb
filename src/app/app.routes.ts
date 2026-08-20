@@ -2,6 +2,11 @@ import { Routes } from '@angular/router';
 import { adminAuthGuard } from './core/guards/admin-auth.guard';
 import { adminOwnerGuard } from './core/guards/admin-owner.guard';
 import { pendingChangesGuard } from './core/guards/pending-changes.guard';
+import {
+  setupAuthGuard,
+  setupManagerGuard,
+  setupUploaderGuard,
+} from './core/guards/setup-auth.guard';
 
 export const routes: Routes = [
   {
@@ -30,6 +35,72 @@ export const routes: Routes = [
       import('./pages/championship-history/championship-detail-page').then(
         (module) => module.ChampionshipDetailPage,
       ),
+  },
+  {
+    path: 'setups/acceso',
+    title: 'home.setups.meta.login',
+    data: { mode: 'login' },
+    loadComponent: () =>
+      import('./pages/setups/setup-auth/setup-auth').then((module) => module.SetupAuth),
+  },
+  {
+    path: 'setups/solicitar-acceso',
+    title: 'home.setups.meta.request',
+    data: { mode: 'request' },
+    loadComponent: () =>
+      import('./pages/setups/setup-auth/setup-auth').then((module) => module.SetupAuth),
+  },
+  {
+    path: 'setups/aceptar-invitacion',
+    title: 'home.setups.meta.invitation',
+    data: { mode: 'invitation' },
+    loadComponent: () =>
+      import('./pages/setups/setup-auth/setup-auth').then((module) => module.SetupAuth),
+  },
+  {
+    path: 'setups',
+    canActivate: [setupAuthGuard],
+    loadComponent: () =>
+      import('./pages/setups/setup-shell/setup-shell').then((module) => module.SetupShell),
+    children: [
+      {
+        path: '',
+        title: 'home.setups.meta.catalog',
+        loadComponent: () =>
+          import('./pages/setups/setup-catalog/setup-catalog').then(
+            (module) => module.SetupCatalog,
+          ),
+      },
+      {
+        path: 'nuevo',
+        title: 'home.setups.meta.new',
+        canActivate: [setupUploaderGuard],
+        canDeactivate: [pendingChangesGuard],
+        loadComponent: () =>
+          import('./pages/setups/setup-form/setup-form').then((module) => module.SetupForm),
+      },
+      {
+        path: 'usuarios',
+        title: 'home.setups.meta.users',
+        canActivate: [setupManagerGuard],
+        loadComponent: () =>
+          import('./pages/setups/setup-users/setup-users').then((module) => module.SetupUsers),
+      },
+      {
+        path: ':id/editar',
+        title: 'home.setups.meta.edit',
+        canActivate: [setupUploaderGuard],
+        canDeactivate: [pendingChangesGuard],
+        loadComponent: () =>
+          import('./pages/setups/setup-form/setup-form').then((module) => module.SetupForm),
+      },
+      {
+        path: ':id',
+        title: 'home.setups.meta.detail',
+        loadComponent: () =>
+          import('./pages/setups/setup-detail/setup-detail').then((module) => module.SetupDetail),
+      },
+    ],
   },
   {
     path: 'admin/login',

@@ -344,12 +344,16 @@ Crear un teaser con uno a tres productos, no una tienda completa dentro de la po
 - Correo o formulario de contacto.
 - Aviso legal, privacidad y cookies cuando correspondan.
 - Copyright con año dinámico.
+- Enlace secundario `Setups` hacia la biblioteca privada `/setups`; el enlace es visible,
+  pero el catálogo y las descargas requieren una cuenta autorizada.
 
 - [x] Verificar los enlaces externos actualmente publicados.
 - [x] Indicar visualmente los enlaces que abren en una pestaña nueva.
 - [x] Usar nombres comprensibles, no solo iconos sociales.
 - [x] Evitar repetir toda la navegación principal; el footer conserva únicamente enlaces
       secundarios y de contacto.
+- [x] Añadir `Setups` al componente de footer y proteger la biblioteca definida en
+      [Biblioteca privada de setups](../setups/setups.md).
 
 ## Arquitectura Angular recomendada
 
@@ -420,6 +424,8 @@ src/app/
 - [ ] Crear páginas completas de equipo, eventos, galería o tienda si el contenido lo justifica.
 - [ ] Incorporar analítica respetuosa con la privacidad.
 - [x] Medir Core Web Vitals y optimizar medios.
+- [x] Implementar la biblioteca privada y el acceso desde el footer según
+      [Setups](../setups/setups.md).
 
 ## Contenido necesario antes de implementar
 

@@ -2,7 +2,8 @@
 
 La imagen contiene el frontend Angular compilado y la API Node. Un único proceso sirve la web, el
 panel de administración, la API y los archivos subidos. SQLite, las imágenes originales, sus
-versiones procesadas y las copias de seguridad se guardan en el volumen `candeweb-data`.
+versiones procesadas, los setups privados y las copias de seguridad se guardan en el volumen
+`candeweb-data`.
 
 La base de datos y los secretos no se incluyen en la imagen. De este modo, actualizar o publicar la
 imagen no expone datos privados ni elimina el contenido administrado.
@@ -85,3 +86,9 @@ docker run --rm -v candeweb-data:/source:ro -v "$PWD/backups:/target" alpine sh 
 ```
 
 Guarda esas copias fuera del servidor y fuera del volumen de Docker.
+
+La primera orden crea una copia consistente de SQLite. La segunda exporta el volumen completo e
+incluye los binarios privados de `/app/data/setups`; ambos elementos son necesarios para restaurar
+la biblioteca. Si hay un proxy inverso delante del contenedor, su límite de cuerpo debe superar los
+25 MB admitidos por cada setup (por ejemplo, `client_max_body_size 90M` en Nginx también cubre los
+vídeos administrativos).

@@ -107,6 +107,17 @@ describe('Hero', () => {
       'hero-poster.webp',
     );
   });
+
+  it('links a finished featured edition directly to its historical record', () => {
+    fixture.componentRef.setInput('championship', newEraChampionship);
+    fixture.detectChanges();
+
+    const historyLink = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLAnchorElement>('.nav-links a'),
+    ).find((link) => link.textContent?.trim() === 'Historial');
+
+    expect(historyLink?.getAttribute('href')).toBe('/candeonatos/42');
+  });
 });
 
 const newEraChampionship: ChampionshipContent = {

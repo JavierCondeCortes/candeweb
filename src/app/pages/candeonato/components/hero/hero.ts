@@ -71,6 +71,12 @@ export class Hero implements AfterViewInit, OnDestroy {
   readonly backgroundVideoMimeType = computed(
     () => this.championship()?.backgroundVideoMimeType ?? 'video/mp4',
   );
+  readonly historyUrl = computed(() => {
+    const championship = this.championship();
+    return championship?.status === 'finished' && championship.externalTournamentId
+      ? `/candeonatos/${championship.externalTournamentId}`
+      : '/candeonatos';
+  });
   readonly startAt = computed(() => this.championship()?.startAt ?? '2026-09-04T18:00:00+02:00');
   readonly dateLabel = computed(() =>
     new Intl.DateTimeFormat(this.i18n.language() === 'en' ? 'en-GB' : 'es-ES', {

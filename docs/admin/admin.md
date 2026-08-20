@@ -19,6 +19,10 @@ Crear un panel privado desde el que se pueda:
 El panel debe ser la fuente de verdad del **contenido editorial**. La API de Fat Cat Race seguirá
 siendo la fuente de verdad de rondas, posiciones, puntos y estadísticas deportivas.
 
+La biblioteca privada de archivos tiene permisos y almacenamiento propios. Su especificación
+se mantiene separada en [Biblioteca privada de setups](../setups/setups.md) para que autorizar una
+descarga o una subida no conceda acceso editorial a `/admin`.
+
 ## Estado actual del proyecto
 
 La primera versión funcional del panel ya está implementada dentro del repositorio:
@@ -121,6 +125,10 @@ La web pública nunca debe conectarse con credenciales de administración ni rec
 
 Las rutas públicas continúan siendo `/`, `/candeonato`, `/candeonatos` y
 `/candeonatos/:torneoId`.
+
+La ruta protegida `/setups` reutiliza la identidad de owner/admin y añade cuentas de comunidad con
+permisos independientes de acceso y contribución. Owner y admin pueden aprobar accesos y conceder
+subida sin convertir a esas personas en administradoras de `/admin`.
 
 ## Cuenta y permisos
 

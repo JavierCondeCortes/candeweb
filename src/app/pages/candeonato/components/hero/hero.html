@@ -20,6 +20,7 @@
       'CANDEWEB — Candeonato ' + editionNumber() + ', inicio'
     "
     [inactive]="isVideoFocusMode()"
+    [historyUrl]="historyUrl()"
     [menuOpen]="isMenuOpen()"
     (menuOpenChange)="isMenuOpen.set($event)"
   />

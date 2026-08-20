@@ -1,0 +1,141 @@
+<section class="setup-page-heading" aria-labelledby="setup-form-title">
+  <div>
+    <p class="setup-eyebrow">{{ 'home.setups.form.eyebrow' | translate }}</p>
+    <h1
+      id="setup-form-title"
+      class="display-title setup-display-title"
+      [attr.data-title]="
+        (id ? 'home.setups.form.editTitle' : 'home.setups.form.newTitle') | translate
+      "
+    >
+      {{ (id ? 'home.setups.form.editTitle' : 'home.setups.form.newTitle') | translate }}
+    </h1>
+    <p>{{ 'home.setups.form.intro' | translate }}</p>
+  </div>
+  <a class="setup-button" routerLink="/setups">{{ 'home.setups.common.cancel' | translate }}</a>
+</section>
+
+@if (loading()) {
+  <p role="status">{{ 'home.setups.common.loading' | translate }}</p>
+} @else {
+  @if (errorMessage()) {
+    <div class="setup-alert is-error" role="alert">{{ errorMessage() }}</div>
+  }
+  <form class="setup-panel setup-form setup-editor" [formGroup]="form" (ngSubmit)="save()">
+    <fieldset>
+      <legend>{{ 'home.setups.form.identity' | translate }}</legend>
+      <div class="setup-form-grid">
+        <label class="is-wide"
+          ><span>{{ 'home.setups.form.title' | translate }}</span
+          ><input type="text" formControlName="title" maxlength="120"
+        /></label>
+        <label
+          ><span>{{ 'home.setups.form.simulator' | translate }}</span
+          ><input type="text" formControlName="simulator" maxlength="80"
+        /></label>
+        <label
+          ><span>{{ 'home.setups.form.car' | translate }}</span
+          ><input type="text" formControlName="car" maxlength="100"
+        /></label>
+        <label
+          ><span>{{ 'home.setups.form.track' | translate }}</span
+          ><input type="text" formControlName="track" maxlength="100"
+        /></label>
+        <label
+          ><span>{{ 'home.setups.form.configuration' | translate }}</span
+          ><input type="text" formControlName="configuration" maxlength="100"
+        /></label>
+        <label
+          ><span>{{ 'home.setups.form.season' | translate }}</span
+          ><input type="number" formControlName="season" min="1" max="99"
+        /></label>
+        <label
+          ><span>{{ 'home.setups.form.week' | translate }}</span
+          ><input type="number" formControlName="week" min="1" max="99"
+        /></label>
+        <label
+          ><span>{{ 'home.setups.form.year' | translate }}</span
+          ><input type="number" formControlName="year" min="2000" max="2100"
+        /></label>
+        <label
+          ><span>{{ 'home.setups.form.tags' | translate }}</span
+          ><input
+            type="text"
+            formControlName="tags"
+            [placeholder]="'home.setups.form.tagsHelp' | translate"
+        /></label>
+        <label class="is-wide"
+          ><span>{{ 'home.setups.form.description' | translate }}</span
+          ><textarea formControlName="description" rows="5" maxlength="1000"></textarea>
+        </label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>{{ 'home.setups.form.fileSection' | translate }}</legend>
+      <label
+        ><span>{{ 'home.setups.form.type' | translate }}</span>
+        <select formControlName="fileSessionType">
+          <option value="race">{{ 'home.setups.sessionType.race' | translate }}</option>
+          <option value="qualifying">
+            {{ 'home.setups.sessionType.qualifying' | translate }}
+          </option>
+          <option value="wet">{{ 'home.setups.sessionType.wet' | translate }}</option>
+          <option value="endurance">{{ 'home.setups.sessionType.endurance' | translate }}</option>
+          <option value="endurance_safe">
+            {{ 'home.setups.sessionType.endurance_safe' | translate }}
+          </option>
+          <option value="qualifying_endurance">
+            {{ 'home.setups.sessionType.qualifying_endurance' | translate }}
+          </option>
+          <option value="qualifying_safe">
+            {{ 'home.setups.sessionType.qualifying_safe' | translate }}
+          </option>
+          <option value="race_endurance">
+            {{ 'home.setups.sessionType.race_endurance' | translate }}
+          </option>
+          <option value="race_safe">
+            {{ 'home.setups.sessionType.race_safe' | translate }}
+          </option>
+          <option value="other">{{ 'home.setups.sessionType.other' | translate }}</option>
+        </select>
+      </label>
+      <label class="setup-file-picker">
+        <span>{{ 'home.setups.form.file' | translate }}</span>
+        <input
+          type="file"
+          accept=".sto,.svm,.set,.setup,.ini,.json,.xml,.zip"
+          (change)="chooseFile($event)"
+        />
+        <small>{{ 'home.setups.form.fileHelp' | translate }}</small>
+      </label>
+      @if (selectedFile(); as file) {
+        <p class="setup-file-selected">{{ file.name }} · {{ file.size }} bytes</p>
+      }
+      <label
+        ><span>{{ 'home.setups.form.notes' | translate }}</span
+        ><textarea formControlName="notes" rows="3" maxlength="500"></textarea>
+      </label>
+      @if (canManage()) {
+        <label
+          ><span>{{ 'home.setups.form.retention' | translate }}</span>
+          <select formControlName="retentionDays">
+            <option value="7">7 {{ 'home.setups.form.days' | translate }}</option>
+            <option value="30">30 {{ 'home.setups.form.days' | translate }}</option>
+            <option value="90">90 {{ 'home.setups.form.days' | translate }}</option>
+            <option value="180">180 {{ 'home.setups.form.days' | translate }}</option>
+            <option value="365">365 {{ 'home.setups.form.days' | translate }}</option>
+            <option value="">{{ 'home.setups.form.noExpiry' | translate }}</option>
+          </select>
+        </label>
+      }
+    </fieldset>
+
+    <div class="setup-actions">
+      <button class="setup-button is-primary" type="submit" [disabled]="saving()">
+        {{ (saving() ? 'home.setups.common.saving' : 'home.setups.common.save') | translate }}
+      </button>
+      <a class="setup-button" routerLink="/setups">{{ 'home.setups.common.cancel' | translate }}</a>
+    </div>
+  </form>
+}

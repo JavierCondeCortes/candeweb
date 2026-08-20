@@ -47,4 +47,10 @@ describe('Footer', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('links the shared footer to the private setups library', () => {
+    const link = fixture.nativeElement.querySelector('a[href="/setups"]') as HTMLAnchorElement;
+    expect(link).toBeTruthy();
+    expect(link.textContent?.trim()).toBeTruthy();
+  });
 });

@@ -401,7 +401,7 @@
     "viewPublic": "Ver página pública",
     "feature": "Mostrar como actual",
     "synchronize": "Sincronizar",
-    "confirmArchive": "¿Archivar {{name}}? Dejará de estar destacada y permanecerá disponible en el historial público.",
+    "confirmArchive": "¿Archivar {{name}}? Dejará de estar destacada y se ocultará de la web pública.",
     "syncing": "Sincronizando con Fat Cat Race…",
     "savingChange": "Guardando cambio…",
     "synced": "Datos deportivos sincronizados.",

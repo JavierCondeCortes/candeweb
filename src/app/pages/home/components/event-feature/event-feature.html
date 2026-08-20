@@ -102,9 +102,7 @@
           <p class="home-event-preview-summary">
             {{
               localizedSummary(event) ||
-                (event.id === 'fallback'
-                  ? ('home.event.fallbackSummary' | translate)
-                  : ('home.event.pending' | translate))
+                ('home.event.pending' | translate)
             }}
           </p>
 
@@ -128,7 +126,7 @@
           </div>
 
           <div class="home-event-actions">
-            <a class="button button-primary" routerLink="/candeonato">{{
+            <a class="button button-primary" [routerLink]="eventUrl(event)">{{
               'home.event.viewCurrent' | translate
             }}</a>
             <a class="button button-secondary" routerLink="/candeonatos">{{

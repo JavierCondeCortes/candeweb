@@ -113,7 +113,7 @@
             <a class="admin-button" [routerLink]="['/admin/candeonatos', championship.id]">{{
               'admin.common.edit' | translate
             }}</a>
-            @if (championship.status !== 'draft') {
+            @if (championship.status !== 'draft' && championship.status !== 'archived') {
               <a
                 class="admin-button"
                 [routerLink]="[
@@ -133,7 +133,11 @@
                 {{ 'admin.common.publish' | translate }}
               </button>
             }
-            @if (!championship.isFeatured && championship.status !== 'draft') {
+            @if (
+              !championship.isFeatured &&
+              championship.status !== 'draft' &&
+              championship.status !== 'archived'
+            ) {
               <button
                 class="admin-button"
                 type="button"

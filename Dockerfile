@@ -24,6 +24,7 @@ ENV NODE_ENV=production \
     DATABASE_PATH=/app/data/candemor.db \
     UPLOAD_DIR=/app/data/uploads \
     BACKUP_DIR=/app/data/backups \
+    SETUP_DIR=/app/data/setups \
     BROWSER_DIR=/app/dist/candeweb/browser \
     NPM_CONFIG_CACHE=/tmp/npm
 
@@ -35,7 +36,7 @@ RUN npm ci --omit=dev && npm cache clean --force
 COPY --chown=node:node server ./server
 COPY --chown=node:node --from=build /app/dist ./dist
 
-RUN mkdir -p /app/data/uploads /app/data/originals /app/data/backups \
+RUN mkdir -p /app/data/uploads /app/data/originals /app/data/backups /app/data/setups \
     && chown -R node:node /app/data
 
 USER node
