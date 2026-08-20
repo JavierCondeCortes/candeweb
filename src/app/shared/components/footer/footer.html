@@ -10,7 +10,7 @@
     </a>
     <div>
       <p class="footer-label">{{ 'candeonato.footer.community' | translate }}</p>
-      <nav class="flex flex-col gap-4">
+      <nav class="footer-nav">
         <a routerLink="/">Candemor Racing Team</a>
         <a href="/candeonato/#inscripcion">{{
           'candeonato.footer.registrationForm' | translate
@@ -28,7 +28,7 @@
         </div> -->
     <div>
       <p class="footer-label">{{ 'candeonato.footer.contact' | translate }}</p>
-      <nav [attr.aria-label]="'home.footer.secondaryNav' | translate" class="flex flex-col gap-4">
+      <nav [attr.aria-label]="'home.footer.secondaryNav' | translate" class="footer-nav">
         <a [href]="
             (settings$ | async)?.twitchChannelUrl || 'https://www.twitch.tv/candemorracingteam'
           " [attr.aria-label]="'home.nav.twitchLabel' | translate" target="_blank" rel="noopener noreferrer">

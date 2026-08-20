@@ -451,6 +451,13 @@ video {
   color: var(--lime);
 }
 
+.site-footer .footer-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
 .footer-mark {
   width: fit-content;
   color: var(--text);
