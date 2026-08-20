@@ -14,6 +14,8 @@ export interface TeamMemberContent {
   instagramUrl: string | null;
   youtubeUrl: string | null;
   xUrl: string | null;
+  discordUrl: string | null;
+  websiteUrl: string | null;
   displayOrder: number;
   isFeatured: boolean;
   isDemo: boolean;

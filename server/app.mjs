@@ -20,6 +20,7 @@ import {
   openDatabase,
   recordAudit,
   settingsFromRow,
+  skinFromRow,
   sponsorFromRow,
 } from './database.mjs';
 import {
@@ -46,6 +47,7 @@ import {
   validateChampionship,
   validateMember,
   validateSettings,
+  validateSkin,
   validateSponsor,
 } from './validation.mjs';
 
@@ -60,7 +62,7 @@ const BASE_SECURITY_HEADERS = {
 };
 const MEMBER_COLUMNS = `
   id, slug, name, alias, role_label, bio, photo_url, photo_alt, photo_consent_confirmed,
-  twitch_url, instagram_url, youtube_url, x_url, display_order, is_featured, is_demo, status,
+  twitch_url, instagram_url, youtube_url, x_url, discord_url, website_url, display_order, is_featured, is_demo, status,
   published_at, created_at, updated_at, updated_by_name, deleted_at
 `;
 const CHAMPIONSHIP_COLUMNS = `
@@ -72,6 +74,10 @@ const CHAMPIONSHIP_COLUMNS = `
 `;
 const SPONSOR_COLUMNS = `
   id, name, description, logo_url, logo_alt, website_url, display_order, status,
+  published_at, created_at, updated_at, updated_by_name, deleted_at
+`;
+const SKIN_COLUMNS = `
+  id, car_name, image_url, image_alt, target_url, display_order, status,
   published_at, created_at, updated_at, updated_by_name, deleted_at
 `;
 
@@ -277,6 +283,25 @@ async function routeRequest(context) {
     return sendJson(response, 200, { sponsors: rows.map(sponsorFromRow).map(publicSponsor) });
   }
 
+  if (method === 'GET' && path === '/api/skins') {
+    const session = getSession(db, request);
+    if (!session) throw new ApiError(401, 'UNAUTHENTICATED', 'Inicia sesión para continuar.');
+    if (!session.admin.mfaEnabled) {
+      throw new ApiError(403, 'MFA_SETUP_REQUIRED', 'Configura TOTP para entrar en Skins.');
+    }
+    if (!session.admin.canAccessSkins) {
+      throw new ApiError(403, 'SKIN_ACCESS_REQUIRED', 'Tu cuenta no tiene acceso a las skins.');
+    }
+    const rows = db
+      .prepare(
+        `SELECT ${SKIN_COLUMNS} FROM skins
+         WHERE status = 'published' AND deleted_at IS NULL
+         ORDER BY display_order ASC, car_name ASC LIMIT 200`,
+      )
+      .all();
+    return sendJson(response, 200, { skins: rows.map(skinFromRow) });
+  }
+
   if (method === 'GET' && path === '/api/public/championships') {
     const rows = db
       .prepare(
@@ -400,7 +425,53 @@ async function routeRequest(context) {
     return sendEmpty(response, 204);
   }
 
+  if (path.startsWith('/api/access/mfa/')) {
+    const session = getSession(db, request);
+    if (!session) throw new ApiError(401, 'UNAUTHENTICATED', 'Inicia sesión para continuar.');
+    if (method !== 'POST' || !requireCsrf(request, session)) {
+      throw new ApiError(403, 'INVALID_CSRF', 'La sesión necesita renovarse antes de guardar.');
+    }
+    if (path === '/api/access/mfa/setup') {
+      const secret = generateTotpSecret();
+      const otpauthUri = createTotpUri(secret, session.admin.email, 'Candemor Access');
+      db.prepare(
+        'UPDATE admin_profiles SET totp_pending_secret = ?, updated_at = ? WHERE id = ?',
+      ).run(secret, new Date().toISOString(), session.admin.id);
+      recordAudit(db, session.admin.id, 'access.mfa_setup_started', 'account', session.admin.id);
+      return sendJson(response, 200, {
+        secret,
+        otpauthUri,
+        qrCodeDataUrl: await QRCode.toDataURL(otpauthUri, {
+          errorCorrectionLevel: 'M',
+          margin: 2,
+          width: 320,
+          color: { dark: '#050505', light: '#f5f5f2' },
+        }),
+      });
+    }
+    if (path === '/api/access/mfa/confirm') {
+      const input = await readJson(request);
+      const account = db.prepare('SELECT * FROM admin_profiles WHERE id = ?').get(session.admin.id);
+      if (!account?.totp_pending_secret) {
+        throw new ApiError(409, 'MFA_SETUP_MISSING', 'Inicia de nuevo la configuración de TOTP.');
+      }
+      if (!verifyTotp(input.code, account.totp_pending_secret)) {
+        throw new ApiError(422, 'INVALID_MFA_CODE', 'El código de seis cifras no es válido.');
+      }
+      const recoveryCodes = generateRecoveryCodes();
+      const encodedRecoveryCodes = JSON.stringify(recoveryCodes.map(hashRecoveryCode));
+      db.prepare(
+        `UPDATE admin_profiles SET totp_secret = totp_pending_secret, totp_pending_secret = NULL,
+         totp_enabled = 1, recovery_codes = ?, updated_at = ? WHERE id = ?`,
+      ).run(encodedRecoveryCodes, new Date().toISOString(), session.admin.id);
+      recordAudit(db, session.admin.id, 'access.mfa_enabled', 'account', session.admin.id);
+      return sendJson(response, 200, { recoveryCodes });
+    }
+    throw new ApiError(404, 'NOT_FOUND', 'No existe esa ruta de seguridad.');
+  }
+
   if (
+    path.startsWith('/api/access/') ||
     path.startsWith('/api/setup-access/') ||
     path === '/api/setups' ||
     path.startsWith('/api/setups/')
@@ -545,6 +616,106 @@ async function routeAdmin(context) {
       )
       .all();
     return sendJson(response, 200, { members: rows.map(memberFromRow) });
+  }
+
+  if (method === 'GET' && path === '/api/admin/skins') {
+    const rows = db
+      .prepare(
+        `SELECT ${SKIN_COLUMNS} FROM skins
+         WHERE deleted_at IS NULL ORDER BY display_order ASC, car_name ASC`,
+      )
+      .all();
+    return sendJson(response, 200, { skins: rows.map(skinFromRow) });
+  }
+
+  if (method === 'POST' && path === '/api/admin/skins') {
+    const input = await readJson(context.request);
+    const skin = validateSkin(input, { publishing: input.status === 'published' });
+    const id = randomUUID();
+    const timestamp = new Date().toISOString();
+    db.prepare(
+      `INSERT INTO skins
+       (id, car_name, image_url, image_alt, target_url, display_order, status, published_at,
+        created_at, updated_at, updated_by_name)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ).run(
+      id,
+      skin.carName,
+      skin.imageUrl,
+      skin.imageAlt,
+      skin.targetUrl,
+      skin.displayOrder,
+      skin.status,
+      skin.status === 'published' ? timestamp : null,
+      timestamp,
+      timestamp,
+      session.admin.displayName,
+    );
+    recordAudit(db, session.admin.id, 'skin.created', 'skin', id, { status: skin.status });
+    return sendJson(response, 201, { skin: findSkin(db, id) });
+  }
+
+  const skinMatch = path.match(/^\/api\/admin\/skins\/([^/]+)$/);
+  if (skinMatch && method === 'GET') {
+    const skin = findSkin(db, skinMatch[1]);
+    if (!skin) throw new ApiError(404, 'NOT_FOUND', 'No existe esa skin.');
+    return sendJson(response, 200, { skin });
+  }
+  if (skinMatch && method === 'PATCH') {
+    const current = findSkin(db, skinMatch[1]);
+    if (!current) throw new ApiError(404, 'NOT_FOUND', 'No existe esa skin.');
+    const input = await readJson(context.request);
+    if (input.updatedAt && input.updatedAt !== current.updatedAt) {
+      throw new ApiError(409, 'EDIT_CONFLICT', 'Otra persona modificó esta skin. Recarga antes de guardar.');
+    }
+    const skin = validateSkin(input, { publishing: input.status === 'published' });
+    const timestamp = new Date().toISOString();
+    db.prepare(
+      `UPDATE skins SET car_name = ?, image_url = ?, image_alt = ?, target_url = ?,
+       display_order = ?, status = ?,
+       published_at = CASE WHEN ? = 'published' THEN COALESCE(published_at, ?) ELSE published_at END,
+       updated_at = ?, updated_by_name = ? WHERE id = ?`,
+    ).run(
+      skin.carName,
+      skin.imageUrl,
+      skin.imageAlt,
+      skin.targetUrl,
+      skin.displayOrder,
+      skin.status,
+      skin.status,
+      timestamp,
+      timestamp,
+      session.admin.displayName,
+      current.id,
+    );
+    recordAudit(db, session.admin.id, 'skin.updated', 'skin', current.id, { status: skin.status });
+    return sendJson(response, 200, { skin: findSkin(db, current.id) });
+  }
+  if (skinMatch && method === 'DELETE') {
+    const skin = findSkin(db, skinMatch[1]);
+    if (!skin) throw new ApiError(404, 'NOT_FOUND', 'No existe esa skin.');
+    const timestamp = new Date().toISOString();
+    db.prepare(
+      'UPDATE skins SET deleted_at = ?, updated_at = ?, updated_by_name = ? WHERE id = ?',
+    ).run(timestamp, timestamp, session.admin.displayName, skin.id);
+    recordAudit(db, session.admin.id, 'skin.deleted', 'skin', skin.id, { carName: skin.carName });
+    return sendEmpty(response, 204);
+  }
+
+  const skinAction = path.match(/^\/api\/admin\/skins\/([^/]+)\/(publish|archive)$/);
+  if (skinAction && method === 'POST') {
+    const skin = findSkin(db, skinAction[1]);
+    if (!skin) throw new ApiError(404, 'NOT_FOUND', 'No existe esa skin.');
+    const action = skinAction[2];
+    if (action === 'publish') validateSkin(skin, { publishing: true });
+    const timestamp = new Date().toISOString();
+    const status = action === 'publish' ? 'published' : 'archived';
+    db.prepare(
+      `UPDATE skins SET status = ?, published_at = COALESCE(published_at, ?),
+       updated_at = ?, updated_by_name = ? WHERE id = ?`,
+    ).run(status, timestamp, timestamp, session.admin.displayName, skin.id);
+    recordAudit(db, session.admin.id, `skin.${action === 'publish' ? 'published' : 'archived'}`, 'skin', skin.id);
+    return sendJson(response, 200, { skin: findSkin(db, skin.id) });
   }
 
   if (method === 'POST' && path === '/api/admin/members') {
@@ -1624,6 +1795,12 @@ function findSponsor(db, id) {
   );
 }
 
+function findSkin(db, id) {
+  return skinFromRow(
+    db.prepare(`SELECT ${SKIN_COLUMNS} FROM skins WHERE id = ? AND deleted_at IS NULL`).get(id),
+  );
+}
+
 function findChampionship(db, id) {
   return championshipFromDatabaseRow(
     db,
@@ -1681,9 +1858,9 @@ function runMemberInsert(db, id, member, timestamp, actorName) {
   db.prepare(
     `INSERT INTO team_members (
       id, slug, name, alias, role_label, bio, photo_url, photo_alt, photo_consent_confirmed,
-      twitch_url, instagram_url, youtube_url, x_url, display_order, is_featured, is_demo, status,
-      published_at, created_at, updated_at, updated_by_name
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      twitch_url, instagram_url, youtube_url, x_url, discord_url, website_url, display_order, is_featured,
+      is_demo, status, published_at, created_at, updated_at, updated_by_name
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   ).run(
     id,
     member.slug,
@@ -1698,6 +1875,8 @@ function runMemberInsert(db, id, member, timestamp, actorName) {
     member.instagramUrl,
     member.youtubeUrl,
     member.xUrl,
+    member.discordUrl,
+    member.websiteUrl,
     member.displayOrder,
     member.isFeatured ? 1 : 0,
     member.isDemo ? 1 : 0,
@@ -1715,7 +1894,7 @@ function runMemberUpdate(db, id, member, actorName) {
     `UPDATE team_members SET
       slug = ?, name = ?, alias = ?, role_label = ?, bio = ?, photo_url = ?, photo_alt = ?,
       photo_consent_confirmed = ?, twitch_url = ?, instagram_url = ?, youtube_url = ?, x_url = ?,
-      display_order = ?, is_featured = ?, is_demo = ?, status = ?,
+      discord_url = ?, website_url = ?, display_order = ?, is_featured = ?, is_demo = ?, status = ?,
       published_at = CASE WHEN ? = 'published' THEN COALESCE(published_at, ?) ELSE published_at END,
       updated_at = ?, updated_by_name = ? WHERE id = ?`,
   ).run(
@@ -1731,6 +1910,8 @@ function runMemberUpdate(db, id, member, actorName) {
     member.instagramUrl,
     member.youtubeUrl,
     member.xUrl,
+    member.discordUrl,
+    member.websiteUrl,
     member.displayOrder,
     member.isFeatured ? 1 : 0,
     member.isDemo ? 1 : 0,
@@ -2021,7 +2202,9 @@ async function saveMedia(context, input) {
       ? 'championship'
       : input.kind === 'sponsor'
         ? 'sponsor'
-        : 'member';
+        : input.kind === 'skin'
+          ? 'skin'
+          : 'member';
   const altText =
     String(input.altText ?? '')
       .trim()
@@ -2044,11 +2227,14 @@ async function saveMedia(context, input) {
       (width >= 900 && height >= 900);
     const validMemberPhoto = width >= 720 && height >= 900;
     const validSponsorLogo = width >= 100 && height >= 100;
+    const validSkinImage = width >= 600 && height >= 400;
     const mediaIsTooSmall =
       kind === 'championship'
         ? !validChampionshipCover
         : kind === 'sponsor'
           ? !validSponsorLogo
+          : kind === 'skin'
+            ? !validSkinImage
           : !validMemberPhoto;
     if (mediaIsTooSmall) {
       throw new ApiError(
@@ -2058,6 +2244,8 @@ async function saveMedia(context, input) {
           ? 'Usa un cartel de al menos 1200 × 675 px en horizontal, 900 × 1200 px en vertical o 900 × 900 px en formato cuadrado.'
           : kind === 'sponsor'
             ? 'El logotipo debe medir al menos 100 × 100 píxeles. Se admiten formatos verticales, cuadrados y horizontales.'
+            : kind === 'skin'
+              ? 'La imagen de la skin debe medir al menos 600 × 400 píxeles.'
             : 'La fotografía debe medir al menos 720 × 900 píxeles.',
       );
     }
@@ -2077,6 +2265,13 @@ async function saveMedia(context, input) {
               fit: 'inside',
               withoutEnlargement: true,
             }
+          : kind === 'skin'
+            ? {
+                width: 1600,
+                height: 1200,
+                fit: 'inside',
+                withoutEnlargement: true,
+              }
           : {
               width: 720,
               height: 900,

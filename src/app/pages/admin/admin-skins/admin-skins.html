@@ -1,0 +1,62 @@
+<header class="admin-page-header">
+  <div>
+    <p class="admin-eyebrow">{{ 'admin.skins.eyebrow' | translate }}</p>
+    <h1>{{ 'admin.skins.title' | translate }}</h1>
+    <p>{{ 'admin.skins.intro' | translate }}</p>
+  </div>
+  <a class="admin-button is-primary" routerLink="/admin/skins/nueva">{{ 'admin.skins.add' | translate }}</a>
+</header>
+
+@if (errorMessage()) { <div class="admin-alert is-error" role="alert">{{ errorMessage() }}</div> }
+@if (message()) { <div class="admin-alert is-success" role="status">{{ message() }}</div> }
+
+<div class="admin-toolbar">
+  <label>
+    <span>{{ 'admin.common.search' | translate }}</span>
+    <input type="search" [placeholder]="'admin.skins.searchPlaceholder' | translate" [value]="query()" (input)="query.set($any($event.target).value)" />
+  </label>
+  <a routerLink="/skins" target="_blank">{{ 'admin.skins.viewCatalog' | translate }}</a>
+</div>
+
+@if (loading()) {
+  <p role="status">{{ 'admin.skins.loading' | translate }}</p>
+} @else if (!filteredSkins().length) {
+  <div class="admin-empty">
+    <h2>{{ (skins().length ? 'admin.skins.noMatches' : 'admin.skins.emptyTitle') | translate }}</h2>
+    <p>{{ 'admin.skins.emptyHelp' | translate }}</p>
+  </div>
+} @else {
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <caption class="sr-only">{{ 'admin.skins.caption' | translate }}</caption>
+      <thead><tr>
+        <th scope="col">{{ 'admin.skins.car' | translate }}</th>
+        <th scope="col">{{ 'admin.common.status' | translate }}</th>
+        <th scope="col">{{ 'admin.common.order' | translate }}</th>
+        <th scope="col">{{ 'admin.common.actions' | translate }}</th>
+      </tr></thead>
+      <tbody>
+        @for (skin of filteredSkins(); track skin.id) {
+          <tr>
+            <th scope="row"><div class="admin-person">
+              <img class="admin-skin-thumbnail" [src]="skin.imageUrl" alt="" />
+              <span>{{ skin.carName }}<small>{{ skin.targetUrl }}</small></span>
+            </div></th>
+            <td><span class="admin-status" [attr.data-status]="skin.status">{{ statusLabel(skin.status) }}</span></td>
+            <td>{{ skin.displayOrder + 1 }}</td>
+            <td><div class="admin-row-actions">
+              <a [routerLink]="['/admin/skins', skin.id]">{{ 'admin.common.edit' | translate }}</a>
+              @if (skin.status !== 'published') {
+                <button type="button" [disabled]="busyId() === skin.id" (click)="runAction(skin, 'publish')">{{ 'admin.common.publish' | translate }}</button>
+              }
+              @if (skin.status !== 'archived') {
+                <button class="is-danger" type="button" [disabled]="busyId() === skin.id" (click)="runAction(skin, 'archive')">{{ 'admin.common.archive' | translate }}</button>
+              }
+              <button class="is-danger" type="button" [disabled]="busyId() === skin.id" (click)="deleteSkin(skin)">{{ 'admin.common.delete' | translate }}</button>
+            </div></td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

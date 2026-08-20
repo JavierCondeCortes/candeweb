@@ -1,0 +1,123 @@
+<header class="admin-page-header">
+  <div>
+    <p class="admin-eyebrow">{{ 'admin.accesses.eyebrow' | translate }}</p>
+    <h1>{{ 'admin.accesses.title' | translate }}</h1>
+    <p>{{ 'admin.accesses.intro' | translate }}</p>
+  </div>
+</header>
+
+@if (errorMessage()) {
+  <div class="admin-alert is-error" role="alert">{{ errorMessage() }}</div>
+}
+
+@if (invitation(); as data) {
+  <section class="admin-invitation-result" aria-labelledby="access-invitation-title">
+    <div>
+      <p class="admin-eyebrow">{{ 'admin.accesses.invitationReady' | translate }}</p>
+      <h2 id="access-invitation-title">{{ data.email }}</h2>
+      <p>{{ 'admin.accesses.invitationHelp' | translate }}</p>
+    </div>
+    <label>
+      <span>{{ 'admin.accesses.invitationLink' | translate }}</span>
+      <input [value]="invitationUrl()" readonly />
+    </label>
+    <div class="admin-row-actions">
+      <button type="button" (click)="copyInvitation()">{{ 'admin.accesses.copy' | translate }}</button>
+      <button type="button" (click)="invitation.set(null)">{{ 'admin.accesses.close' | translate }}</button>
+    </div>
+  </section>
+}
+
+@if (loading()) {
+  <p role="status">{{ 'admin.common.loading' | translate }}</p>
+} @else {
+  <section class="admin-content-card" aria-labelledby="access-requests-title">
+    <div class="admin-access-heading">
+      <div>
+        <p class="admin-eyebrow">{{ 'admin.accesses.requestsEyebrow' | translate }}</p>
+        <h2 id="access-requests-title">{{ 'admin.accesses.requestsTitle' | translate }}</h2>
+      </div>
+      <span class="admin-access-count">{{ requests().length }}</span>
+    </div>
+    @if (!requests().length) {
+      <p class="admin-empty-copy">{{ 'admin.accesses.noRequests' | translate }}</p>
+    } @else {
+      <ul class="admin-access-list">
+        @for (request of requests(); track request.id) {
+          <li>
+            <div>
+              <strong>{{ request.displayName }}</strong>
+              <small>{{ request.email }} · {{ ('admin.accesses.requestStatus.' + request.status) | translate }}</small>
+            </div>
+            <div class="admin-row-actions">
+              <button type="button" (click)="approve(request)" [disabled]="busyId() === request.id">
+                {{ (request.status === 'approved' ? 'admin.accesses.regenerate' : 'admin.accesses.approve') | translate }}
+              </button>
+              <button class="is-danger" type="button" (click)="reject(request)" [disabled]="busyId() === request.id">
+                {{ 'admin.accesses.reject' | translate }}
+              </button>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+
+  <section class="admin-content-card" aria-labelledby="access-accounts-title">
+    <div class="admin-access-heading">
+      <div>
+        <p class="admin-eyebrow">{{ 'admin.accesses.accountsEyebrow' | translate }}</p>
+        <h2 id="access-accounts-title">{{ 'admin.accesses.accountsTitle' | translate }}</h2>
+      </div>
+      <span class="admin-access-count">{{ users().length }}</span>
+    </div>
+    <ul class="admin-access-list">
+      @for (user of users(); track user.id) {
+        <li [class.is-inactive]="!user.active">
+          <div class="admin-access-person">
+            <strong>{{ user.displayName }}</strong>
+            <small>{{ user.email }} · {{ 'home.setups.role.' + user.role | translate }}</small>
+          </div>
+          @if (user.role === 'user') {
+            <div class="admin-access-permissions" [attr.aria-label]="'admin.accesses.permissionsFor' | translate: { name: user.displayName }">
+              <button
+                type="button"
+                class="admin-permission-toggle is-skins"
+                [class.is-on]="user.canAccessSkins"
+                [attr.aria-pressed]="user.canAccessSkins"
+                [disabled]="busyId() === user.id || !user.active"
+                (click)="toggleSkins(user)"
+              >{{ 'admin.accesses.skinsAccess' | translate }}</button>
+              <button
+                type="button"
+                class="admin-permission-toggle"
+                [class.is-on]="user.canAccessSetups"
+                [attr.aria-pressed]="user.canAccessSetups"
+                [disabled]="busyId() === user.id || !user.active"
+                (click)="toggleSetups(user)"
+              >{{ 'admin.accesses.setupsAccess' | translate }}</button>
+              <button
+                type="button"
+                class="admin-permission-toggle"
+                [class.is-on]="user.canUploadSetups"
+                [attr.aria-pressed]="user.canUploadSetups"
+                [disabled]="busyId() === user.id || !user.active"
+                (click)="toggleSetupUpload(user)"
+              >{{ 'admin.accesses.setupUpload' | translate }}</button>
+            </div>
+            <div class="admin-row-actions">
+              <button
+                type="button"
+                [class.is-danger]="user.active"
+                [disabled]="busyId() === user.id"
+                (click)="setActive(user, !user.active)"
+              >{{ (user.active ? 'admin.accesses.revoke' : 'admin.accesses.restore') | translate }}</button>
+            </div>
+          } @else {
+            <span class="admin-status" data-status="published">{{ 'admin.accesses.fullAccess' | translate }}</span>
+          }
+        </li>
+      }
+    </ul>
+  </section>
+}

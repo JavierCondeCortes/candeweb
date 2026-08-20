@@ -1,8 +1,8 @@
 # Administración de contenidos de Candemor
 
 > Especificación funcional y técnica para que una persona administradora pueda mantener los datos
-> de la web sin editar componentes de Angular. El alcance incluye miembros, sponsors y ediciones del
-> Candeonato.
+> de la web sin editar componentes de Angular. El alcance incluye miembros, sponsors, skins y
+> ediciones del Candeonato, además de la gestión centralizada de accesos privados.
 
 ## Objetivo
 
@@ -15,13 +15,16 @@ Crear un panel privado desde el que se pueda:
 5. Modificar un conjunto pequeño de ajustes globales, como el canal de Twitch y los enlaces de
    contacto.
 6. Crear, editar, ordenar, publicar, archivar y eliminar sponsors y colaboradores.
+7. Mantener el catálogo privado de skins.
+8. Conceder desde un único apartado los permisos independientes de Setups y Skins.
 
 El panel debe ser la fuente de verdad del **contenido editorial**. La API de Fat Cat Race seguirá
 siendo la fuente de verdad de rondas, posiciones, puntos y estadísticas deportivas.
 
-La biblioteca privada de archivos tiene permisos y almacenamiento propios. Su especificación
-se mantiene separada en [Biblioteca privada de setups](../setups/setups.md) para que autorizar una
-descarga o una subida no conceda acceso editorial a `/admin`.
+Las zonas privadas tienen permisos y almacenamiento propios. Sus especificaciones se mantienen en
+[Biblioteca privada de setups](../setups/setups.md), [Biblioteca privada de skins](../skins/skins.md)
+y [Gestión centralizada de accesos](../accesos/accesos.md), para que autorizar contenido privado no
+conceda acceso editorial a `/admin`.
 
 ## Estado actual del proyecto
 
@@ -118,17 +121,22 @@ La web pública nunca debe conectarse con credenciales de administración ni rec
 | `/admin/sponsors`           | Listado, estado y acciones de sponsors                           |
 | `/admin/sponsors/nuevo`     | Alta de un sponsor                                               |
 | `/admin/sponsors/:id`       | Edición, vista previa, publicación y retirada                    |
+| `/admin/skins`              | Listado, orden y estado de skins                                 |
+| `/admin/skins/nueva`        | Alta de una skin                                                 |
+| `/admin/skins/:id`          | Edición, publicación y retirada                                  |
+| `/admin/accesos`            | Permisos centralizados de Setups y Skins                         |
 | `/admin/ajustes`            | Twitch, contacto, edición destacada y valores globales           |
 | `/admin/seguridad`          | Alta o rotación de segundo factor y códigos de recuperación      |
 | `/admin/administradores`    | Solicitudes, invitaciones y cuentas; solo para el propietario    |
 | `/admin/auditoria`          | Historial de acciones; puede posponerse visualmente, no en datos |
 
 Las rutas públicas continúan siendo `/`, `/candeonato`, `/candeonatos` y
-`/candeonatos/:torneoId`.
+`/candeonatos/:torneoId`. `/setups` y `/skins` son rutas visibles pero protegidas por producto.
 
-La ruta protegida `/setups` reutiliza la identidad de owner/admin y añade cuentas de comunidad con
-permisos independientes de acceso y contribución. Owner y admin pueden aprobar accesos y conceder
-subida sin convertir a esas personas en administradoras de `/admin`.
+Las rutas protegidas `/setups` y `/skins` reutilizan la misma identidad y sesión. Owner y admin
+gestionan desde `/admin/accesos` los permisos independientes `can_access_setups`,
+`can_upload_setups` y `can_access_skins`, sin convertir a esas personas en administradoras de
+`/admin`.
 
 ## Cuenta y permisos
 
@@ -157,9 +165,12 @@ renovarse. El envío se hace manualmente con el botón de correo para no exigir 
 | Portada     | Candeonato destacado, Twitch, correo y enlaces principales                | BBDD           |
 | Multimedia  | Fotografías, portadas y vídeos de fondo por edición                       | Almacenamiento |
 | Sponsors    | Nombre, logo, descripción, web, orden y estado                            | BBDD           |
+| Skins       | Foto, nombre del coche, URL, orden y estado                               | BBDD           |
+| Accesos     | Permisos independientes de Setups y Skins                                 | BBDD           |
 
-Productos y una galería manual quedan fuera del MVP. La navegación pública se mantiene en código
-para conservar una arquitectura clara; los sponsors sí forman parte del panel.
+Una galería manual queda fuera del MVP. La navegación pública se mantiene en código para conservar
+una arquitectura clara; los sponsors forman parte del panel y Skins queda especificado como la
+siguiente ampliación.
 
 ## Modelo: sponsor
 
@@ -196,6 +207,8 @@ administrador publique un registro real.
 | `instagram_url`           | URL o `null`   | No          | Solo HTTPS y dominio esperado                               |
 | `youtube_url`             | URL o `null`   | No          | Solo HTTPS y dominio esperado                               |
 | `x_url`                   | URL o `null`   | No          | Solo HTTPS y dominio esperado                               |
+| `discord_url`             | URL o `null`   | No          | Solo HTTPS en `discord.com` o `discord.gg`                  |
+| `website_url`             | URL o `null`   | No          | Web personal o profesional; solo HTTPS                      |
 | `display_order`           | Entero         | Sí          | Cero o positivo; reordenable desde la lista                 |
 | `is_featured`             | Booleano       | Sí          | Decide si aparece en la portada                             |
 | `status`                  | Enum           | Sí          | `draft`, `published` o `archived`                           |
@@ -218,7 +231,7 @@ administrador publique un registro real.
 
 1. **Identidad:** nombre, alias, rol y descripción.
 2. **Imagen:** subida, recorte recomendado `4:5`, vista previa y texto alternativo.
-3. **Redes:** campos opcionales independientes.
+3. **Redes y web:** campos opcionales independientes, incluido `Web`.
 4. **Publicación:** destacado, orden, estado y vista previa.
 
 El botón principal será `Guardar borrador` o `Publicar cambios` según el permiso y estado. Archivar
@@ -254,6 +267,19 @@ debe requerir confirmación y explicar que el perfil desaparecerá de la web pú
 | `created_at`                 | Fecha           | Automático  | Solo lectura                                              |
 | `updated_at`                 | Fecha           | Automático  | Solo lectura                                              |
 | `deleted_at`                 | Fecha o `null`  | Automático  | Borrado lógico                                            |
+
+### Fechas, zona horaria y temporizador
+
+El panel interpreta los controles `datetime-local` como hora española de calendario en la zona
+IANA `Europe/Madrid`. Antes de persistirlos, el backend los convierte a un instante UTC ISO 8601.
+La web calcula la cuenta atrás contra ese instante UTC y presenta de nuevo la fecha en
+`Europe/Madrid`.
+
+Esta regla es única para panel, API y frontend y contempla automáticamente CET (`UTC+1`) y CEST
+(`UTC+2`). No se debe añadir o restar una hora manualmente ni interpretar el valor del panel como
+UTC. Al editar un Candeonato, la conversión se invierte para que el campo muestre exactamente la
+hora española que introdujo administración. La interfaz indicará junto al control: `Hora de España
+peninsular (Europe/Madrid)`.
 
 ### Datos procedentes de Fat Cat Race
 
@@ -609,6 +635,7 @@ La interfaz debe indicar cuándo muestra datos en caché y la fecha de la últim
 - [x] Un administrador puede crear un borrador con nombre y fotografía.
 - [x] Puede publicar, ordenar, destacar y archivar miembros.
 - [x] Puede guardar un miembro sin Twitch ni otras redes.
+- [x] Puede añadir un enlace opcional `Web` y este aparece solo cuando existe.
 - [x] La portada muestra únicamente miembros publicados y destacados.
 - [x] Al actualizar un miembro, la web pública refleja el cambio sin nuevo despliegue.
 
@@ -620,6 +647,8 @@ La interfaz debe indicar cuándo muestra datos en caché y la fecha de la últim
 - [x] Puede sincronizar y consultar el último resultado válido.
 - [x] Las posiciones y puntos externos no se modifican silenciosamente desde el panel.
 - [x] La portada, página promocional e historial utilizan la edición administrada.
+- [x] La hora introducida en el panel se interpreta en `Europe/Madrid` y coincide con el
+      temporizador público, incluido el cambio de horario de verano.
 
 ### Seguridad y calidad
 

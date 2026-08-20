@@ -1,3 +1,5 @@
+import { madridDateTimeToIso } from './timezone.mjs';
+
 export class ApiError extends Error {
   constructor(status, code, message, fields = undefined) {
     super(message);
@@ -48,6 +50,8 @@ export function validateMember(input, { publishing = false } = {}) {
     instagramUrl: socialUrl(input.instagramUrl, 'instagram.com', 'instagramUrl', fields),
     youtubeUrl: socialUrl(input.youtubeUrl, 'youtube.com', 'youtubeUrl', fields, ['youtu.be']),
     xUrl: socialUrl(input.xUrl, 'x.com', 'xUrl', fields, ['twitter.com']),
+    discordUrl: socialUrl(input.discordUrl, 'discord.com', 'discordUrl', fields, ['discord.gg']),
+    websiteUrl: optionalHttpsUrl(input.websiteUrl, 'websiteUrl', fields),
     displayOrder: nonNegativeInteger(input.displayOrder, 'displayOrder', fields),
     isFeatured: Boolean(input.isFeatured),
     isDemo: Boolean(input.isDemo),
@@ -84,6 +88,30 @@ export function validateSponsor(input, { publishing = false } = {}) {
     throw new ApiError(422, 'VALIDATION_ERROR', 'Hay campos que necesitan revisión.', fields);
   }
   return sponsor;
+}
+
+export function validateSkin(input, { publishing = false } = {}) {
+  const fields = {};
+  const carName = cleanText(input.carName, 120);
+  const imageUrl = optionalUrlOrPath(input.imageUrl, 'imageUrl', fields);
+  const imageAlt = cleanOptionalText(input.imageAlt, 160);
+  const targetUrl = optionalHttpsUrl(input.targetUrl, 'targetUrl', fields);
+  if (carName.length < 2) fields.carName = 'Escribe el nombre del coche.';
+  if (publishing && !imageUrl) fields.imageUrl = 'Añade una fotografía antes de publicar.';
+  if (imageUrl && !imageAlt) fields.imageAlt = 'Describe la fotografía antes de publicar.';
+  if (publishing && !targetUrl) fields.targetUrl = 'Añade una URL HTTPS antes de publicar.';
+  const skin = {
+    carName,
+    imageUrl,
+    imageAlt,
+    targetUrl,
+    displayOrder: nonNegativeInteger(input.displayOrder, 'displayOrder', fields),
+    status: oneOf(input.status, ['draft', 'published', 'archived'], 'draft'),
+  };
+  if (Object.keys(fields).length) {
+    throw new ApiError(422, 'VALIDATION_ERROR', 'Hay campos que necesitan revisión.', fields);
+  }
+  return skin;
 }
 
 export function validateChampionship(input, { publishing = false } = {}) {
@@ -314,12 +342,12 @@ function optionalPositiveInteger(value, field, fields) {
 
 function optionalDate(value, field, fields) {
   if (!value) return null;
-  const parsed = Date.parse(String(value));
-  if (Number.isNaN(parsed)) {
+  try {
+    return madridDateTimeToIso(value);
+  } catch {
     fields[field] = 'Introduce una fecha válida.';
     return null;
   }
-  return new Date(parsed).toISOString();
 }
 
 function optionalEmail(value, field, fields) {

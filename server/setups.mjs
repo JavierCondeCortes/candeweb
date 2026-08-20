@@ -52,6 +52,25 @@ const SECURITY_HEADERS = {
 export async function routeSetupApi(context) {
   const { path, method } = context;
 
+  if (method === 'GET' && path === '/api/access/session') {
+    return accessSession(context);
+  }
+  if (method === 'POST' && path === '/api/access/login') {
+    return loginToAccess(context);
+  }
+  if (method === 'POST' && path === '/api/access/logout') {
+    return logoutFromSetups(context);
+  }
+  if (method === 'POST' && path === '/api/access/requests') {
+    return requestSetupAccess(context);
+  }
+  if (method === 'GET' && path === '/api/access/invitations/verify') {
+    return verifySetupInvitation(context);
+  }
+  if (method === 'POST' && path === '/api/access/invitations/accept') {
+    return acceptSetupInvitation(context);
+  }
+
   if (method === 'GET' && path === '/api/setup-access/session') {
     return setupSession(context);
   }
@@ -73,11 +92,16 @@ export async function routeSetupApi(context) {
 
   const session = getSession(context.db, context.request);
   if (!session) throw new ApiError(401, 'UNAUTHENTICATED', 'Inicia sesión para continuar.');
-  if (isSetupAdministrator(session) && !session.admin.mfaEnabled) {
-    throw new ApiError(403, 'MFA_SETUP_REQUIRED', 'Configura TOTP antes de entrar en Setups.');
+  if (!session.admin.mfaEnabled) {
+    throw new ApiError(403, 'MFA_SETUP_REQUIRED', 'Configura TOTP antes de entrar.');
   }
   if (!SESSION_METHODS.has(method) && !requireCsrf(context.request, session)) {
     throw new ApiError(403, 'INVALID_CSRF', 'La sesión necesita renovarse antes de guardar.');
+  }
+
+  if (path.startsWith('/api/access/')) {
+    requireSetupAdministrator(session);
+    return routeSetupAccessManagement({ ...context, session });
   }
 
   if (path.startsWith('/api/setup-access/')) {
@@ -94,12 +118,62 @@ export async function routeSetupApi(context) {
 function setupSession(context) {
   const session = getSession(context.db, context.request);
   const authorized = Boolean(
-    session?.admin.canAccessSetups && (!isSetupAdministrator(session) || session.admin.mfaEnabled),
+    session?.admin.canAccessSetups && session.admin.mfaEnabled,
   );
   return sendJson(context.response, 200, {
     authenticated: authorized,
     account: authorized ? setupAccount(session.admin) : null,
     csrfToken: authorized ? session.csrfToken : null,
+  });
+}
+
+function accessSession(context) {
+  const session = getSession(context.db, context.request);
+  const authenticated = Boolean(session?.admin.mfaEnabled);
+  return sendJson(context.response, 200, {
+    authenticated,
+    account: authenticated ? setupAccount(session.admin) : null,
+    csrfToken: authenticated ? session.csrfToken : null,
+  });
+}
+
+async function loginToAccess(context) {
+  const { db, request, response, secureCookies, loginAttempts } = context;
+  const input = await readJson(request);
+  const email = String(input.email ?? '').trim().toLowerCase();
+  const password = String(input.password ?? '');
+  const attemptKey = `access:${request.socket.remoteAddress ?? 'local'}:${email}`;
+  assertLoginAllowed(loginAttempts, attemptKey);
+  const account = db.prepare('SELECT * FROM admin_profiles WHERE email = ? AND active = 1').get(email);
+  if (!account || !(await verifyPassword(password, account.password_hash))) {
+    registerFailedLogin(loginAttempts, attemptKey);
+    throw new ApiError(401, 'INVALID_CREDENTIALS', 'El correo o la contraseña no son correctos.');
+  }
+  if (account.totp_enabled !== 1) {
+    throw new ApiError(403, 'MFA_SETUP_REQUIRED', 'Completa la configuración de TOTP para entrar.');
+  }
+  const mfaCode = String(input.mfaCode ?? '').trim();
+  if (!mfaCode) throw new ApiError(401, 'MFA_REQUIRED', 'Introduce tu código de segundo factor.');
+  const remainingRecoveryCodes = consumeRecoveryCode(mfaCode, account.recovery_codes);
+  if (!verifyTotp(mfaCode, account.totp_secret) && remainingRecoveryCodes === null) {
+    registerFailedLogin(loginAttempts, attemptKey);
+    throw new ApiError(401, 'INVALID_MFA_CODE', 'El código de segundo factor no es válido.');
+  }
+  if (remainingRecoveryCodes !== null) {
+    db.prepare('UPDATE admin_profiles SET recovery_codes = ?, updated_at = ? WHERE id = ?').run(
+      remainingRecoveryCodes,
+      new Date().toISOString(),
+      account.id,
+    );
+  }
+  loginAttempts.delete(attemptKey);
+  const session = createSession(db, account.id);
+  response.setHeader('Set-Cookie', sessionCookie(session.token, session.expiresAt, secureCookies));
+  recordAudit(db, account.id, 'access.login', 'account', account.id);
+  return sendJson(response, 200, {
+    authenticated: true,
+    account: setupAccountFromRow(account),
+    csrfToken: session.csrfToken,
   });
 }
 
@@ -123,11 +197,11 @@ async function loginToSetups(context) {
     registerFailedLogin(loginAttempts, attemptKey);
     throw new ApiError(401, 'INVALID_CREDENTIALS', 'El correo o la contraseña no son correctos.');
   }
-  if (account.account_type === 'administrator' && account.totp_enabled !== 1) {
+  if (account.totp_enabled !== 1) {
     throw new ApiError(
       403,
       'MFA_SETUP_REQUIRED',
-      'Configura TOTP desde el panel administrativo antes de entrar.',
+      'Completa la configuración de TOTP antes de entrar.',
     );
   }
   if (account.totp_enabled === 1) {
@@ -246,8 +320,8 @@ async function acceptSetupInvitation(context) {
       .prepare(
         `INSERT INTO admin_profiles
          (id, email, display_name, password_hash, role, is_owner, active, email_verified_at,
-          account_type, can_access_setups, can_upload_setups, created_at, updated_at)
-         SELECT ?, ?, ?, ?, 'admin', 0, 1, ?, 'setup_user', 1, 0, ?, ?
+          account_type, can_access_setups, can_upload_setups, can_access_skins, created_at, updated_at)
+         SELECT ?, ?, ?, ?, 'admin', 0, 1, ?, 'setup_user', ?, 0, 0, ?, ?
          WHERE NOT EXISTS (SELECT 1 FROM admin_profiles WHERE email = ?)`,
       )
       .run(
@@ -256,6 +330,7 @@ async function acceptSetupInvitation(context) {
         identity.displayName,
         passwordHash,
         timestamp,
+        invitation.grants_setup_access === 1 ? 1 : 0,
         timestamp,
         timestamp,
         identity.email,
@@ -272,7 +347,7 @@ async function acceptSetupInvitation(context) {
         `UPDATE setup_access_requests SET status = 'activated', updated_at = ? WHERE id = ?`,
       ).run(timestamp, invitation.request_id);
     }
-    recordAudit(db, id, 'setups.invitation_accepted', 'account', id, {
+    recordAudit(db, id, 'access.invitation_accepted', 'account', id, {
       invitedBy: invitation.created_by,
     });
     db.exec('COMMIT');
@@ -281,18 +356,11 @@ async function acceptSetupInvitation(context) {
     throw error;
   }
   const session = createSession(db, id);
+  const account = db.prepare('SELECT * FROM admin_profiles WHERE id = ?').get(id);
   response.setHeader('Set-Cookie', sessionCookie(session.token, session.expiresAt, secureCookies));
   return sendJson(response, 201, {
     authenticated: true,
-    account: {
-      id,
-      email: identity.email,
-      displayName: identity.displayName,
-      role: 'user',
-      canAccessSetups: true,
-      canUploadSetups: false,
-      mfaEnabled: false,
-    },
+    account: setupAccountFromRow(account),
     csrfToken: session.csrfToken,
   });
 }
@@ -310,11 +378,11 @@ function findValidSetupInvitation(db, token) {
 
 async function routeSetupAccessManagement(context) {
   const { db, response, path, method, session } = context;
-  if (method === 'GET' && path === '/api/setup-access/users') {
+  if (method === 'GET' && (path === '/api/setup-access/users' || path === '/api/access/users')) {
     const users = db
       .prepare(
         `SELECT id, email, display_name, account_type, is_owner, active, can_access_setups,
-                can_upload_setups, totp_enabled, created_at, updated_at
+                can_upload_setups, can_access_skins, totp_enabled, created_at, updated_at
          FROM admin_profiles
          WHERE account_type IN ('administrator', 'setup_user')
          ORDER BY account_type ASC, is_owner DESC, display_name ASC`,
@@ -324,8 +392,8 @@ async function routeSetupAccessManagement(context) {
     const requests = db
       .prepare(
         `SELECT id, email, display_name, status, created_at, updated_at, reviewed_at
-         FROM setup_access_requests WHERE status != 'activated'
-         ORDER BY CASE status WHEN 'pending' THEN 0 WHEN 'approved' THEN 1 ELSE 2 END,
+         FROM setup_access_requests WHERE status IN ('pending', 'approved')
+         ORDER BY CASE status WHEN 'pending' THEN 0 ELSE 1 END,
                   created_at DESC LIMIT 100`,
       )
       .all()
@@ -348,8 +416,9 @@ async function routeSetupAccessManagement(context) {
     });
   }
 
-  const approve = path.match(/^\/api\/setup-access\/requests\/([^/]+)\/approve$/);
+  const approve = path.match(/^\/api\/(?:setup-access|access)\/requests\/([^/]+)\/approve$/);
   if (method === 'POST' && approve) {
+    const centralized = path.startsWith('/api/access/');
     const accessRequest = db
       .prepare('SELECT * FROM setup_access_requests WHERE id = ?')
       .get(approve[1]);
@@ -362,8 +431,12 @@ async function routeSetupAccessManagement(context) {
     const timestamp = new Date();
     if (existingAccount) {
       db.prepare(
-        `UPDATE admin_profiles SET can_access_setups = 1, active = 1, updated_at = ? WHERE id = ?`,
-      ).run(timestamp.toISOString(), existingAccount.id);
+        `UPDATE admin_profiles SET can_access_setups = ?, active = 1, updated_at = ? WHERE id = ?`,
+      ).run(
+        centralized ? existingAccount.can_access_setups : 1,
+        timestamp.toISOString(),
+        existingAccount.id,
+      );
       db.prepare(
         `UPDATE setup_access_requests SET status = 'activated', updated_at = ?, reviewed_at = ?,
          reviewed_by = ? WHERE id = ?`,
@@ -380,8 +453,9 @@ async function routeSetupAccessManagement(context) {
       );
       db.prepare(
         `INSERT INTO setup_invitations
-         (id, request_id, email, display_name, token_hash, expires_at, created_by, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+         (id, request_id, email, display_name, token_hash, expires_at, created_by, created_at,
+          grants_setup_access)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       ).run(
         randomUUID(),
         accessRequest.id,
@@ -391,6 +465,7 @@ async function routeSetupAccessManagement(context) {
         expiresAt.toISOString(),
         session.admin.id,
         timestamp.toISOString(),
+        centralized ? 0 : 1,
       );
       db.prepare(
         `UPDATE setup_access_requests SET status = 'approved', updated_at = ?, reviewed_at = ?,
@@ -412,13 +487,13 @@ async function routeSetupAccessManagement(context) {
       activated: false,
       invitation: {
         email: accessRequest.email,
-        path: `/setups/aceptar-invitacion?token=${encodeURIComponent(token)}`,
+        path: `${centralized ? '/aceptar-invitacion' : '/setups/aceptar-invitacion'}?token=${encodeURIComponent(token)}`,
         expiresAt: expiresAt.toISOString(),
       },
     });
   }
 
-  const reject = path.match(/^\/api\/setup-access\/requests\/([^/]+)\/reject$/);
+  const reject = path.match(/^\/api\/(?:setup-access|access)\/requests\/([^/]+)\/reject$/);
   if (method === 'POST' && reject) {
     const accessRequest = db
       .prepare("SELECT * FROM setup_access_requests WHERE id = ? AND status != 'activated'")
@@ -442,29 +517,59 @@ async function routeSetupAccessManagement(context) {
     return sendEmpty(response, 204);
   }
 
-  const user = path.match(/^\/api\/setup-access\/users\/([^/]+)$/);
+  const user = path.match(/^\/api\/(setup-access|access)\/users\/([^/]+)$/);
   if (method === 'PATCH' && user) {
-    const target = db.prepare('SELECT * FROM admin_profiles WHERE id = ?').get(user[1]);
+    const target = db.prepare('SELECT * FROM admin_profiles WHERE id = ?').get(user[2]);
     if (!target) throw new ApiError(404, 'NOT_FOUND', 'No existe esa cuenta.');
     if (target.account_type === 'administrator') {
       throw new ApiError(422, 'ADMIN_PROTECTED', 'Los administradores conservan acceso completo.');
     }
     const input = await readJson(context.request);
-    if (typeof input.canAccessSetups !== 'boolean' || typeof input.canUploadSetups !== 'boolean') {
-      throw new ApiError(422, 'VALIDATION_ERROR', 'Indica los dos permisos de la cuenta.');
+    if (
+      typeof input.canAccessSetups !== 'boolean' ||
+      typeof input.canUploadSetups !== 'boolean' ||
+      (user[1] === 'access' && typeof input.canAccessSkins !== 'boolean')
+    ) {
+      throw new ApiError(422, 'VALIDATION_ERROR', 'Indica todos los permisos de la cuenta.');
     }
     const canAccess = input.canAccessSetups;
     const canUpload = canAccess && input.canUploadSetups;
+    const canAccessSkins =
+      user[1] === 'access' ? input.canAccessSkins : target.can_access_skins === 1;
     const timestamp = new Date().toISOString();
     db.prepare(
-      `UPDATE admin_profiles SET can_access_setups = ?, can_upload_setups = ?, updated_at = ?
+      `UPDATE admin_profiles SET can_access_setups = ?, can_upload_setups = ?,
+       can_access_skins = ?, updated_at = ?
        WHERE id = ?`,
-    ).run(canAccess ? 1 : 0, canUpload ? 1 : 0, timestamp, target.id);
-    if (!canAccess) db.prepare('DELETE FROM admin_sessions WHERE admin_id = ?').run(target.id);
-    recordAudit(db, session.admin.id, 'setups.permissions_updated', 'account', target.id, {
+    ).run(canAccess ? 1 : 0, canUpload ? 1 : 0, canAccessSkins ? 1 : 0, timestamp, target.id);
+    recordAudit(db, session.admin.id, 'access.permissions_updated', 'account', target.id, {
       canAccessSetups: canAccess,
       canUploadSetups: canUpload,
+      canAccessSkins,
     });
+    return sendJson(response, 200, {
+      user: setupManagedAccountFromRow(
+        db.prepare('SELECT * FROM admin_profiles WHERE id = ?').get(target.id),
+      ),
+    });
+  }
+
+  const revoke = path.match(/^\/api\/access\/users\/([^/]+)\/(revoke|restore)$/);
+  if (method === 'POST' && revoke) {
+    const target = db.prepare('SELECT * FROM admin_profiles WHERE id = ?').get(revoke[1]);
+    if (!target) throw new ApiError(404, 'NOT_FOUND', 'No existe esa cuenta.');
+    if (target.account_type === 'administrator') {
+      throw new ApiError(422, 'ADMIN_PROTECTED', 'Gestiona administradores desde su apartado.');
+    }
+    const active = revoke[2] === 'restore';
+    const timestamp = new Date().toISOString();
+    db.prepare('UPDATE admin_profiles SET active = ?, updated_at = ? WHERE id = ?').run(
+      active ? 1 : 0,
+      timestamp,
+      target.id,
+    );
+    if (!active) db.prepare('DELETE FROM admin_sessions WHERE admin_id = ?').run(target.id);
+    recordAudit(db, session.admin.id, `access.account_${active ? 'restored' : 'revoked'}`, 'account', target.id);
     return sendJson(response, 200, {
       user: setupManagedAccountFromRow(
         db.prepare('SELECT * FROM admin_profiles WHERE id = ?').get(target.id),
@@ -1090,6 +1195,7 @@ function setupAccount(account) {
     role: account.role,
     canAccessSetups: Boolean(account.canAccessSetups),
     canUploadSetups: Boolean(account.canUploadSetups),
+    canAccessSkins: Boolean(account.canAccessSkins),
     mfaEnabled: Boolean(account.mfaEnabled),
   };
 }
@@ -1102,6 +1208,7 @@ function setupAccountFromRow(row) {
     role: row.account_type === 'setup_user' ? 'user' : row.is_owner === 1 ? 'owner' : 'admin',
     canAccessSetups: row.account_type === 'administrator' || row.can_access_setups === 1,
     canUploadSetups: row.account_type === 'administrator' || row.can_upload_setups === 1,
+    canAccessSkins: row.account_type === 'administrator' || row.can_access_skins === 1,
     mfaEnabled: row.totp_enabled === 1,
   };
 }

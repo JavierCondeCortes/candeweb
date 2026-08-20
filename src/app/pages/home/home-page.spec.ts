@@ -116,7 +116,9 @@ describe('HomePage', () => {
     expect(host.querySelector('#unirse')).toBeFalsy();
 
     expect(host.querySelectorAll('.team-card')).toHaveLength(5);
-    expect(host.querySelectorAll('.team-card a')).toHaveLength(3);
+    expect(host.querySelectorAll('.team-card a')).toHaveLength(5);
+    expect(host.querySelector('.team-card a[aria-label^="Discord de Alex Vega"]')).toBeTruthy();
+    expect(host.querySelector('.team-card a[aria-label^="Web de Alex Vega"]')).toBeTruthy();
 
     expect(
       host
@@ -376,6 +378,8 @@ function member(id: string, name: string, withTwitch: boolean) {
     instagramUrl: null,
     youtubeUrl: null,
     xUrl: null,
+    discordUrl: id === '1' ? 'https://discord.gg/j22XuDEfMk' : null,
+    websiteUrl: id === '1' ? 'https://example.com/alex' : null,
     displayOrder: Number(id),
     isFeatured: true,
     isDemo: true,

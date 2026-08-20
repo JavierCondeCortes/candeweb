@@ -18,6 +18,7 @@ describe('SetupShell', () => {
         role: 'user' as const,
         canAccessSetups: true,
         canUploadSetups: false,
+        canAccessSkins: true,
         mfaEnabled: false,
       },
       csrfToken: 'csrf',
@@ -53,6 +54,16 @@ describe('SetupShell', () => {
         language!.compareDocumentPosition(menuButton!) & Node.DOCUMENT_POSITION_FOLLOWING,
       ),
     ).toBe(true);
+  });
+
+  it('shows both private libraries when the account has both permissions', () => {
+    const host = fixture.nativeElement as HTMLElement;
+    const links = Array.from(host.querySelectorAll<HTMLAnchorElement>('.setup-nav a')).map((link) =>
+      link.getAttribute('href'),
+    );
+
+    expect(links).toContain('/setups');
+    expect(links).toContain('/skins');
   });
 
   it('opens the mobile navigation and closes it with Escape', () => {

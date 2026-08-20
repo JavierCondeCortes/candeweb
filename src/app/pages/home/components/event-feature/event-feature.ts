@@ -50,6 +50,7 @@ export class EventFeature {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
+      timeZone: 'Europe/Madrid',
     }).format(new Date(value));
   }
 

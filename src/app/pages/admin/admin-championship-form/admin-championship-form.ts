@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize, timeout } from 'rxjs';
 import { HasPendingChanges } from '../../../core/guards/pending-changes.guard';
+import { madridDateTimeLocalValue } from '../../../core/date-time/madrid-date-time';
 import {
   ChampionshipContent,
   ChampionshipStatus,
@@ -375,16 +376,12 @@ function toChampionshipForm(championship: ChampionshipContent) {
     coverAltEn: championship.coverAltEn ?? '',
     backgroundVideoUrl: championship.backgroundVideoUrl ?? '',
     backgroundVideoMimeType: championship.backgroundVideoMimeType ?? '',
-    startAt: localDateValue(championship.startAt),
-    endAt: localDateValue(championship.endAt),
+    startAt: madridDateTimeLocalValue(championship.startAt),
+    endAt: madridDateTimeLocalValue(championship.endAt),
     registrationUrl: championship.registrationUrl ?? '',
     rulesUrl: championship.rulesUrl ?? '',
     status: championship.status,
     isFeatured: championship.isFeatured,
     displayOrder: championship.displayOrder,
   };
-}
-
-function localDateValue(value: string | null): string {
-  return value ? value.slice(0, 16) : '';
 }

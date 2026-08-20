@@ -19,6 +19,7 @@ export interface SetupAccount {
   role: SetupRole;
   canAccessSetups: boolean;
   canUploadSetups: boolean;
+  canAccessSkins: boolean;
   mfaEnabled: boolean;
 }
 

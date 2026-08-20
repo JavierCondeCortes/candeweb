@@ -58,7 +58,8 @@ export function getSession(db, request) {
       `SELECT
         s.token_hash, s.csrf_token, s.expires_at,
         a.id AS admin_id, a.email, a.display_name, a.role, a.is_owner, a.active, a.totp_enabled,
-        a.email_verified_at, a.account_type, a.can_access_setups, a.can_upload_setups
+        a.email_verified_at, a.account_type, a.can_access_setups, a.can_upload_setups,
+        a.can_access_skins
        FROM admin_sessions s
        JOIN admin_profiles a ON a.id = s.admin_id
        WHERE s.token_hash = ?`,
@@ -83,6 +84,7 @@ export function getSession(db, request) {
       accountType: session.account_type,
       canAccessSetups: session.account_type === 'administrator' || session.can_access_setups === 1,
       canUploadSetups: session.account_type === 'administrator' || session.can_upload_setups === 1,
+      canAccessSkins: session.account_type === 'administrator' || session.can_access_skins === 1,
       mfaEnabled: session.totp_enabled === 1,
       emailVerified: Boolean(session.email_verified_at),
     },

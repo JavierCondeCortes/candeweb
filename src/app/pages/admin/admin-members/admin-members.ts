@@ -136,4 +136,16 @@ export class AdminMembers implements OnInit {
   statusLabel(status: TeamMemberContent['status']): string {
     return this.i18n.translate(`admin.common.${status}`);
   }
+
+  socialLabels(member: TeamMemberContent): string {
+    const labels = [
+      member.twitchUrl && 'Twitch',
+      member.instagramUrl && 'Instagram',
+      member.youtubeUrl && 'YouTube',
+      member.xUrl && 'X',
+      member.discordUrl && 'Discord',
+      member.websiteUrl && this.i18n.translate('admin.memberForm.website'),
+    ].filter(Boolean);
+    return labels.join(' · ') || this.i18n.translate('admin.members.noSocials');
+  }
 }
