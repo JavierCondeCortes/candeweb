@@ -16,6 +16,7 @@
     "sponsors": "Sponsors",
     "currentEvent": "Candeonato actual",
     "championshipHistory": "Historial",
+    "chiquitoSpotter": "Chiquito Spotter",
     "homeLabel": "CANDEWEB — Candemor Racing Team, volver al inicio",
     "twitchLabel": "Twitch de Candemor (se abre en una pestaña nueva)",
     "discordLabel": "Discord de Candemor (se abre en una pestaña nueva)"
@@ -174,10 +175,10 @@
   "privateNav": {
     "label": "Navegación de bibliotecas privadas",
     "setups": "Setups",
-    "skins": "pinturas"
+    "skins": "Pinturas"
   },
   "skins": {
-    "meta": { "title": "pinturas privadas · Candemor" },
+    "meta": { "title": "Pinturas privadas · Candemor" },
     "skip": "Saltar al catálogo de pinturas",
     "homeLabel": "CandePaints, catálogo",
     "navLabel": "Navegación de pinturas",
@@ -368,13 +369,116 @@
       "restore": "Restaurar acceso"
     }
   },
+  "spotter": {
+    "meta": { "title": "Chiquito Spotter · Candemor Racing Team" },
+    "skip": "Saltar al contenido de Chiquito Spotter",
+    "nav": {
+      "label": "Navegación de Chiquito Spotter",
+      "home": "Inicio",
+      "about": "Qué es",
+      "listen": "Escúchalo",
+      "compatibility": "Compatibilidad",
+      "open": "Abrir menú",
+      "close": "Cerrar menú"
+    },
+    "hero": {
+      "eyebrow": "Producto de la comunidad // Audio de competición",
+      "lede": "Una voz diferente para vivir cada salida, cada batalla y cada bandera dentro de pista.",
+      "try": "Probar los audios",
+      "signalLabel": "Vista previa de la señal de audio",
+      "radio": "Radio de carrera // Canal 04",
+      "signalText": "Seis muestras reales disponibles para escuchar ahora.",
+      "playFeatured": "Ir a las muestras",
+      "discover": "Descubrir el producto"
+    },
+    "home": {
+      "eyebrow": "Nuevo producto de la comunidad",
+      "intro": "Prueba la voz de Chiquito Spotter directamente en la web y descubre una forma diferente de escuchar lo que ocurre en pista.",
+      "action": "Escuchar las demos",
+      "heroAction": "Probar Chiquito Spotter",
+      "console": "Señal preparada · Pulsa para escuchar"
+    },
+    "about": {
+      "eyebrow": "Qué es",
+      "title": "La carrera también se escucha",
+      "lede": "Chiquito Spotter reúne mensajes de carrera con una identidad reconocible para acompañar la acción sin perder de vista la información de pista.",
+      "track": "Avisos para situaciones reales de pista.",
+      "race": "Mensajes para distintos momentos de carrera.",
+      "identity": "Una personalidad propia nacida dentro de la comunidad."
+    },
+    "demo": {
+      "eyebrow": "Escúchalo",
+      "title": "Prueba la radio",
+      "intro": "Estas son muestras cortas extraídas del producto. Inicia cualquiera de ellas: al cambiar de muestra, la anterior se detendrá automáticamente.",
+      "listLabel": "Muestras de audio de Chiquito Spotter",
+      "note": "Las demos son fragmentos de presentación. El paquete completo no se descarga desde esta página.",
+      "items": {
+        "position": {
+          "title": "Lucha por posición",
+          "context": "Coche de delante",
+          "transcript": "«El coche de delante lucha por posición, no te rajes»"
+        },
+        "won": {
+          "title": "Victoria",
+          "context": "Final de carrera",
+          "transcript": "«Vamos, campeón, has ganado. Te voy a dar dos medallas: una por tonto y otra por si la pierdes. Es broma, te quiero, pecador. Buen trabajo»"
+        },
+        "top10": {
+          "title": "Dentro del Top 10",
+          "context": "Posición de carrera",
+          "transcript": "«No hagas el canelo, vas Top 10, pedazo de tróspido»"
+        },
+        "smoking": {
+          "title": "Humo en el coche",
+          "context": "Avería mecánica",
+          "transcript": "«Quietor, humo como para hacer un café, cobarde. A boxes antes de que tu coche se nos haga churrascos de la pradera»"
+        },
+        "repair": {
+          "title": "Daños graves",
+          "context": "Entrada a boxes",
+          "transcript": "«Bro, vas dejando piezas por la pista como migas de pan. Entra en boxes antes de que tengamos que recogerte con pala»"
+        },
+        "mostRepair": {
+          "title": "Reparación parcial",
+          "context": "Daños del vehículo",
+          "transcript": "«Podemos reparar la mayoría del daño, pero no somos los Reyes Magos»"
+        }
+      }
+    },
+    "details": {
+      "eyebrow": "El producto",
+      "title": "Preparado para la parrilla",
+      "audioTitle": "Mensajes de carrera",
+      "audioText": "El paquete incluye distintos avisos de pista. El contenido completo se entregará fuera de esta landing.",
+      "compatibilityTitle": "Compatibilidad",
+      "compatibilityText": "Los simuladores, versiones y requisitos compatibles se publicarán aquí cuando queden confirmados.",
+      "deliveryTitle": "Acceso mediante Patreon",
+      "deliveryText": "El producto se obtiene desde su publicación oficial en Patreon. El precio, la entrega y las condiciones se consultan allí."
+    },
+    "patreon": {
+      "eyebrow": "Disponible mediante Patreon",
+      "title": "Llévate la voz a pista",
+      "text": "Accede a la publicación oficial de Chiquito Spotter en Patreon para consultar sus condiciones y conseguir el producto.",
+      "action": "Conseguir en Patreon"
+    },
+    "faq": {
+      "title": "Antes de salir",
+      "listenQuestion": "¿Puedo probarlo antes de comprar?",
+      "listenAnswer": "Sí. Las seis muestras de esta landing son audios reales del producto y no requieren registro.",
+      "buyQuestion": "¿Dónde se compra?",
+      "buyAnswer": "Se consigue desde la publicación oficial de Chiquito Spotter en Patreon. Los botones de esta página te llevan directamente a ella.",
+      "compatibilityQuestion": "¿Con qué simuladores funciona?",
+      "compatibilityAnswer": "El Chiquito Spotter funciona en iRacing."
+    }
+  },
   "footer": {
     "label": "Información de Candemor Racing Team",
     "description": "Una comunidad de simracing que compite, comparte y crea experiencias propias.",
     "secondaryNav": "Navegación secundaria",
     "history": "Historial de Candeonatos",
     "setups": "Setups privados",
-    "skins": "pinturas privadas",
+    "skins": "Pinturas privadas",
+    "chiquitoSpotter": "Chiquito Spotter",
     "contact": "Contacto",
     "legal": "© {{year}} Candemor Racing Team · Contenido externo sujeto a disponibilidad."
   }

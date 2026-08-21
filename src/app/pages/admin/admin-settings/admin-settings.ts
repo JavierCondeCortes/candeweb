@@ -17,6 +17,9 @@ import {
   focusErrorSummary,
 } from '../admin-form-errors';
 
+const DEFAULT_CHIQUITO_SPOTTER_URL =
+  'https://www.patreon.com/candemor/posts/chiquitito-151646382';
+
 @Component({
   selector: 'app-admin-settings',
   imports: [DatePipe, ReactiveFormsModule, TranslatePipe],
@@ -40,6 +43,7 @@ export class AdminSettings implements OnInit {
     twitchChannelUrl: ['', [Validators.required]],
     twitchChannelsText: [''],
     featuredChampionshipId: [''],
+    chiquitoSpotterUrl: ['', [Validators.required]],
     contactEmail: ['', [Validators.email]],
     discordUrl: [''],
     instagramUrl: [''],
@@ -64,6 +68,8 @@ export class AdminSettings implements OnInit {
               .map((channel) => channel.login)
               .join('\n'),
             featuredChampionshipId: settings.settings.featuredChampionshipId ?? '',
+            chiquitoSpotterUrl:
+              settings.settings.chiquitoSpotterUrl ?? DEFAULT_CHIQUITO_SPOTTER_URL,
             contactEmail: settings.settings.contactEmail ?? '',
             discordUrl: settings.settings.discordUrl ?? '',
             instagramUrl: settings.settings.instagramUrl ?? '',
@@ -93,6 +99,7 @@ export class AdminSettings implements OnInit {
           {
             twitchChannelLogin: this.i18n.translate('admin.settings.channelLogin'),
             twitchChannelUrl: this.i18n.translate('admin.settings.channelUrl'),
+            chiquitoSpotterUrl: this.i18n.translate('admin.settings.spotterUrl'),
             contactEmail: this.i18n.translate('admin.settings.email'),
           },
           (key, params) => this.i18n.translate(key, params),
@@ -127,6 +134,7 @@ export class AdminSettings implements OnInit {
         ...additionalChannels.channels,
       ],
       featuredChampionshipId: value.featuredChampionshipId || null,
+      chiquitoSpotterUrl: value.chiquitoSpotterUrl,
       contactEmail: value.contactEmail || null,
       discordUrl: value.discordUrl || null,
       instagramUrl: value.instagramUrl || null,

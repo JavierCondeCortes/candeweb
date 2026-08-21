@@ -53,4 +53,13 @@ describe('Footer', () => {
     expect(link).toBeTruthy();
     expect(link.textContent?.trim()).toBeTruthy();
   });
+
+  it('makes the Chiquito Spotter public landing visible', () => {
+    const link = fixture.nativeElement.querySelector(
+      'a[href="/chiquito-spotter"]',
+    ) as HTMLAnchorElement;
+
+    expect(link).toBeTruthy();
+    expect(link.textContent).toContain('Chiquito Spotter');
+  });
 });

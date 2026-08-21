@@ -96,6 +96,34 @@
       </div>
     </section>
 
+    <section class="admin-form-section" aria-labelledby="settings-spotter-title">
+      <div>
+        <h2 id="settings-spotter-title">{{ 'admin.settings.spotterTitle' | translate }}</h2>
+        <p>{{ 'admin.settings.spotterHelp' | translate }}</p>
+      </div>
+      <div class="admin-form-grid">
+        <label class="is-wide">
+          <span>{{ 'admin.settings.spotterUrl' | translate }}</span>
+          <input
+            type="url"
+            formControlName="chiquitoSpotterUrl"
+            autocomplete="url"
+            placeholder="https://www.patreon.com/candemor/posts/..."
+            [attr.aria-invalid]="fieldErrors()['chiquitoSpotterUrl'] ? 'true' : null"
+            [attr.aria-describedby]="
+              fieldErrors()['chiquitoSpotterUrl']
+                ? 'settings-spotter-help settings-spotter-error'
+                : 'settings-spotter-help'
+            "
+          />
+          <small id="settings-spotter-help">{{ 'admin.settings.spotterUrlHelp' | translate }}</small>
+          @if (fieldErrors()['chiquitoSpotterUrl']; as error) {
+            <small id="settings-spotter-error" class="field-error">{{ error }}</small>
+          }
+        </label>
+      </div>
+    </section>
+
     <section class="admin-form-section" aria-labelledby="settings-contact-title">
       <div>
         <h2 id="settings-contact-title">{{ 'admin.settings.contact' | translate }}</h2>

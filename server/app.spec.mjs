@@ -344,6 +344,10 @@ test('administra contenidos y cuentas con propietario, invitación y TOTP indepe
     });
     assert.equal(initialSettings.data.settings.twitchChannels.length, 1);
     assert.equal(initialSettings.data.settings.discordUrl, 'https://discord.gg/j22XuDEfMk');
+    assert.equal(
+      initialSettings.data.settings.chiquitoSpotterUrl,
+      'https://www.patreon.com/candemor/posts/chiquitito-151646382',
+    );
     const updatedSettings = await jsonRequest(baseUrl, '/api/admin/settings', {
       method: 'PATCH',
       cookie: adminCookie,
@@ -359,6 +363,8 @@ test('administra contenidos y cuentas con propietario, invitación y TOTP indepe
             priority: 1,
           },
         ],
+        chiquitoSpotterUrl:
+          'https://www.patreon.com/candemor/posts/chiquitito-version-2-999999999',
       },
     });
     assert.equal(updatedSettings.status, 200);
@@ -366,6 +372,26 @@ test('administra contenidos y cuentas con propietario, invitación y TOTP indepe
       updatedSettings.data.settings.twitchChannels.map((channel) => channel.login),
       ['candemorracingteam', 'piloto_candemor'],
     );
+    assert.equal(
+      updatedSettings.data.settings.chiquitoSpotterUrl,
+      'https://www.patreon.com/candemor/posts/chiquitito-version-2-999999999',
+    );
+    const publicSettings = await jsonRequest(baseUrl, '/api/public/site-settings');
+    assert.equal(
+      publicSettings.data.chiquitoSpotterUrl,
+      'https://www.patreon.com/candemor/posts/chiquitito-version-2-999999999',
+    );
+    const rejectedSpotterUrl = await jsonRequest(baseUrl, '/api/admin/settings', {
+      method: 'PATCH',
+      cookie: adminCookie,
+      csrf: adminCsrf,
+      body: {
+        ...updatedSettings.data.settings,
+        chiquitoSpotterUrl: 'https://example.com/falso-spotter',
+      },
+    });
+    assert.equal(rejectedSpotterUrl.status, 422);
+    assert.match(rejectedSpotterUrl.data.error.fields.chiquitoSpotterUrl, /patreon\.com/);
     await jsonRequest(baseUrl, '/api/public/stream-status');
     assert.deepEqual(
       receivedTwitchChannels.map((channel) => channel.login),

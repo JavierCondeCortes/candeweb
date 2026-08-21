@@ -81,6 +81,8 @@ describe('Admin reactive forms', () => {
               },
             ],
             featuredChampionshipId: null,
+            chiquitoSpotterUrl:
+              'https://www.patreon.com/candemor/posts/chiquitito-151646382',
             contactEmail: null,
             discordUrl: 'https://discord.gg/j22XuDEfMk',
             instagramUrl: null,
@@ -107,6 +109,9 @@ describe('Admin reactive forms', () => {
       host.querySelector<HTMLTextAreaElement>('textarea[formControlName="twitchChannelsText"]')
         ?.value,
     ).toBe('piloto_candemor');
+    expect(
+      host.querySelector<HTMLInputElement>('input[formControlName="chiquitoSpotterUrl"]')?.value,
+    ).toBe('https://www.patreon.com/candemor/posts/chiquitito-151646382');
   });
 
   it('renders the second-factor security screen', async () => {

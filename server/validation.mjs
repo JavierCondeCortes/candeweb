@@ -212,10 +212,19 @@ export function validateSettings(input) {
     discordUrl: socialUrl(input.discordUrl, 'discord.gg', 'discordUrl', fields, ['discord.com']),
     instagramUrl: socialUrl(input.instagramUrl, 'instagram.com', 'instagramUrl', fields),
     youtubeUrl: socialUrl(input.youtubeUrl, 'youtube.com', 'youtubeUrl', fields, ['youtu.be']),
+    chiquitoSpotterUrl: socialUrl(
+      input.chiquitoSpotterUrl,
+      'patreon.com',
+      'chiquitoSpotterUrl',
+      fields,
+    ),
   };
 
   if (!settings.twitchChannelUrl) {
     fields.twitchChannelUrl = 'Añade la URL oficial de Twitch.';
+  }
+  if (!settings.chiquitoSpotterUrl && !fields.chiquitoSpotterUrl) {
+    fields.chiquitoSpotterUrl = 'Añade la URL de la publicación más reciente en Patreon.';
   }
   if (Object.keys(fields).length) {
     throw new ApiError(422, 'VALIDATION_ERROR', 'Hay campos que necesitan revisión.', fields);

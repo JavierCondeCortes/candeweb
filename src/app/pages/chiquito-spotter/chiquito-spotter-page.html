@@ -1,0 +1,183 @@
+<a class="skip-link" href="#spotter-content">{{ 'home.spotter.skip' | translate }}</a>
+
+<div class="spotter-page">
+  <header id="spotter-start" class="spotter-hero">
+    <nav class="spotter-nav" [class.menu-open]="menuOpen()" [attr.aria-label]="'home.spotter.nav.label' | translate">
+      <a class="spotter-brand site-brand" routerLink="/" [attr.aria-label]="'home.nav.homeLabel' | translate">
+        CANDE<span>WEB</span>
+      </a>
+
+      <div id="spotter-navigation-links" class="spotter-nav-links">
+        <a class="site-nav-link" routerLink="/" (click)="closeMenu()">{{ 'home.spotter.nav.home' | translate }}</a>
+        <a class="site-nav-link" routerLink="/chiquito-spotter" fragment="que-es" (click)="closeMenu()">{{
+          'home.spotter.nav.about' | translate
+          }}</a>
+        <a class="site-nav-link" routerLink="/chiquito-spotter" fragment="demo" (click)="closeMenu()">{{
+          'home.spotter.nav.listen' | translate
+          }}</a>
+        <a class="site-nav-link" routerLink="/chiquito-spotter" fragment="compatibilidad" (click)="closeMenu()">{{
+          'home.spotter.nav.compatibility' | translate
+          }}</a>
+      </div>
+
+      <div class="spotter-nav-actions">
+        <app-language-switcher />
+        <button class="spotter-menu-button" type="button" aria-controls="spotter-navigation-links"
+          [attr.aria-expanded]="menuOpen()" [attr.aria-label]="
+            menuOpen()
+              ? ('home.spotter.nav.close' | translate)
+              : ('home.spotter.nav.open' | translate)
+          " (click)="toggleMenu()">
+          <span></span><span></span>
+        </button>
+      </div>
+    </nav>
+
+    <div class="spotter-grid" aria-hidden="true"></div>
+
+    <div class="spotter-hero-inner">
+      <div class="spotter-hero-copy">
+        <p class="eyebrow">{{ 'home.spotter.hero.eyebrow' | translate }}</p>
+        <h1 class="display-title">
+          Chiquito
+          <span>Spotter</span>
+        </h1>
+        <p class="lede">{{ 'home.spotter.hero.lede' | translate }}</p>
+        <div class="spotter-hero-actions">
+          <a class="button button-primary" routerLink="/chiquito-spotter" fragment="demo">
+            {{ 'home.spotter.hero.try' | translate }}
+            <span aria-hidden="true">↓</span>
+          </a>
+          <a class="button button-secondary" [href]="patreonUrl()" target="_blank" rel="noopener noreferrer">
+            {{ 'home.spotter.patreon.action' | translate }}
+            <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </div>
+
+      <aside class="spotter-signal" [attr.aria-label]="'home.spotter.hero.signalLabel' | translate">
+        <div class="spotter-signal-head meta-text text-muted">
+          <span>{{ 'home.spotter.hero.radio' | translate }}</span>
+          <span class="text-magenta">REC</span>
+        </div>
+        <div class="spotter-wave" aria-hidden="true">
+          @for (bar of waveBars; track $index) {
+          <i></i>
+          }
+        </div>
+        <p class="body-copy">{{ 'home.spotter.hero.signalText' | translate }}</p>
+        <a class="meta-link text-lime" routerLink="/chiquito-spotter" fragment="demo">
+          {{ 'home.spotter.hero.playFeatured' | translate }}
+          <span aria-hidden="true">↘</span>
+        </a>
+      </aside>
+    </div>
+  </header>
+
+  <main id="spotter-content" tabindex="-1">
+    <section id="que-es" class="spotter-intro spotter-shell">
+      <div>
+        <p class="eyebrow">01 · {{ 'home.spotter.about.eyebrow' | translate }}</p>
+        <h2 class="section-title">{{ 'home.spotter.about.title' | translate }}</h2>
+      </div>
+      <div class="spotter-intro-copy">
+        <p class="lede">{{ 'home.spotter.about.lede' | translate }}</p>
+        <ul>
+          <li class="content-title"><span class="meta-text text-magenta">01</span>{{ 'home.spotter.about.track' | translate }}</li>
+          <li class="content-title"><span class="meta-text text-magenta">02</span>{{ 'home.spotter.about.race' | translate }}</li>
+          <li class="content-title"><span class="meta-text text-magenta">03</span>{{ 'home.spotter.about.identity' | translate }}</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="demo" class="spotter-demo-section">
+      <div class="spotter-shell">
+        <div class="spotter-section-heading">
+          <div>
+            <p class="eyebrow">02 · {{ 'home.spotter.demo.eyebrow' | translate }}</p>
+            <h2 class="section-title">{{ 'home.spotter.demo.title' | translate }}</h2>
+          </div>
+          <p class="body-copy">{{ 'home.spotter.demo.intro' | translate }}</p>
+        </div>
+
+        <div class="spotter-demo-grid" [attr.aria-label]="'home.spotter.demo.listLabel' | translate">
+          @for (demo of demos; track demo.id; let index = $index) {
+          <article class="spotter-demo-card">
+            <div class="spotter-demo-number meta-text text-magenta" aria-hidden="true">0{{ index + 1 }}</div>
+            <div class="spotter-demo-copy">
+              <p class="eyebrow">{{ demo.contextKey | translate }}</p>
+              <h3 class="content-title">{{ demo.titleKey | translate }}</h3>
+              <blockquote class="body-copy">{{ demo.transcriptKey | translate }}</blockquote>
+            </div>
+            <div class="spotter-demo-wave" aria-hidden="true">
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+            </div>
+            <audio #demoAudio class="spotter-audio" controls preload="metadata" [src]="demo.src"
+              [attr.aria-label]="demo.titleKey | translate" (play)="pauseOtherAudios($event)"></audio>
+          </article>
+          }
+        </div>
+        <p class="spotter-demo-note body-copy">{{ 'home.spotter.demo.note' | translate }}</p>
+      </div>
+    </section>
+
+    <section id="compatibilidad" class="spotter-details spotter-shell">
+      <div class="spotter-details-title">
+        <p class="eyebrow">03 · {{ 'home.spotter.details.eyebrow' | translate }}</p>
+        <h2 class="section-title">{{ 'home.spotter.details.title' | translate }}</h2>
+      </div>
+      <div class="spotter-detail-card">
+        <!-- <span aria-hidden="true">A</span> -->
+        <h3 class="content-title">{{ 'home.spotter.details.audioTitle' | translate }}</h3>
+        <p class="body-copy">{{ 'home.spotter.details.audioText' | translate }}</p>
+      </div>
+      <div class="spotter-detail-card">
+        <!-- <span aria-hidden="true">B</span> -->
+        <h3 class="content-title">{{ 'home.spotter.details.compatibilityTitle' | translate }}</h3>
+        <p class="body-copy">{{ 'home.spotter.details.compatibilityText' | translate }}</p>
+      </div>
+      <div class="spotter-detail-card">
+        <!-- <span aria-hidden="true">C</span> -->
+        <h3 class="content-title">{{ 'home.spotter.details.deliveryTitle' | translate }}</h3>
+        <p class="body-copy">{{ 'home.spotter.details.deliveryText' | translate }}</p>
+      </div>
+    </section>
+
+    <section class="spotter-cta">
+      <div class="spotter-shell spotter-cta-inner">
+        <div>
+          <p class="eyebrow">{{ 'home.spotter.patreon.eyebrow' | translate }}</p>
+          <h2 class="section-title">{{ 'home.spotter.patreon.title' | translate }}</h2>
+          <p class="body-copy">{{ 'home.spotter.patreon.text' | translate }}</p>
+          <a class="button button-primary" [href]="patreonUrl()" target="_blank" rel="noopener noreferrer">
+            {{ 'home.spotter.patreon.action' | translate }}
+            <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="spotter-faq spotter-shell">
+      <div>
+        <p class="eyebrow">04 · FAQ</p>
+        <h2 class="section-title">{{ 'home.spotter.faq.title' | translate }}</h2>
+      </div>
+      <div class="spotter-faq-list">
+        <details>
+          <summary class="content-title lede accent-marker">{{ 'home.spotter.faq.listenQuestion' | translate }}</summary>
+          <p class="body-copy">{{ 'home.spotter.faq.listenAnswer' | translate }}</p>
+        </details>
+        <details>
+          <summary class="content-title lede accent-marker">{{ 'home.spotter.faq.buyQuestion' | translate }}</summary>
+          <p class="body-copy">{{ 'home.spotter.faq.buyAnswer' | translate }}</p>
+        </details>
+        <details>
+          <summary class="content-title lede accent-marker">{{ 'home.spotter.faq.compatibilityQuestion' | translate }}</summary>
+          <p class="body-copy">{{ 'home.spotter.faq.compatibilityAnswer' | translate }}</p>
+        </details>
+      </div>
+    </section>
+  </main>
+
+  <app-footer></app-footer>
+</div>
