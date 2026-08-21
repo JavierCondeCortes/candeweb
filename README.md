@@ -57,6 +57,11 @@ primero el oficial y después se respeta el orden editorial.
 La invitación oficial de la comunidad es `https://discord.gg/j22XuDEfMk`. Puede modificarse o
 retirarse desde `/admin/ajustes` sin cambiar el frontend.
 
+El bot WebUpdates consume un feed duradero de publicaciones mediante
+`GET /api/web-updates/events`. Configura `WEB_UPDATES_API_TOKEN` exclusivamente en el servidor y en
+el bot; el contrato, los tipos de evento y la estrategia de cursor están documentados en
+[`docs/web-updates-api.md`](docs/web-updates-api.md).
+
 El Candeonato utiliza el sistema de clasificación de Fat Cat Race: esta web presenta los resultados
 publicados por esa plataforma y no recalcula puntos, desempates ni sanciones. El historial incluye
 seis Candeonatos encontrados en su archivo público. Las

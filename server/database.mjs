@@ -775,6 +775,163 @@ function migrate(db) {
     ).run('https://www.patreon.com/candemor/posts/chiquitito-151646382');
     db.prepare('INSERT INTO schema_migrations (version, applied_at) VALUES (24, ?)').run(now());
   }
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS web_update_events (
+      sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+      event_id TEXT NOT NULL UNIQUE,
+      event_type TEXT NOT NULL CHECK (
+        event_type IN ('setup.published', 'skin.published', 'championship.published')
+      ),
+      entity_id TEXT NOT NULL,
+      dedupe_key TEXT NOT NULL UNIQUE,
+      payload TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS web_update_events_created
+      ON web_update_events(created_at, sequence);
+
+    CREATE TRIGGER IF NOT EXISTS web_updates_setup_published
+    AFTER UPDATE OF status ON setups
+    WHEN NEW.status = 'published' AND OLD.status != 'published'
+    BEGIN
+      INSERT OR IGNORE INTO web_update_events
+        (event_id, event_type, entity_id, dedupe_key, payload, created_at)
+      VALUES (
+        lower(hex(randomblob(16))),
+        'setup.published',
+        NEW.id,
+        'setup.published:' || NEW.id || ':first-publication',
+        json_object(
+          'id', NEW.id,
+          'title', NEW.title,
+          'simulator', NEW.simulator,
+          'car', NEW.car,
+          'track', NEW.track,
+          'configuration', NEW.configuration,
+          'season', NEW.season_number,
+          'week', NEW.week_number,
+          'year', NEW.season_year,
+          'url', '/setups/' || NEW.id,
+          'publishedAt', NEW.published_at
+        ),
+        COALESCE(NEW.published_at, NEW.updated_at)
+      );
+    END;
+
+    CREATE TRIGGER IF NOT EXISTS web_updates_skin_created_published
+    AFTER INSERT ON skins
+    WHEN NEW.status = 'published'
+    BEGIN
+      INSERT OR IGNORE INTO web_update_events
+        (event_id, event_type, entity_id, dedupe_key, payload, created_at)
+      VALUES (
+        lower(hex(randomblob(16))),
+        'skin.published',
+        NEW.id,
+        'skin.published:' || NEW.id || ':first-publication',
+        json_object(
+          'id', NEW.id,
+          'carName', NEW.car_name,
+          'imageUrl', NEW.image_url,
+          'imageAlt', NEW.image_alt,
+          'targetUrl', NEW.target_url,
+          'catalogUrl', '/skins',
+          'publishedAt', NEW.published_at
+        ),
+        COALESCE(NEW.published_at, NEW.updated_at)
+      );
+    END;
+
+    CREATE TRIGGER IF NOT EXISTS web_updates_skin_published
+    AFTER UPDATE OF status ON skins
+    WHEN NEW.status = 'published' AND OLD.status != 'published'
+    BEGIN
+      INSERT OR IGNORE INTO web_update_events
+        (event_id, event_type, entity_id, dedupe_key, payload, created_at)
+      VALUES (
+        lower(hex(randomblob(16))),
+        'skin.published',
+        NEW.id,
+        'skin.published:' || NEW.id || ':first-publication',
+        json_object(
+          'id', NEW.id,
+          'carName', NEW.car_name,
+          'imageUrl', NEW.image_url,
+          'imageAlt', NEW.image_alt,
+          'targetUrl', NEW.target_url,
+          'catalogUrl', '/skins',
+          'publishedAt', NEW.published_at
+        ),
+        COALESCE(NEW.published_at, NEW.updated_at)
+      );
+    END;
+
+    CREATE TRIGGER IF NOT EXISTS web_updates_championship_created_published
+    AFTER INSERT ON championships
+    WHEN NEW.status IN ('registration', 'active', 'finished')
+      AND COALESCE(NEW.updated_by_name, '') != 'Sistema'
+    BEGIN
+      INSERT OR IGNORE INTO web_update_events
+        (event_id, event_type, entity_id, dedupe_key, payload, created_at)
+      VALUES (
+        lower(hex(randomblob(16))),
+        'championship.published',
+        NEW.id,
+        'championship.published:' || NEW.id || ':first-publication',
+        json_object(
+          'id', NEW.id,
+          'slug', NEW.slug,
+          'name', NEW.name,
+          'editionNumber', NEW.edition_number,
+          'subtitle', NEW.subtitle,
+          'season', NEW.season,
+          'summary', NEW.summary,
+          'coverUrl', NEW.cover_url,
+          'startAt', NEW.start_at,
+          'status', NEW.status,
+          'url', '/candeonatos/' || NEW.slug,
+          'publishedAt', NEW.published_at
+        ),
+        COALESCE(NEW.published_at, NEW.updated_at)
+      );
+    END;
+
+    CREATE TRIGGER IF NOT EXISTS web_updates_championship_published
+    AFTER UPDATE OF status ON championships
+    WHEN NEW.status IN ('registration', 'active', 'finished')
+      AND OLD.status NOT IN ('registration', 'active', 'finished')
+      AND COALESCE(NEW.updated_by_name, '') != 'Sistema'
+    BEGIN
+      INSERT OR IGNORE INTO web_update_events
+        (event_id, event_type, entity_id, dedupe_key, payload, created_at)
+      VALUES (
+        lower(hex(randomblob(16))),
+        'championship.published',
+        NEW.id,
+        'championship.published:' || NEW.id || ':first-publication',
+        json_object(
+          'id', NEW.id,
+          'slug', NEW.slug,
+          'name', NEW.name,
+          'editionNumber', NEW.edition_number,
+          'subtitle', NEW.subtitle,
+          'season', NEW.season,
+          'summary', NEW.summary,
+          'coverUrl', NEW.cover_url,
+          'startAt', NEW.start_at,
+          'status', NEW.status,
+          'url', '/candeonatos/' || NEW.slug,
+          'publishedAt', NEW.published_at
+        ),
+        COALESCE(NEW.published_at, NEW.updated_at)
+      );
+    END;
+  `);
+  db.prepare('INSERT OR IGNORE INTO schema_migrations (version, applied_at) VALUES (25, ?)').run(
+    now(),
+  );
 }
 
 function seed(db) {

@@ -21,6 +21,7 @@ services:
       BACKUP_DIR: /app/data/backups
       BROWSER_DIR: /app/dist/candeweb/browser
       ADMIN_SETUP_TOKEN: ${ADMIN_SETUP_TOKEN:-}
+      WEB_UPDATES_API_TOKEN: ${WEB_UPDATES_API_TOKEN:-}
       TWITCH_CLIENT_ID: ${TWITCH_CLIENT_ID:-}
       TWITCH_CLIENT_SECRET: ${TWITCH_CLIENT_SECRET:-}
       FATCAT_API_BASE_URL: ${FATCAT_API_BASE_URL:-https://fatcatrace.xyz/api/torneo}

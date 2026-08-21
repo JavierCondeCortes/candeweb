@@ -14,6 +14,7 @@ import {
 } from './fatcat-standings.mjs';
 import { createTwitchStatusService } from './twitch.mjs';
 import { routeSetupApi, runSetupCleanup } from './setups.mjs';
+import { routeWebUpdatesApi } from './web-updates.mjs';
 import {
   championshipFromRow,
   memberFromRow,
@@ -94,6 +95,7 @@ export function createCandemorApp(options = {}) {
   const roundResultsService = options.roundResultsService ?? createFatcatRoundResultsService();
   const standingsService = options.standingsService ?? createFatcatStandingsService();
   const googleFormsService = options.googleFormsService ?? createGoogleFormsService();
+  const webUpdatesToken = options.webUpdatesToken ?? process.env.WEB_UPDATES_API_TOKEN ?? '';
   const db = openDatabase(databasePath);
   const loginAttempts = new Map();
   const actionAttempts = new Map();
@@ -124,6 +126,7 @@ export function createCandemorApp(options = {}) {
         roundResultsService,
         standingsService,
         googleFormsService,
+        webUpdatesToken,
       });
     } catch (error) {
       sendError(response, error);
@@ -156,6 +159,11 @@ async function routeRequest(context) {
 
   if (method === 'GET' && path === '/api/health') {
     return sendJson(response, 200, { ok: true, database: 'ready' });
+  }
+
+  if (path === '/api/web-updates/events') {
+    routeWebUpdatesApi({ ...context, path, method, url });
+    return;
   }
 
   if (method === 'GET' && path === '/api/public/google-form') {
