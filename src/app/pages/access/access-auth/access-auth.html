@@ -41,7 +41,38 @@
       } @else if (invitation(); as data) {
         <p>{{ data.displayName }} · {{ data.email }}</p>
         <form class="setup-form" [formGroup]="invitationForm" (ngSubmit)="acceptInvitation()">
-          <label><span>{{ 'home.access.newPassword' | translate }}</span><input type="password" formControlName="password" autocomplete="new-password" minlength="12" /><small>{{ 'home.access.passwordHelp' | translate }}</small></label>
+          <label>
+            <span>{{ 'home.access.newPassword' | translate }}</span>
+            <div class="setup-password-field">
+              <input
+                id="access-new-password"
+                [type]="invitationPasswordVisible() ? 'text' : 'password'"
+                formControlName="password"
+                autocomplete="new-password"
+                minlength="12"
+              />
+              <button
+                type="button"
+                aria-controls="access-new-password"
+                [attr.aria-pressed]="invitationPasswordVisible()"
+                [attr.aria-label]="
+                  (invitationPasswordVisible()
+                    ? 'home.access.hidePassword'
+                    : 'home.access.showPassword'
+                  ) | translate
+                "
+                (click)="toggleInvitationPassword()"
+              >
+                {{
+                  (invitationPasswordVisible()
+                    ? 'home.access.hidePassword'
+                    : 'home.access.showPassword'
+                  ) | translate
+                }}
+              </button>
+            </div>
+            <small>{{ 'home.access.passwordHelp' | translate }}</small>
+          </label>
           <button class="setup-button is-primary" type="submit" [disabled]="submitting()">{{ 'home.access.activate' | translate }}</button>
         </form>
       }
@@ -52,8 +83,39 @@
       @if (errorMessage()) { <div class="setup-alert is-error" role="alert">{{ errorMessage() }}</div> }
       <form class="setup-form" [formGroup]="loginForm" (ngSubmit)="login()">
         <label><span>{{ 'home.access.email' | translate }}</span><input type="email" formControlName="email" autocomplete="username" /></label>
-        <label><span>{{ 'home.access.password' | translate }}</span><input type="password" formControlName="password" autocomplete="current-password" minlength="12" /></label>
+        <label>
+          <span>{{ 'home.access.password' | translate }}</span>
+          <div class="setup-password-field">
+            <input
+              id="access-login-password"
+              [type]="loginPasswordVisible() ? 'text' : 'password'"
+              formControlName="password"
+              autocomplete="current-password"
+              minlength="12"
+            />
+            <button
+              type="button"
+              aria-controls="access-login-password"
+              [attr.aria-pressed]="loginPasswordVisible()"
+              [attr.aria-label]="
+                (loginPasswordVisible() ? 'home.access.hidePassword' : 'home.access.showPassword')
+                  | translate
+              "
+              (click)="toggleLoginPassword()"
+            >
+              {{
+                (loginPasswordVisible() ? 'home.access.hidePassword' : 'home.access.showPassword')
+                  | translate
+              }}
+            </button>
+          </div>
+        </label>
         <label><span>{{ 'home.access.mfaCode' | translate }}</span><input type="text" formControlName="mfaCode" autocomplete="one-time-code" inputmode="numeric" maxlength="11" /></label>
+        <label class="setup-checkbox">
+          <input type="checkbox" formControlName="rememberMe" />
+          <span>{{ 'home.access.rememberMe' | translate }}</span>
+          <small>{{ 'home.access.rememberHelp' | translate }}</small>
+        </label>
         <button class="setup-button is-primary" type="submit" [disabled]="submitting()">{{ 'home.access.login' | translate }}</button>
       </form>
       <p class="setup-auth-secondary">{{ 'home.access.noAccess' | translate }} <a routerLink="/solicitar-acceso">{{ 'home.access.requestLink' | translate }}</a></p>

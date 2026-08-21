@@ -64,6 +64,21 @@ En móvil, cada cuenta se transformará en una tarjeta y mantendrá el mismo ord
 La aprobación de la identidad y la concesión de productos son acciones distintas: aceptar una
 cuenta no debe habilitar automáticamente Setups ni Skins.
 
+### Contraseña y permanencia de la sesión
+
+- La solicitud inicial solo pide nombre y correo. La contraseña se elige después de que owner o
+  admin apruebe la cuenta, desde la invitación privada.
+- Tanto al crear la contraseña desde la invitación como al iniciar sesión existe un botón para
+  mostrarla u ocultarla. El control conserva el valor escrito, funciona con teclado e informa de su
+  estado mediante `aria-pressed` y una etiqueta accesible.
+- Sin marcar **Mantener la sesión iniciada**, la cookie se elimina al cerrar el navegador y la
+  sesión del servidor caduca, como máximo, a las 12 horas.
+- Al marcar **Mantener la sesión iniciada**, la cookie y la sesión del servidor permanecen activas
+  durante 30 días.
+- La cookie de autenticación continúa siendo `HttpOnly`, `SameSite=Strict` y, en producción,
+  `Secure`. Cerrar sesión o revocar una cuenta invalida la sesión aunque se hubiera recordado.
+- El mismo comportamiento se aplica al inicio de sesión del panel de administración.
+
 ## API propuesta
 
 ```text
@@ -90,3 +105,6 @@ pero el frontend nuevo debe consumir la API central para evitar duplicar lógica
 - [x] Revocar la cuenta invalida sus sesiones.
 - [x] Los estados funcionan con teclado y no dependen únicamente del color.
 - [x] Todos los cambios de permisos quedan auditados.
+- [x] La creación de contraseña y los inicios de sesión permiten mostrar u ocultar la contraseña.
+- [x] Los usuarios pueden elegir entre una sesión de navegador y una sesión recordada durante 30
+  días.

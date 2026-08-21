@@ -10,6 +10,7 @@ import { promisify } from 'node:util';
 const scrypt = promisify(scryptCallback);
 const SESSION_COOKIE = 'candemor_session';
 const SESSION_DURATION_SECONDS = 60 * 60 * 12;
+const REMEMBERED_SESSION_DURATION_SECONDS = 60 * 60 * 24 * 30;
 
 export async function hashPassword(password) {
   const salt = randomBytes(16);
@@ -30,11 +31,14 @@ export function hashToken(token) {
   return createHash('sha256').update(token).digest('hex');
 }
 
-export function createSession(db, adminId) {
+export function createSession(db, adminId, { remember = false } = {}) {
   const token = randomBytes(32).toString('base64url');
   const csrfToken = randomBytes(24).toString('base64url');
   const createdAt = new Date();
-  const expiresAt = new Date(createdAt.getTime() + SESSION_DURATION_SECONDS * 1000);
+  const durationSeconds = remember
+    ? REMEMBERED_SESSION_DURATION_SECONDS
+    : SESSION_DURATION_SECONDS;
+  const expiresAt = new Date(createdAt.getTime() + durationSeconds * 1000);
 
   db.prepare(
     `INSERT INTO admin_sessions (token_hash, admin_id, csrf_token, expires_at, created_at)
@@ -91,14 +95,14 @@ export function getSession(db, request) {
   };
 }
 
-export function sessionCookie(token, expiresAt, secure = false) {
+export function sessionCookie(token, expiresAt, secure = false, persistent = true) {
   const parts = [
     `${SESSION_COOKIE}=${token}`,
     'Path=/',
     'HttpOnly',
     'SameSite=Strict',
-    `Expires=${expiresAt.toUTCString()}`,
   ];
+  if (persistent) parts.push(`Expires=${expiresAt.toUTCString()}`);
   if (secure) parts.push('Secure');
   return parts.join('; ');
 }

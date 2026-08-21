@@ -25,21 +25,61 @@
       <form class="admin-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
         <label>
           <span>{{ 'admin.acceptInvitation.password' | translate }}</span>
-          <input
-            type="password"
-            formControlName="password"
-            autocomplete="new-password"
-            minlength="12"
-          />
+          <div class="admin-password-field">
+            <input
+              id="admin-invitation-password"
+              [type]="passwordVisible() ? 'text' : 'password'"
+              formControlName="password"
+              autocomplete="new-password"
+              minlength="12"
+            />
+            <button
+              type="button"
+              aria-controls="admin-invitation-password"
+              [attr.aria-pressed]="passwordVisible()"
+              [attr.aria-label]="
+                (passwordVisible() ? 'admin.login.hidePassword' : 'admin.login.showPassword')
+                  | translate
+              "
+              (click)="togglePassword()"
+            >
+              {{
+                (passwordVisible() ? 'admin.login.hidePassword' : 'admin.login.showPassword')
+                  | translate
+              }}
+            </button>
+          </div>
           <small>{{ 'admin.login.passwordHelp' | translate }}</small>
         </label>
         <label>
           <span>{{ 'admin.acceptInvitation.confirmPassword' | translate }}</span>
-          <input
-            type="password"
-            formControlName="passwordConfirmation"
-            autocomplete="new-password"
-          />
+          <div class="admin-password-field">
+            <input
+              id="admin-invitation-password-confirmation"
+              [type]="passwordConfirmationVisible() ? 'text' : 'password'"
+              formControlName="passwordConfirmation"
+              autocomplete="new-password"
+            />
+            <button
+              type="button"
+              aria-controls="admin-invitation-password-confirmation"
+              [attr.aria-pressed]="passwordConfirmationVisible()"
+              [attr.aria-label]="
+                (passwordConfirmationVisible()
+                  ? 'admin.login.hidePassword'
+                  : 'admin.login.showPassword'
+                ) | translate
+              "
+              (click)="togglePasswordConfirmation()"
+            >
+              {{
+                (passwordConfirmationVisible()
+                  ? 'admin.login.hidePassword'
+                  : 'admin.login.showPassword'
+                ) | translate
+              }}
+            </button>
+          </div>
         </label>
         <button class="admin-button is-primary" type="submit" [disabled]="submitting()">
           {{

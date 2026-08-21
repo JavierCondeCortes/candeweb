@@ -1680,6 +1680,7 @@ async function login(context) {
     .trim()
     .toLowerCase();
   const password = String(input.password ?? '');
+  const rememberMe = input.rememberMe === true;
   const attemptKey = `${request.socket.remoteAddress ?? 'local'}:${email}`;
   assertLoginAllowed(loginAttempts, attemptKey);
 
@@ -1720,9 +1721,12 @@ async function login(context) {
 
   loginAttempts.delete(attemptKey);
   db.prepare('DELETE FROM admin_sessions WHERE expires_at <= ?').run(new Date().toISOString());
-  const session = createSession(db, admin.id);
-  response.setHeader('Set-Cookie', sessionCookie(session.token, session.expiresAt, secureCookies));
-  recordAudit(db, admin.id, 'admin.login', 'admin_profile', admin.id);
+  const session = createSession(db, admin.id, { remember: rememberMe });
+  response.setHeader(
+    'Set-Cookie',
+    sessionCookie(session.token, session.expiresAt, secureCookies, rememberMe),
+  );
+  recordAudit(db, admin.id, 'admin.login', 'admin_profile', admin.id, { rememberMe });
   return sendJson(response, 200, {
     authenticated: true,
     needsSetup: false,
