@@ -1195,8 +1195,8 @@ async function routeAdmin(context) {
       db.prepare(
         `UPDATE site_settings SET twitch_channel_login = ?, twitch_channel_url = ?,
          twitch_channels_json = ?, featured_championship_id = ?, contact_email = ?,
-         discord_url = ?, instagram_url = ?, youtube_url = ?, updated_at = ?,
-         updated_by_name = ? WHERE id = 1`,
+         discord_url = ?, instagram_url = ?, youtube_url = ?, chiquito_spotter_url = ?,
+         updated_at = ?, updated_by_name = ? WHERE id = 1`,
       ).run(
         settings.twitchChannelLogin,
         settings.twitchChannelUrl,
@@ -1206,6 +1206,7 @@ async function routeAdmin(context) {
         settings.discordUrl,
         settings.instagramUrl,
         settings.youtubeUrl,
+        settings.chiquitoSpotterUrl,
         timestamp,
         session.admin.displayName,
       );

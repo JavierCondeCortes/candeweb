@@ -3,10 +3,7 @@ import { adminAuthGuard } from './core/guards/admin-auth.guard';
 import { adminOwnerGuard } from './core/guards/admin-owner.guard';
 import { pendingChangesGuard } from './core/guards/pending-changes.guard';
 import { skinAuthGuard } from './core/guards/skin-auth.guard';
-import {
-  setupAuthGuard,
-  setupUploaderGuard,
-} from './core/guards/setup-auth.guard';
+import { setupAuthGuard, setupUploaderGuard } from './core/guards/setup-auth.guard';
 
 export const routes: Routes = [
   {
@@ -34,6 +31,14 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/championship-history/championship-detail-page').then(
         (module) => module.ChampionshipDetailPage,
+      ),
+  },
+  {
+    path: 'chiquito-spotter',
+    title: 'home.spotter.meta.title',
+    loadComponent: () =>
+      import('./pages/chiquito-spotter/chiquito-spotter-page').then(
+        (module) => module.ChiquitoSpotterPage,
       ),
   },
   {

@@ -82,6 +82,9 @@
       <a routerLink="/candeonatos" (click)="closeMenu()">{{
         'home.nav.championshipHistory' | translate
       }}</a>
+      <a class="home-nav-product" routerLink="/chiquito-spotter" (click)="closeMenu()">{{
+        'home.nav.chiquitoSpotter' | translate
+      }}</a>
     </div>
     <app-language-switcher />
   </nav>
@@ -112,6 +115,9 @@
         }}</a>
         <a class="button button-secondary" routerLink="/" fragment="equipo">{{
           'home.hero.meetTeam' | translate
+        }}</a>
+        <a class="button button-spotter" routerLink="/chiquito-spotter">{{
+          'home.spotter.home.heroAction' | translate
         }}</a>
       </div>
     </div>

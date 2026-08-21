@@ -172,6 +172,7 @@ function migrate(db) {
       discord_url TEXT,
       instagram_url TEXT,
       youtube_url TEXT,
+      chiquito_spotter_url TEXT,
       updated_at TEXT NOT NULL,
       updated_by_name TEXT
     );
@@ -761,6 +762,19 @@ function migrate(db) {
     }
     db.prepare('INSERT INTO schema_migrations (version, applied_at) VALUES (23, ?)').run(now());
   }
+
+  const migration24Applied = db.prepare('SELECT 1 FROM schema_migrations WHERE version = 24').get();
+  if (!migration24Applied) {
+    const settingsColumns = db.prepare('PRAGMA table_info(site_settings)').all();
+    if (!settingsColumns.some((column) => column.name === 'chiquito_spotter_url')) {
+      db.exec('ALTER TABLE site_settings ADD COLUMN chiquito_spotter_url TEXT;');
+    }
+    db.prepare(
+      `UPDATE site_settings SET chiquito_spotter_url = ?
+       WHERE chiquito_spotter_url IS NULL OR chiquito_spotter_url = ''`,
+    ).run('https://www.patreon.com/candemor/posts/chiquitito-151646382');
+    db.prepare('INSERT INTO schema_migrations (version, applied_at) VALUES (24, ?)').run(now());
+  }
 }
 
 function seed(db) {
@@ -837,8 +851,8 @@ function seed(db) {
   db.prepare(
     `INSERT OR IGNORE INTO site_settings (
       id, twitch_channel_login, twitch_channel_url, twitch_channels_json,
-      featured_championship_id, discord_url, updated_at, updated_by_name
-    ) VALUES (1, ?, ?, ?, ?, ?, ?, 'Sistema')`,
+      featured_championship_id, discord_url, chiquito_spotter_url, updated_at, updated_by_name
+    ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, 'Sistema')`,
   ).run(
     'candemorracingteam',
     'https://www.twitch.tv/candemorracingteam',
@@ -852,6 +866,7 @@ function seed(db) {
     ]),
     championshipId,
     'https://discord.gg/j22XuDEfMk',
+    'https://www.patreon.com/candemor/posts/chiquitito-151646382',
     timestamp,
   );
 
@@ -1028,6 +1043,7 @@ export function settingsFromRow(row) {
     discordUrl: row.discord_url,
     instagramUrl: row.instagram_url,
     youtubeUrl: row.youtube_url,
+    chiquitoSpotterUrl: row.chiquito_spotter_url,
     updatedAt: row.updated_at,
     updatedByName: row.updated_by_name,
   };

@@ -37,7 +37,7 @@
         />
         <div class="experience-overlay">
           <p class="eyebrow">{{ 'home.content.officialChannel' | translate }}</p>
-          <h3>
+          <h3 class="content-title">
             {{ state.content?.channel?.displayName || ('home.content.liveTitle' | translate) }}
           </h3>
           <p>
@@ -100,7 +100,7 @@
           </div>
           <div class="experience-overlay">
             <p class="eyebrow">Twitch</p>
-            <h3>{{ 'home.content.clipsPreparing' | translate }}</h3>
+            <h3 class="content-title">{{ 'home.content.clipsPreparing' | translate }}</h3>
             <p>
               @if (state.kind === 'error') {
                 {{ 'home.content.twitchUnavailable' | translate }}

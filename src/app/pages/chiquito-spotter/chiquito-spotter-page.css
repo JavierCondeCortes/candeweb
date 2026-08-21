@@ -1,0 +1,510 @@
+:host {
+  display: block;
+}
+
+.spotter-page {
+  overflow: hidden;
+  background: #050505;
+}
+
+.spotter-shell {
+  width: min(calc(100% - 2rem), var(--content-width));
+  margin-inline: auto;
+}
+
+.spotter-hero {
+  position: relative;
+  display: grid;
+  min-height: 100svh;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 78% 45%, rgba(255, 43, 214, 0.2), transparent 30rem),
+    linear-gradient(135deg, #050505 35%, #130411 100%);
+  isolation: isolate;
+}
+
+.spotter-grid {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+}
+
+.spotter-grid {
+  opacity: 0.35;
+  background-image:
+    linear-gradient(rgba(245, 245, 242, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245, 245, 242, 0.08) 1px, transparent 1px);
+  background-size: 4rem 4rem;
+  mask-image: linear-gradient(to bottom, black, transparent 90%);
+}
+
+.spotter-nav {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 20;
+  display: flex;
+  width: min(calc(100% - 2rem), var(--content-width));
+  min-height: 4.75rem;
+  align-items: center;
+  justify-content: space-between;
+  transform: translateX(-50%);
+  border-bottom: 1px solid rgba(245, 245, 242, 0.22);
+}
+
+.spotter-brand {
+  position: relative;
+  z-index: 22;
+}
+
+.spotter-nav-actions {
+  position: relative;
+  z-index: 22;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.spotter-menu-button {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0.7rem;
+  align-content: center;
+  gap: 0.4rem;
+  border: 1px solid rgba(245, 245, 242, 0.5);
+  border-radius: 50%;
+  background: rgba(5, 5, 5, 0.72);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.spotter-menu-button span {
+  display: block;
+  height: 1px;
+  background: currentColor;
+  transition: transform 160ms ease;
+}
+
+.spotter-nav.menu-open .spotter-menu-button span:first-child {
+  transform: translateY(0.22rem) rotate(45deg);
+}
+
+.spotter-nav.menu-open .spotter-menu-button span:last-child {
+  transform: translateY(-0.22rem) rotate(-45deg);
+}
+
+.spotter-nav-links {
+  position: fixed;
+  z-index: 21;
+  inset: 0;
+  display: grid;
+  width: 100vw;
+  min-height: 100svh;
+  padding: 7rem 1.5rem 2rem;
+  align-content: center;
+  visibility: hidden;
+  background:
+    radial-gradient(circle at 85% 10%, rgba(255, 43, 214, 0.2), transparent 24rem),
+    rgba(5, 5, 5, 0.98);
+  opacity: 0;
+  transform: translateY(-1rem);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease,
+    visibility 180ms ease;
+}
+
+.spotter-nav.menu-open .spotter-nav-links {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.spotter-nav-links a {
+  padding: 0.9rem 0;
+  border-bottom: 1px solid rgba(245, 245, 242, 0.16);
+}
+
+.spotter-hero-inner {
+  display: grid;
+  width: min(calc(100% - 2rem), var(--content-width));
+  margin-inline: auto;
+  padding-block: 9rem 7rem;
+  align-items: end;
+  gap: 3rem;
+}
+
+.spotter-hero h1 {
+  margin: 1rem 0 1.5rem;
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  font-size: clamp(4.2rem, 18vw, 8.5rem);
+  font-style: italic;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 0.72;
+  text-transform: uppercase;
+}
+
+.spotter-hero h1 span {
+  display: block;
+  color: var(--text);
+  font-family: 'Dog Rough', Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  font-size: clamp(4.2rem, 18vw, 16.5rem);
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: 0.015em;
+  line-height: 0.9;
+}
+
+.spotter-hero-actions {
+  display: flex;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.spotter-signal {
+  position: relative;
+  max-width: 30rem;
+  padding: 1.25rem;
+  border: 1px solid rgba(222, 255, 0, 0.4);
+  background: rgba(5, 5, 5, 0.74);
+  box-shadow: 1rem 1rem 0 rgba(255, 43, 214, 0.09);
+  backdrop-filter: blur(0.7rem);
+}
+
+.spotter-signal-head {
+  display: flex;
+  justify-content: space-between;
+}
+
+.spotter-wave {
+  display: flex;
+  height: 8rem;
+  margin-block: 1.4rem;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.spotter-wave i {
+  width: 100%;
+  height: 24%;
+  background: var(--lime);
+  opacity: 0.8;
+  transform-origin: center;
+  animation: spotter-signal 1.35s ease-in-out infinite alternate;
+}
+
+.spotter-wave i:nth-child(3n) {
+  height: 82%;
+  animation-delay: -0.7s;
+}
+
+.spotter-wave i:nth-child(4n) {
+  height: 48%;
+  animation-delay: -0.25s;
+}
+
+.spotter-wave i:nth-child(5n) {
+  height: 100%;
+  animation-delay: -1s;
+}
+
+.spotter-signal p {
+  margin: 0 0 1.2rem;
+}
+
+#que-es,
+#demo,
+#compatibilidad {
+  scroll-margin-top: 5rem;
+}
+
+.spotter-intro {
+  display: grid;
+  padding-block: clamp(5rem, 10vw, 9rem);
+  gap: 3rem;
+}
+
+.spotter-intro h2,
+.spotter-section-heading h2,
+.spotter-details h2,
+.spotter-cta h2,
+.spotter-faq h2 {
+  margin: 0.8rem 0 0;
+}
+
+.spotter-intro-copy > p {
+  max-width: 50ch;
+}
+
+.spotter-intro-copy ul {
+  margin: 2.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.spotter-intro-copy li {
+  display: grid;
+  padding-block: 1rem;
+  grid-template-columns: 3rem 1fr;
+  border-top: 1px solid var(--border);
+}
+
+.spotter-demo-section {
+  padding-block: clamp(5rem, 10vw, 9rem);
+  border-block: 1px solid var(--border);
+  background: linear-gradient(135deg, rgba(255, 43, 214, 0.08), transparent 35%), #0a0a0b;
+}
+
+.spotter-section-heading {
+  display: grid;
+  gap: 2rem;
+}
+
+.spotter-section-heading > p {
+  max-width: 48ch;
+}
+
+.spotter-demo-grid {
+  display: grid;
+  margin-top: 3rem;
+  gap: 1rem;
+}
+
+.spotter-demo-card {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  padding: 1.25rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: rgba(5, 5, 5, 0.86);
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.spotter-demo-card:hover,
+.spotter-demo-card:focus-within {
+  border-color: var(--lime);
+  transform: translateY(-0.2rem);
+}
+
+.spotter-demo-copy p {
+  margin: 1.4rem 0 0;
+}
+
+.spotter-demo-copy h3 {
+  margin: 0.35rem 0 0;
+}
+
+.spotter-demo-copy blockquote {
+  min-height: 3.2rem;
+  margin: 1rem 0;
+}
+
+.spotter-demo-wave {
+  display: flex;
+  height: 2.5rem;
+  margin-bottom: 1rem;
+  align-items: center;
+  gap: 0.35rem;
+  opacity: 0.42;
+}
+
+.spotter-demo-wave i {
+  width: 100%;
+  height: 25%;
+  background: var(--magenta);
+}
+
+.spotter-demo-wave i:nth-child(2n) {
+  height: 70%;
+}
+
+.spotter-demo-wave i:nth-child(3n) {
+  height: 100%;
+}
+
+.spotter-audio {
+  width: 100%;
+  min-height: 3.4rem;
+  accent-color: var(--magenta);
+  color-scheme: dark;
+}
+
+.spotter-demo-note {
+  max-width: 65ch;
+  margin: 1.5rem 0 0;
+}
+
+.spotter-details {
+  display: grid;
+  padding-block: clamp(5rem, 10vw, 9rem);
+  gap: 1rem;
+}
+
+.spotter-details-title {
+  padding-bottom: 2rem;
+}
+
+.spotter-detail-card {
+  padding: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.spotter-detail-card h3 {
+  margin: 1.5rem 0 0.5rem;
+}
+
+.spotter-detail-card p {
+  margin: 0;
+}
+
+.spotter-cta {
+  position: relative;
+  padding-block: clamp(5rem, 12vw, 10rem);
+  overflow: hidden;
+  border-block: 1px solid var(--magenta);
+  background:
+    radial-gradient(circle at 90% 30%, rgba(222, 255, 0, 0.16), transparent 24rem),
+    linear-gradient(125deg, rgba(255, 43, 214, 0.16), transparent 48%), #090509;
+}
+
+.spotter-cta h2 {
+  max-width: 11ch;
+}
+
+.spotter-cta p:not(.eyebrow) {
+  max-width: 52ch;
+  margin: 1.5rem 0 2rem;
+}
+
+.spotter-faq {
+  display: grid;
+  padding-block: clamp(5rem, 10vw, 9rem);
+  gap: 3rem;
+}
+
+.spotter-faq-list details {
+  border-top: 1px solid var(--border);
+}
+
+.spotter-faq-list details:last-child {
+  border-bottom: 1px solid var(--border);
+}
+
+.spotter-faq-list summary {
+  padding: 1.25rem 2rem 1.25rem 0;
+  cursor: pointer;
+}
+
+.spotter-faq-list details p {
+  max-width: 58ch;
+  margin: 0;
+  padding: 0 0 1.5rem;
+}
+
+@keyframes spotter-signal {
+  from {
+    transform: scaleY(0.35);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@media (min-width: 48rem) {
+  .spotter-shell,
+  .spotter-hero-inner,
+  .spotter-nav {
+    width: min(calc(100% - 5rem), var(--content-width));
+  }
+
+  .spotter-hero-inner {
+    grid-template-columns: minmax(0, 1.45fr) minmax(18rem, 0.55fr);
+  }
+
+  .spotter-intro,
+  .spotter-section-heading,
+  .spotter-faq {
+    grid-template-columns: minmax(0, 1.15fr) minmax(20rem, 0.85fr);
+  }
+
+  .spotter-demo-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .spotter-details {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .spotter-details-title {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 64rem) {
+  .spotter-menu-button {
+    display: none;
+  }
+
+  .spotter-nav-links {
+    position: static;
+    display: flex;
+    width: auto;
+    min-height: 0;
+    padding: 0;
+    align-items: center;
+    gap: 1.5rem;
+    visibility: visible;
+    background: transparent;
+    opacity: 1;
+    transform: none;
+  }
+
+  .spotter-nav-links a {
+    padding: 0;
+    border: 0;
+  }
+
+  .spotter-demo-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 35rem) {
+  .spotter-hero-actions > * {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spotter-wave i {
+    animation: none;
+  }
+
+  .spotter-demo-card,
+  .spotter-menu-button span,
+  .spotter-nav-links {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .spotter-signal,
+  .spotter-demo-card,
+  .spotter-cta {
+    border: 2px solid CanvasText;
+  }
+
+  .spotter-grid,
+  .spotter-wave,
+  .spotter-demo-wave {
+    display: none;
+  }
+}

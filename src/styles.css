@@ -176,6 +176,7 @@ video {
 .section-title {
   width: fit-content;
   font-size: clamp(3rem, 9vw, 7.5rem);
+  text-wrap: balance;
   -webkit-text-fill-color: var(--black);
   -webkit-text-stroke: 1px var(--text);
   text-shadow: 0 0 1.5rem rgba(255, 43, 214, 0.18);
@@ -210,6 +211,93 @@ video {
   margin: 0;
   color: var(--text-muted);
   font-size: 1rem;
+}
+
+.site-brand {
+  color: var(--text);
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  font-size: 1.55rem;
+  font-style: italic;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.site-brand span {
+  color: var(--magenta);
+}
+
+.site-nav-link {
+  color: var(--text);
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  font-size: clamp(2.3rem, 12vw, 4rem);
+  font-style: italic;
+  line-height: 1;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.site-nav-link:hover {
+  color: var(--lime);
+}
+
+.content-title {
+  margin: 0;
+  color: var(--text);
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  font-size: clamp(1.55rem, 4vw, 2.2rem);
+  font-style: italic;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+details .content-title{
+  font-size: clamp(1rem, 4vw, 1.5rem);
+}
+
+.meta-text,
+.meta-link {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.meta-link {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 0.3rem;
+}
+
+.meta-link:hover {
+  color: var(--lime);
+}
+
+.text-magenta {
+  color: var(--magenta);
+}
+
+.text-lime {
+  color: var(--lime);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.accent-marker::marker {
+  color: var(--magenta);
+}
+
+@media (min-width: 64rem) {
+  .site-nav-link {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.64rem;
+    font-style: normal;
+    letter-spacing: 0.065em;
+  }
 }
 
 @media (forced-colors: active) {

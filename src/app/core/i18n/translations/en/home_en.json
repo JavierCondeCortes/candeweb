@@ -16,6 +16,7 @@
     "sponsors": "Sponsors",
     "currentEvent": "Current Candeonato",
     "championshipHistory": "History",
+    "chiquitoSpotter": "Chiquito Spotter",
     "homeLabel": "CANDEWEB — Candemor Racing Team, return to home",
     "twitchLabel": "Candemor on Twitch (opens in a new tab)",
     "discordLabel": "Candemor on Discord (opens in a new tab)"
@@ -368,6 +369,108 @@
       "restore": "Restore access"
     }
   },
+  "spotter": {
+    "meta": { "title": "Chiquito Spotter · Candemor Racing Team" },
+    "skip": "Skip to Chiquito Spotter content",
+    "nav": {
+      "label": "Chiquito Spotter navigation",
+      "home": "Home",
+      "about": "About",
+      "listen": "Listen",
+      "compatibility": "Compatibility",
+      "open": "Open menu",
+      "close": "Close menu"
+    },
+    "hero": {
+      "eyebrow": "Community product // Racing audio",
+      "lede": "A different voice for every start, every battle and every flag on track.",
+      "try": "Try the audio",
+      "signalLabel": "Audio signal preview",
+      "radio": "Race radio // Channel 04",
+      "signalText": "Six real samples are ready to play now.",
+      "playFeatured": "Go to samples",
+      "discover": "Discover the product"
+    },
+    "home": {
+      "eyebrow": "New community product",
+      "intro": "Try the Chiquito Spotter voice directly on the website and discover a different way to hear what is happening on track.",
+      "action": "Listen to the demos",
+      "heroAction": "Try Chiquito Spotter",
+      "console": "Signal ready · Press to listen"
+    },
+    "about": {
+      "eyebrow": "About",
+      "title": "Hear the race differently",
+      "lede": "Chiquito Spotter delivers race messages with a distinctive personality, helping you follow the action without missing essential track information.",
+      "track": "Warnings for real on-track situations.",
+      "race": "Calls for different moments of every race.",
+      "identity": "A personality created within the community."
+    },
+    "demo": {
+      "eyebrow": "Listen",
+      "title": "Try the radio",
+      "intro": "These are short samples taken from the product. Start any of them: switching samples automatically stops the previous one.",
+      "listLabel": "Chiquito Spotter audio samples",
+      "note": "The demos are presentation excerpts. The complete package cannot be downloaded from this page.",
+      "items": {
+        "position": {
+          "title": "Fight for position",
+          "context": "Car ahead",
+          "transcript": "Spanish audio: «El coche de delante lucha por posición, no te rajes». Translation: “The car ahead is fighting for position — don't back down.”"
+        },
+        "won": {
+          "title": "Victory",
+          "context": "End of the race",
+          "transcript": "Spanish audio: «Vamos, campeón, has ganado. Te voy a dar dos medallas: una por tonto y otra por si la pierdes. Es broma, te quiero, pecador. Buen trabajo». Translation: “Come on, champ, you've won. I'll give you two medals: one for being a fool and another in case you lose it. Just kidding, I love you, sinner. Good job.”"
+        },
+        "top10": {
+          "title": "Running in the Top 10",
+          "context": "Race position",
+          "transcript": "Spanish audio: «No hagas el canelo, vas Top 10, pedazo de tróspido». Translation: “Don't mess about, you're in the Top 10, you daft fool.”"
+        },
+        "smoking": {
+          "title": "Car smoking",
+          "context": "Mechanical problem",
+          "transcript": "Spanish audio: «Quietor, humo como para hacer un café, cobarde. A boxes antes de que tu coche se nos haga churrascos de la pradera». Translation: “Hold it! Enough smoke to make coffee, coward. Get into the pits before your car turns into a prairie barbecue.”"
+        },
+        "repair": {
+          "title": "Heavy damage",
+          "context": "Pit entry",
+          "transcript": "Spanish audio: «Bro, vas dejando piezas por la pista como migas de pan. Entra en boxes antes de que tengamos que recogerte con pala». Translation: “Bro, you're leaving parts around the track like breadcrumbs. Pit before we have to pick you up with a shovel.”"
+        },
+        "mostRepair": {
+          "title": "Partial repair",
+          "context": "Vehicle damage",
+          "transcript": "Spanish audio: «Podemos reparar la mayoría del daño, pero no somos los Reyes Magos». Translation: “We can repair most of the damage, but we're not the Three Wise Men.”"
+        }
+      }
+    },
+    "details": {
+      "eyebrow": "The product",
+      "title": "Ready for the grid",
+      "audioTitle": "Race messages",
+      "audioText": "The package contains a range of track calls. The complete content will be delivered outside this landing page.",
+      "compatibilityTitle": "Compatibility",
+      "compatibilityText": "Supported simulators, versions and requirements will be published here once confirmed.",
+      "deliveryTitle": "Access through Patreon",
+      "deliveryText": "The product is available from its official Patreon post. Pricing, delivery and terms can be checked there."
+    },
+    "patreon": {
+      "eyebrow": "Available through Patreon",
+      "title": "Take Chiquito to the track",
+      "text": "Visit the official Chiquito Spotter post on Patreon to review its terms and get the product.",
+      "action": "Get it on Patreon"
+    },
+    "faq": {
+      "title": "Before you race",
+      "listenQuestion": "Can I try it before buying?",
+      "listenAnswer": "Yes. The six samples on this landing page are real product audio and require no registration.",
+      "buyQuestion": "Where can I buy it?",
+      "buyAnswer": "It is available from the official Chiquito Spotter post on Patreon. The buttons on this page take you directly there.",
+      "compatibilityQuestion": "Which simulators does it support?",
+      "compatibilityAnswer": "The Spotter Chiquito works in iRacing."
+    }
+  },
   "footer": {
     "label": "Candemor Racing Team information",
     "description": "A simracing community that competes, shares and creates its own experiences.",
@@ -375,6 +478,7 @@
     "history": "Candeonato history",
     "setups": "Private setups",
     "skins": "Private skins",
+    "chiquitoSpotter": "Chiquito Spotter",
     "contact": "Contact",
     "legal": "© {{year}} Candemor Racing Team · External content subject to availability."
   }

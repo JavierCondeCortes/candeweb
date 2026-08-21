@@ -102,6 +102,7 @@ export interface SiteSettings {
   discordUrl: string | null;
   instagramUrl: string | null;
   youtubeUrl: string | null;
+  chiquitoSpotterUrl?: string | null;
   updatedAt: string;
   updatedByName?: string | null;
 }
