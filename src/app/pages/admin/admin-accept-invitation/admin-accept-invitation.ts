@@ -26,6 +26,8 @@ export class AdminAcceptInvitation implements OnInit {
   readonly invitation = signal<AdminInvitation | null>(null);
   readonly errorMessage = signal('');
   readonly token = signal('');
+  readonly passwordVisible = signal(false);
+  readonly passwordConfirmationVisible = signal(false);
   readonly form = this.formBuilder.nonNullable.group({
     password: ['', [Validators.required, Validators.minLength(12)]],
     passwordConfirmation: ['', [Validators.required]],
@@ -70,5 +72,13 @@ export class AdminAcceptInvitation implements OnInit {
             ),
           ),
       });
+  }
+
+  togglePassword(): void {
+    this.passwordVisible.update((visible) => !visible);
+  }
+
+  togglePasswordConfirmation(): void {
+    this.passwordConfirmationVisible.update((visible) => !visible);
   }
 }

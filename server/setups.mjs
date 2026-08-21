@@ -142,6 +142,7 @@ async function loginToAccess(context) {
   const input = await readJson(request);
   const email = String(input.email ?? '').trim().toLowerCase();
   const password = String(input.password ?? '');
+  const rememberMe = input.rememberMe === true;
   const attemptKey = `access:${request.socket.remoteAddress ?? 'local'}:${email}`;
   assertLoginAllowed(loginAttempts, attemptKey);
   const account = db.prepare('SELECT * FROM admin_profiles WHERE email = ? AND active = 1').get(email);
@@ -167,9 +168,12 @@ async function loginToAccess(context) {
     );
   }
   loginAttempts.delete(attemptKey);
-  const session = createSession(db, account.id);
-  response.setHeader('Set-Cookie', sessionCookie(session.token, session.expiresAt, secureCookies));
-  recordAudit(db, account.id, 'access.login', 'account', account.id);
+  const session = createSession(db, account.id, { remember: rememberMe });
+  response.setHeader(
+    'Set-Cookie',
+    sessionCookie(session.token, session.expiresAt, secureCookies, rememberMe),
+  );
+  recordAudit(db, account.id, 'access.login', 'account', account.id, { rememberMe });
   return sendJson(response, 200, {
     authenticated: true,
     account: setupAccountFromRow(account),

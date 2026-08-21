@@ -18,7 +18,7 @@ export class AccessApiService {
       .pipe(tap((session) => this.sessionState.set(session)));
   }
 
-  login(input: { email: string; password: string; mfaCode: string }) {
+  login(input: { email: string; password: string; mfaCode: string; rememberMe: boolean }) {
     return this.http
       .post<SetupSession>('/api/access/login', input, { withCredentials: true })
       .pipe(tap((session) => this.sessionState.set(session)));

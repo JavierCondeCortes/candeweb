@@ -1077,6 +1077,19 @@ test('administra contenidos y cuentas con propietario, invitación y TOTP indepe
       },
     });
     assert.equal(loginWithMfa.status, 200);
+    assert.doesNotMatch(loginWithMfa.response.headers.get('set-cookie'), /expires=/i);
+
+    const rememberedLogin = await jsonRequest(baseUrl, '/api/admin/login', {
+      method: 'POST',
+      body: {
+        email: 'admin@candemor.test',
+        password: 'password-segura-123',
+        mfaCode: totpCode(mfaSetup.data.secret),
+        rememberMe: true,
+      },
+    });
+    assert.equal(rememberedLogin.status, 200);
+    assert.match(rememberedLogin.response.headers.get('set-cookie'), /expires=/i);
 
     const privateAfterLogout = await jsonRequest(baseUrl, '/api/admin/dashboard', {
       cookie: adminCookie,

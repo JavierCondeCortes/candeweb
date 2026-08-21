@@ -152,6 +152,54 @@
   font-weight: 400;
 }
 
+.admin-password-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.admin-password-field input {
+  min-width: 0;
+  border-right: 0;
+}
+
+.admin-password-field button {
+  min-width: 7.5rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgba(245, 245, 242, 0.34);
+  background: var(--black-soft);
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.admin-password-field button:hover {
+  border-color: var(--lime);
+  color: var(--lime);
+}
+
+.admin-form .admin-checkbox {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.25rem 0.65rem;
+  cursor: pointer;
+}
+
+.admin-form .admin-checkbox input {
+  width: 1.1rem;
+  min-height: 1.1rem;
+  margin: 0;
+  accent-color: var(--magenta);
+}
+
+.admin-form .admin-checkbox small {
+  grid-column: 2;
+}
+
 .admin-button {
   display: inline-flex;
   min-height: 2.75rem;

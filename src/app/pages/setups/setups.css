@@ -276,6 +276,58 @@
   resize: vertical;
 }
 
+.setup-password-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.setup-password-field input {
+  min-width: 0;
+  border-right: 0;
+}
+
+.setup-password-field button {
+  min-width: 7.5rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--border);
+  background: var(--black-soft);
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.setup-password-field button:hover {
+  border-color: var(--lime);
+  color: var(--lime);
+}
+
+.setup-form .setup-checkbox {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.25rem 0.65rem;
+  text-transform: none;
+  cursor: pointer;
+}
+
+.setup-form .setup-checkbox input {
+  width: 1.1rem;
+  min-height: 1.1rem;
+  margin: 0;
+  accent-color: var(--magenta);
+}
+
+.setup-form .setup-checkbox small {
+  grid-column: 2;
+  color: var(--text-muted);
+  font-weight: 400;
+  letter-spacing: normal;
+}
+
 .setup-button {
   display: inline-flex;
   min-height: 2.8rem;

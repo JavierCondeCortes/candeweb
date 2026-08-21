@@ -25,6 +25,7 @@ export class AdminLogin implements OnInit {
   readonly needsSetup = signal(false);
   readonly errorMessage = signal('');
   readonly requiresMfa = signal(false);
+  readonly passwordVisible = signal(false);
 
   readonly form = this.formBuilder.nonNullable.group({
     displayName: ['', [Validators.maxLength(80)]],
@@ -32,6 +33,7 @@ export class AdminLogin implements OnInit {
     password: ['', [Validators.required, Validators.minLength(12)]],
     setupToken: [''],
     mfaCode: [''],
+    rememberMe: [false],
   });
 
   ngOnInit(): void {
@@ -60,6 +62,7 @@ export class AdminLogin implements OnInit {
           email: value.email,
           password: value.password,
           mfaCode: value.mfaCode || undefined,
+          rememberMe: value.rememberMe,
         });
     request.pipe(finalize(() => this.submitting.set(false))).subscribe({
       next: (session) => {
@@ -81,5 +84,9 @@ export class AdminLogin implements OnInit {
         );
       },
     });
+  }
+
+  togglePassword(): void {
+    this.passwordVisible.update((visible) => !visible);
   }
 }

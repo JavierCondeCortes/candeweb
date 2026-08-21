@@ -29,11 +29,14 @@ export class AccessAuth implements OnInit {
   readonly invitation = signal<SetupInvitation | null>(null);
   readonly mfaSetup = signal<MfaSetup | null>(null);
   readonly recoveryCodes = signal<string[]>([]);
+  readonly loginPasswordVisible = signal(false);
+  readonly invitationPasswordVisible = signal(false);
 
   readonly loginForm = this.formBuilder.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(12)]],
     mfaCode: ['', [Validators.required, Validators.minLength(6)]],
+    rememberMe: [false],
   });
   readonly requestForm = this.formBuilder.nonNullable.group({
     displayName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(80)]],
@@ -73,10 +76,21 @@ export class AccessAuth implements OnInit {
     if (this.loginForm.invalid || this.submitting()) return;
     this.submitting.set(true);
     this.errorMessage.set('');
-    this.api.login(this.loginForm.getRawValue()).pipe(finalize(() => this.submitting.set(false))).subscribe({
-      next: () => void this.navigateToAuthorizedArea(),
-      error: (error) => this.errorMessage.set(accessError(error)),
-    });
+    this.api
+      .login(this.loginForm.getRawValue())
+      .pipe(finalize(() => this.submitting.set(false)))
+      .subscribe({
+        next: () => void this.navigateToAuthorizedArea(),
+        error: (error) => this.errorMessage.set(accessError(error)),
+      });
+  }
+
+  toggleLoginPassword(): void {
+    this.loginPasswordVisible.update((visible) => !visible);
+  }
+
+  toggleInvitationPassword(): void {
+    this.invitationPasswordVisible.update((visible) => !visible);
   }
 
   requestAccess(): void {

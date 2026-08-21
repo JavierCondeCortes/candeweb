@@ -42,13 +42,31 @@
 
         <label>
           <span>{{ 'admin.login.password' | translate }}</span>
-          <input
-            type="password"
-            formControlName="password"
-            [attr.autocomplete]="needsSetup() ? 'new-password' : 'current-password'"
-            minlength="12"
-            aria-describedby="password-help"
-          />
+          <div class="admin-password-field">
+            <input
+              id="admin-login-password"
+              [type]="passwordVisible() ? 'text' : 'password'"
+              formControlName="password"
+              [attr.autocomplete]="needsSetup() ? 'new-password' : 'current-password'"
+              minlength="12"
+              aria-describedby="password-help"
+            />
+            <button
+              type="button"
+              aria-controls="admin-login-password"
+              [attr.aria-pressed]="passwordVisible()"
+              [attr.aria-label]="
+                (passwordVisible() ? 'admin.login.hidePassword' : 'admin.login.showPassword')
+                  | translate
+              "
+              (click)="togglePassword()"
+            >
+              {{
+                (passwordVisible() ? 'admin.login.hidePassword' : 'admin.login.showPassword')
+                  | translate
+              }}
+            </button>
+          </div>
           <small id="password-help">{{ 'admin.login.passwordHelp' | translate }}</small>
         </label>
 
@@ -64,6 +82,14 @@
               [placeholder]="'admin.login.mfaPlaceholder' | translate"
               autofocus
             />
+          </label>
+        }
+
+        @if (!needsSetup()) {
+          <label class="admin-checkbox">
+            <input type="checkbox" formControlName="rememberMe" />
+            <span>{{ 'admin.login.rememberMe' | translate }}</span>
+            <small>{{ 'admin.login.rememberHelp' | translate }}</small>
           </label>
         }
 
