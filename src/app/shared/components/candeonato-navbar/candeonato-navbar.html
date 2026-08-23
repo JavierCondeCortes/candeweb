@@ -57,15 +57,17 @@
         (click)="closeMenu()"
         >{{ 'candeonato.nav.rules' | translate }}</a
       >
-      <a
-        routerLink="/candeonato"
-        fragment="inscripcion"
-        routerLinkActive="is-active"
-        ariaCurrentWhenActive="location"
-        [routerLinkActiveOptions]="exactLinkMatchOptions"
-        (click)="closeMenu()"
-        >{{ 'candeonato.nav.registration' | translate }}</a
-      >
+      @if (showRegistration()) {
+        <a
+          routerLink="/candeonato"
+          fragment="inscripcion"
+          routerLinkActive="is-active"
+          ariaCurrentWhenActive="location"
+          [routerLinkActiveOptions]="exactLinkMatchOptions"
+          (click)="closeMenu()"
+          >{{ 'candeonato.nav.registration' | translate }}</a
+        >
+      }
       <a
         [routerLink]="historyUrl()"
         routerLinkActive="is-active"

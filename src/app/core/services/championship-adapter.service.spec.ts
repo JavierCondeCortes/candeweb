@@ -122,6 +122,7 @@ describe('ChampionshipAdapterService', () => {
   it('uses the independent public classification when it includes driver names', () => {
     const named = adapter.adapt({
       ...apiResponse,
+      pPd: apiResponse.pPd.map((standing) => ({ ...standing, poles: 2 })),
       namedStandings: [
         {
           position: 1,
@@ -131,7 +132,7 @@ describe('ChampionshipAdapterService', () => {
           team: 'fatcat racing',
           rounds: 6,
           laps: 54,
-          wins: 0,
+          wins: 1,
           podiums: 4,
           topFive: 5,
           incidents: 33,
@@ -143,6 +144,14 @@ describe('ChampionshipAdapterService', () => {
     expect(named.standings[0].driverLabel).toBe('Pablo Cabrera');
     expect(named.standings[0].driverId).toBe(801380);
     expect(named.standings[0].team).toBe('fatcat racing');
+    expect(named.standings[0].fastestLaps).toBe(1);
+    expect(named.standings[0].poles).toBe(2);
+    expect(named.leaders.map(({ metric, value }) => ({ metric, value }))).toEqual([
+      { metric: 'wins', value: 1 },
+      { metric: 'podiums', value: 4 },
+      { metric: 'fastestLaps', value: 1 },
+      { metric: 'poles', value: 2 },
+    ]);
     expect(named.warnings.map((warning) => warning.code)).not.toContain('missing-driver-names');
   });
 });

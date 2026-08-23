@@ -270,6 +270,13 @@ export class AdminApiService {
     );
   }
 
+  deleteChampionship(id: string) {
+    return this.http.delete<void>(
+      `/api/admin/championships/${encodeURIComponent(id)}`,
+      this.options(true),
+    );
+  }
+
   championshipAction(id: string, action: 'publish' | 'archive' | 'feature' | 'sync') {
     return this.http.post<{ championship: ChampionshipContent }>(
       `/api/admin/championships/${encodeURIComponent(id)}/${action}`,

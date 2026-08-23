@@ -69,6 +69,28 @@
 - [x] Ocultar la flecha al abandonar el hero.
   - Actualmente permanece fija durante toda la página y puede solaparse con el formulario.
 
+## Comportamiento según el estado
+
+La edición destacada en administración es la única fuente para decidir el estado público:
+
+| Estado         | Comportamiento público |
+| -------------- | ---------------------- |
+| `registration` | Mantiene la landing completa, el contador y el formulario dinámico de inscripción. |
+| `active`       | Oculta la inscripción, fija el contador en `00:00:00:00`, muestra el estado `Corriendo` y sustituye `Inscribirme` por un CTA independiente `Ver en Twitch`, con alternancia visual negra/blanca y borde blanco. |
+| `finished`     | `/candeonato` redirige a `/candeonatos/{externalTournamentId}` para consultar la última edición terminada. |
+| `archived`     | No aparece públicamente ni puede seleccionarse como edición destacada. |
+
+- [x] Mostrar un punto rojo animado en el hero y junto a `Candeonato actual` en la navegación de
+      inicio mientras el estado sea `active`.
+- [x] Mantener el punto visible sin depender solo del color: el texto accesible informa de que el
+      evento está en marcha.
+- [x] Respetar `prefers-reduced-motion`: el estado sigue visible, pero el pulso se detiene.
+- [x] Utilizar siempre la URL de Twitch configurada en administración.
+- [x] Mantener el CTA de Twitch separado de las acciones de inscripción y fuera del espacio reservado para los controles del vídeo.
+- [x] Detener el parpadeo al interactuar con el CTA y respetar `prefers-reduced-motion`.
+- [x] Retirar también los enlaces del navbar y footer que apuntan a la inscripción cuando esta ya
+      no está abierta.
+
 ## Control de sonido
 
 - [x] Sustituir el `<span>` por un `<button type="button">`.

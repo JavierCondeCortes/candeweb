@@ -77,6 +77,8 @@
     "saving": "Guardando…",
     "save": "Guardar",
     "cancel": "Cancelar",
+    "pendingChanges": "Hay cambios sin guardar. Si sales ahora, se perderán.",
+    "leave": "Salir sin guardar",
     "edit": "Editar",
     "back": "Volver al listado",
     "system": "Sistema",
@@ -417,11 +419,13 @@
     "feature": "Mostrar como actual",
     "synchronize": "Sincronizar",
     "confirmArchive": "¿Archivar {{name}}? Dejará de estar destacada y se ocultará de la web pública.",
+    "confirmDelete": "¿Eliminar definitivamente {{name}}? Se borrarán la edición, sus datos deportivos sincronizados, correcciones y archivos multimedia subidos. Esta acción no se puede deshacer.",
     "syncing": "Sincronizando con Fat Cat Race…",
     "savingChange": "Guardando cambio…",
     "synced": "Datos deportivos sincronizados.",
     "featuredUpdated": "Edición destacada actualizada.",
-    "statusUpdated": "Estado actualizado."
+    "statusUpdated": "Estado actualizado.",
+    "deletedMessage": "Edición eliminada definitivamente."
   },
   "members": {
     "eyebrow": "Equipo",

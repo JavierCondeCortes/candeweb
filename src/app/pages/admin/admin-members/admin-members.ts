@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { TeamMemberContent } from '../../../core/models/content-admin.model';
 import { AdminApiService } from '../../../core/services/admin-api.service';
+import { ConfirmationService } from '../../../core/services/confirmation.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { apiErrorMessage } from '../admin-form-errors';
@@ -14,6 +15,7 @@ import { apiErrorMessage } from '../admin-form-errors';
 })
 export class AdminMembers implements OnInit {
   private readonly api = inject(AdminApiService);
+  private readonly confirmation = inject(ConfirmationService);
   readonly i18n = inject(I18nService);
   readonly members = signal<TeamMemberContent[]>([]);
   readonly loading = signal(true);
@@ -62,10 +64,13 @@ export class AdminMembers implements OnInit {
     });
   }
 
-  runAction(member: TeamMemberContent, action: 'publish' | 'archive'): void {
+  async runAction(member: TeamMemberContent, action: 'publish' | 'archive'): Promise<void> {
     if (
       action === 'archive' &&
-      !window.confirm(this.i18n.translate('admin.members.confirmArchive', { name: member.name }))
+      !(await this.confirmation.confirm({
+        message: this.i18n.translate('admin.members.confirmArchive', { name: member.name }),
+        confirmLabel: this.i18n.translate('admin.common.archive'),
+      }))
     )
       return;
     this.busyId.set(member.id);
@@ -95,8 +100,14 @@ export class AdminMembers implements OnInit {
       });
   }
 
-  deleteMember(member: TeamMemberContent): void {
-    if (!window.confirm(this.i18n.translate('admin.members.confirmDelete', { name: member.name })))
+  async deleteMember(member: TeamMemberContent): Promise<void> {
+    if (
+      !(await this.confirmation.confirm({
+        message: this.i18n.translate('admin.members.confirmDelete', { name: member.name }),
+        confirmLabel: this.i18n.translate('admin.common.delete'),
+        tone: 'danger',
+      }))
+    )
       return;
     this.busyId.set(member.id);
     this.errorMessage.set('');

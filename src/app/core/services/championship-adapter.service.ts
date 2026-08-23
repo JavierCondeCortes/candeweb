@@ -31,24 +31,32 @@ export class ChampionshipAdapterService {
         receivedStatus: round.status_label,
       }));
 
+    const originalStandingsByDriverId = new Map(
+      (response.pPd ?? []).map((standing) => [standing.piloto_id, standing]),
+    );
     const standings = response.namedStandings?.length
-      ? response.namedStandings.map((standing, index) => ({
-          position: this.number(standing.position) || index + 1,
-          driverId: this.nullableNumber(standing.driverId),
-          driverLabel: standing.driverName || `#${index + 1}`,
-          team: standing.team,
-          points: this.number(standing.points),
-          rounds: this.number(standing.rounds),
-          incidents: this.number(standing.incidents),
-          laps: this.number(standing.laps),
-          warnings: 0,
-          wins: this.number(standing.wins),
-          podiums: this.number(standing.podiums),
-          topFive: this.number(standing.topFive),
-          topTen: 0,
-          fastestLaps: 0,
-          poles: 0,
-        }))
+      ? response.namedStandings.map((standing, index) => {
+          const originalStanding = standing.driverId
+            ? originalStandingsByDriverId.get(standing.driverId)
+            : undefined;
+          return {
+            position: this.number(standing.position) || index + 1,
+            driverId: this.nullableNumber(standing.driverId),
+            driverLabel: standing.driverName || `#${index + 1}`,
+            team: standing.team,
+            points: this.number(standing.points),
+            rounds: this.number(standing.rounds),
+            incidents: this.number(standing.incidents),
+            laps: this.number(standing.laps),
+            warnings: 0,
+            wins: this.number(standing.wins),
+            podiums: this.number(standing.podiums),
+            topFive: this.number(standing.topFive),
+            topTen: 0,
+            fastestLaps: this.number(originalStanding?.vueltas_rapidas),
+            poles: this.number(originalStanding?.poles),
+          };
+        })
       : (response.pPd ?? []).map((standing, index) => this.adaptStanding(standing, index));
 
     return {

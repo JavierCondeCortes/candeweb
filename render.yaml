@@ -18,7 +18,7 @@ services:
       - key: ADMIN_SETUP_TOKEN
         generateValue: true
       - key: WEB_UPDATES_API_TOKEN
-        generateValue: true
+        sync: false
       - key: TWITCH_CLIENT_ID
         sync: false
       - key: TWITCH_CLIENT_SECRET

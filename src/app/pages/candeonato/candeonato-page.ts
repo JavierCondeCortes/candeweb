@@ -12,24 +12,23 @@ import { Footer } from '../../shared/components/footer/footer';
 
 @Component({
   selector: 'app-candeonato-page',
-  imports: [
-    AsyncPipe,
-    Footer,
-    Hero,
-    About,
-    Requirements,
-    Rules,
-    FormInscription,
-    TranslatePipe,
-  ],
+  imports: [AsyncPipe, Footer, Hero, About, Requirements, Rules, FormInscription, TranslatePipe],
   templateUrl: './candeonato-page.html',
   styleUrl: '../../app.css',
 })
 export class CandeonatoPage {
   private readonly content = inject(PublicContentService);
-  readonly featured$ = this.content.getSiteSettings().pipe(
+  readonly settings$ = this.content.getSiteSettings().pipe(
+    catchError(() =>
+      of({
+        twitchChannelUrl: 'https://www.twitch.tv/candemorracingteam',
+        featuredChampionship: null,
+      }),
+    ),
+    shareReplay({ bufferSize: 1, refCount: true }),
+  );
+  readonly featured$ = this.settings$.pipe(
     map((settings) => settings.featuredChampionship),
-    catchError(() => of(null)),
     shareReplay({ bufferSize: 1, refCount: true }),
   );
 }

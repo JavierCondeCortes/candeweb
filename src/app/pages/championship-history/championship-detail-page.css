@@ -298,15 +298,6 @@ app-championship-detail-page {
   font-size: 0.7rem;
 }
 
-.pending-section.section-shell {
-  display: grid;
-  gap: 2rem;
-  padding: clamp(1.5rem, 5vw, 4rem);
-  border: 1px solid var(--magenta-soft);
-  background: linear-gradient(115deg, rgba(255, 43, 214, 0.13), transparent 48%), var(--surface);
-}
-
-.pending-section h2,
 .error-section h2 {
   margin: 0.7rem 0 1rem;
   font-size: clamp(2.4rem, 8vw, 5.5rem);
@@ -315,21 +306,10 @@ app-championship-detail-page {
   text-transform: uppercase;
 }
 
-.pending-section p:not(.eyebrow),
 .error-section p {
   max-width: 58ch;
   margin: 0;
   color: var(--text-muted);
-}
-
-.pending-code {
-  align-self: end;
-  color: rgba(245, 245, 242, 0.12);
-  font-family: ui-monospace, monospace;
-  font-size: clamp(2rem, 8vw, 5rem);
-  font-weight: 900;
-  line-height: 0.85;
-  text-align: right;
 }
 
 .source-row.section-shell {
@@ -447,10 +427,6 @@ app-championship-detail-page {
 
   .leaders-grid {
     grid-template-columns: repeat(2, 1fr);
-  }
-
-  .pending-section {
-    grid-template-columns: minmax(0, 1.2fr) minmax(12rem, 0.8fr);
   }
 
   .detail-footer {

@@ -77,6 +77,8 @@
     "saving": "Saving…",
     "save": "Save",
     "cancel": "Cancel",
+    "pendingChanges": "There are unsaved changes. They will be lost if you leave now.",
+    "leave": "Leave without saving",
     "edit": "Edit",
     "back": "Back to list",
     "system": "System",
@@ -417,11 +419,13 @@
     "feature": "Show as current",
     "synchronize": "Synchronize",
     "confirmArchive": "Archive {{name}}? It will no longer be featured and will be hidden from the public website.",
+    "confirmDelete": "Permanently delete {{name}}? The edition, its synchronized sporting data, corrections and uploaded media files will be deleted. This action cannot be undone.",
     "syncing": "Synchronizing with Fat Cat Race…",
     "savingChange": "Saving change…",
     "synced": "Sporting data synchronized.",
     "featuredUpdated": "Featured edition updated.",
-    "statusUpdated": "Status updated."
+    "statusUpdated": "Status updated.",
+    "deletedMessage": "Edition permanently deleted."
   },
   "members": {
     "eyebrow": "Team",

@@ -41,5 +41,9 @@ export class Footer {
     shareReplay({ bufferSize: 1, refCount: true }),
   );
 
+  readonly registrationOpen$ = this.featured$.pipe(
+    map((championship) => championship?.status === 'registration'),
+  );
+
   readonly settings$ = this.siteSettings$;
 }

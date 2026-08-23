@@ -167,6 +167,14 @@
                 {{ 'admin.common.archive' | translate }}
               </button>
             }
+            <button
+              class="admin-button is-danger"
+              type="button"
+              [disabled]="busyId() === championship.id"
+              (click)="deleteChampionship(championship)"
+            >
+              {{ 'admin.common.delete' | translate }}
+            </button>
           </div>
         </article>
       }

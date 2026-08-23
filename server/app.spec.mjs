@@ -44,6 +44,33 @@ test('las migraciones respetan los cambios editoriales al volver a abrir la base
   }
 });
 
+test('una edición eliminada no vuelve a sembrarse al reabrir la base de datos', async () => {
+  const temporaryRoot = await mkdtemp(join(tmpdir(), 'candemor-deleted-championship-'));
+  const databasePath = join(temporaryRoot, 'data', 'test.db');
+  try {
+    const db = openDatabase(databasePath);
+    db.prepare('DELETE FROM championships WHERE external_tournament_id = 42').run();
+    assert.equal(
+      db
+        .prepare('SELECT COUNT(*) AS count FROM championships WHERE external_tournament_id = 42')
+        .get().count,
+      0,
+    );
+    db.close();
+
+    const reopened = openDatabase(databasePath);
+    assert.equal(
+      reopened
+        .prepare('SELECT COUNT(*) AS count FROM championships WHERE external_tournament_id = 42')
+        .get().count,
+      0,
+    );
+    reopened.close();
+  } finally {
+    await rm(temporaryRoot, { recursive: true, force: true });
+  }
+});
+
 test('las migraciones conservan activas varias cuentas después de reiniciar', async () => {
   const temporaryRoot = await mkdtemp(join(tmpdir(), 'candemor-multi-admin-migrations-'));
   const databasePath = join(temporaryRoot, 'data', 'test.db');
@@ -633,6 +660,112 @@ test('administra contenidos y cuentas con propietario, invitación y TOTP indepe
     assert.equal(settingsAfterArchive.data.featuredChampionshipId, null);
     assert.equal(settingsAfterArchive.data.featuredChampionship, null);
 
+    const ownerId = app.db
+      .prepare('SELECT id FROM admin_profiles WHERE is_owner = 1 LIMIT 1')
+      .get().id;
+    const linkedMediaPath = join(temporaryRoot, 'uploads', 'delete-championship.webp');
+    const linkedOriginalsDir = join(temporaryRoot, 'originals');
+    const linkedOriginalPath = join(linkedOriginalsDir, 'delete-championship.png');
+    await mkdir(linkedOriginalsDir, { recursive: true });
+    await writeFile(linkedMediaPath, Buffer.from('processed image'));
+    await writeFile(linkedOriginalPath, Buffer.from('original image'));
+    app.db
+      .prepare(
+        `INSERT INTO media_assets
+         (id, public_url, storage_path, original_storage_path, original_name, mime_type,
+          byte_size, entity_type, entity_id, uploaded_by, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 'championship', ?, ?, ?)`,
+      )
+      .run(
+        'media-to-delete',
+        '/uploads/delete-championship.webp',
+        linkedMediaPath,
+        linkedOriginalPath,
+        'delete-championship.png',
+        'image/webp',
+        15,
+        nextChampionship.data.championship.id,
+        ownerId,
+        new Date().toISOString(),
+      );
+    app.db
+      .prepare(
+        `INSERT INTO championship_snapshots
+         (id, championship_id, payload, checksum, synced_at, is_final)
+         VALUES (?, ?, ?, ?, ?, 1)`,
+      )
+      .run(
+        'snapshot-to-delete',
+        nextChampionship.data.championship.id,
+        '{}',
+        'snapshot-delete-checksum',
+        new Date().toISOString(),
+      );
+    app.db
+      .prepare(
+        `INSERT INTO sports_corrections
+         (id, championship_id, reason, note, created_by_name, created_at)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        'correction-to-delete',
+        nextChampionship.data.championship.id,
+        'Corrección de prueba',
+        'Debe eliminarse con la edición.',
+        'Administración Candemor',
+        new Date().toISOString(),
+      );
+
+    const deletedChampionship = await jsonRequest(
+      baseUrl,
+      `/api/admin/championships/${nextChampionship.data.championship.id}`,
+      { method: 'DELETE', cookie: adminCookie, csrf: adminCsrf },
+    );
+    assert.equal(deletedChampionship.status, 204);
+    assert.equal(
+      app.db
+        .prepare('SELECT COUNT(*) AS count FROM championships WHERE id = ?')
+        .get(nextChampionship.data.championship.id).count,
+      0,
+    );
+    assert.equal(
+      app.db
+        .prepare(
+          'SELECT COUNT(*) AS count FROM championship_translations WHERE championship_id = ?',
+        )
+        .get(nextChampionship.data.championship.id).count,
+      0,
+    );
+    assert.equal(
+      app.db
+        .prepare('SELECT COUNT(*) AS count FROM championship_snapshots WHERE championship_id = ?')
+        .get(nextChampionship.data.championship.id).count,
+      0,
+    );
+    assert.equal(
+      app.db
+        .prepare('SELECT COUNT(*) AS count FROM sports_corrections WHERE championship_id = ?')
+        .get(nextChampionship.data.championship.id).count,
+      0,
+    );
+    assert.equal(
+      app.db
+        .prepare(
+          "SELECT COUNT(*) AS count FROM media_assets WHERE entity_type = 'championship' AND entity_id = ?",
+        )
+        .get(nextChampionship.data.championship.id).count,
+      0,
+    );
+    await assert.rejects(readFile(linkedMediaPath));
+    await assert.rejects(readFile(linkedOriginalPath));
+
+    const deletedChampionshipDetail = await jsonRequest(
+      baseUrl,
+      `/api/admin/championships/${nextChampionship.data.championship.id}`,
+      { cookie: adminCookie },
+    );
+    assert.equal(deletedChampionshipDetail.status, 404);
+
     const restoredNewEra = await jsonRequest(
       baseUrl,
       `/api/admin/championships/${seededChampionship.id}/feature`,
@@ -1011,6 +1144,10 @@ test('administra contenidos y cuentas con propietario, invitación y TOTP indepe
     assert.equal(audit.status, 200);
     assert.equal(
       audit.data.entries.some((entry) => entry.action === 'championship.synced'),
+      true,
+    );
+    assert.equal(
+      audit.data.entries.some((entry) => entry.action === 'championship.deleted'),
       true,
     );
     assert.equal(

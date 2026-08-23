@@ -42,12 +42,13 @@ export class Hero implements AfterViewInit, OnDestroy {
   }
 
   readonly championship = input<ChampionshipContent | null>(null);
+  readonly twitchUrl = input('https://www.twitch.tv/candemorracingteam');
 
   readonly isMuted = signal(true);
   readonly isPaused = signal(false);
   readonly isVideoFocusMode = signal(false);
   readonly isMenuOpen = signal(false);
-  readonly countdown = signal<Countdown>({ days: '00', hours: '00', minutes: '00', seconds: '00' });
+  readonly isActive = computed(() => this.championship()?.status === 'active');
   readonly editionNumber = computed(() => this.championship()?.editionNumber ?? 8);
   readonly editionCode = computed(() => String(this.editionNumber()).padStart(2, '0'));
   readonly editionSubtitle = computed(
@@ -78,6 +79,24 @@ export class Hero implements AfterViewInit, OnDestroy {
       : '/candeonatos';
   });
   readonly startAt = computed(() => this.championship()?.startAt ?? '2026-09-04T18:00:00+02:00');
+  private readonly currentTime = signal(Date.now());
+  readonly countdown = computed<Countdown>(() => {
+    if (this.isActive()) {
+      return { days: '00', hours: '00', minutes: '00', seconds: '00' };
+    }
+
+    const distance = Math.max(0, new Date(this.startAt()).getTime() - this.currentTime());
+    const day = 86_400_000;
+    const hour = 3_600_000;
+    const minute = 60_000;
+
+    return {
+      days: this.pad(Math.floor(distance / day)),
+      hours: this.pad(Math.floor((distance % day) / hour)),
+      minutes: this.pad(Math.floor((distance % hour) / minute)),
+      seconds: this.pad(Math.floor((distance % minute) / 1000)),
+    };
+  });
   readonly dateLabel = computed(() =>
     new Intl.DateTimeFormat(this.i18n.language() === 'en' ? 'en-GB' : 'es-ES', {
       day: '2-digit',
@@ -181,17 +200,7 @@ export class Hero implements AfterViewInit, OnDestroy {
   }
 
   private updateCountdown(): void {
-    const distance = Math.max(0, new Date(this.startAt()).getTime() - Date.now());
-    const day = 86_400_000;
-    const hour = 3_600_000;
-    const minute = 60_000;
-
-    this.countdown.set({
-      days: this.pad(Math.floor(distance / day)),
-      hours: this.pad(Math.floor((distance % day) / hour)),
-      minutes: this.pad(Math.floor((distance % hour) / minute)),
-      seconds: this.pad(Math.floor((distance % minute) / 1000)),
-    });
+    this.currentTime.set(Date.now());
   }
 
   private pad(value: number): string {

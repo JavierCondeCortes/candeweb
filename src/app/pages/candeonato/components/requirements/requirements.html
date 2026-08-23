@@ -75,7 +75,12 @@
     <ol [attr.aria-label]="'candeonato.schedule.processLabel' | translate">
       <li>
         <span>{{ 'candeonato.schedule.now' | translate }}</span
-        ><strong>{{ 'candeonato.schedule.registrationOpen' | translate }}</strong>
+        ><strong>{{
+          (isActive()
+            ? 'candeonato.schedule.racingNow'
+            : 'candeonato.schedule.registrationOpen'
+          ) | translate
+        }}</strong>
       </li>
       <li>
         <span>{{ 'candeonato.schedule.before' | translate }}</span

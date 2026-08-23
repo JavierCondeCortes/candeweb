@@ -1,0 +1,47 @@
+@if (confirmation.state(); as request) {
+  <dialog
+    #dialog
+    class="confirmation-dialog"
+    [class.is-danger]="request.tone === 'danger'"
+    aria-labelledby="confirmation-dialog-title"
+    aria-describedby="confirmation-dialog-message"
+    (cancel)="cancel($event)"
+    (close)="closeIfStillPending()"
+    (click)="backdropClick($event)"
+  >
+    <div class="confirmation-dialog-accent" aria-hidden="true"></div>
+    <div class="confirmation-dialog-body">
+      <p class="confirmation-dialog-eyebrow">
+        {{
+          (request.tone === 'danger'
+            ? 'home.interactions.dangerEyebrow'
+            : 'home.interactions.warningEyebrow'
+          ) | translate
+        }}
+      </p>
+      <h2 id="confirmation-dialog-title">
+        {{
+          request.title ||
+            ((request.tone === 'danger'
+              ? 'home.interactions.dangerTitle'
+              : 'home.interactions.confirmTitle'
+            ) | translate)
+        }}
+      </h2>
+      <p id="confirmation-dialog-message">{{ request.message }}</p>
+      <div class="confirmation-dialog-actions">
+        <button class="confirmation-dialog-cancel" type="button" autofocus (click)="cancel()">
+          {{ 'home.interactions.cancel' | translate }}
+        </button>
+        <button
+          class="confirmation-dialog-confirm"
+          [class.is-danger]="request.tone === 'danger'"
+          type="button"
+          (click)="confirm()"
+        >
+          {{ request.confirmLabel || ('home.interactions.confirm' | translate) }}
+        </button>
+      </div>
+    </div>
+  </dialog>
+}

@@ -1,14 +1,30 @@
-<header id="inicio" class="hero" aria-describedby="video-description" [class.video-focus-mode]="isVideoFocusMode()">
+<header
+  id="inicio"
+  class="hero"
+  aria-describedby="video-description"
+  [class.video-focus-mode]="isVideoFocusMode()"
+>
   <picture class="hero-poster" aria-hidden="true">
     <source media="(max-width: 47.99rem)" [srcset]="coverMobileUrl()" />
     <img [src]="coverUrl()" alt="" width="1600" height="900" fetchpriority="high" />
   </picture>
 
   @if (backgroundVideoUrl(); as videoUrl) {
-  <video #heroVideo class="hero-video" autoplay muted loop playsinline preload="metadata" [poster]="coverUrl()"
-    aria-hidden="true" (play)="onVideoPlay()" (pause)="onVideoPause()">
-    <source [src]="videoUrl" [type]="backgroundVideoMimeType()" />
-  </video>
+    <video
+      #heroVideo
+      class="hero-video"
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="metadata"
+      [poster]="coverUrl()"
+      aria-hidden="true"
+      (play)="onVideoPlay()"
+      (pause)="onVideoPause()"
+    >
+      <source [src]="videoUrl" [type]="backgroundVideoMimeType()" />
+    </video>
   }
 
   <div class="hero-vignette" aria-hidden="true"></div>
@@ -16,23 +32,42 @@
 
   <app-candeonato-navbar
     variant="landing"
-    [brandAriaLabel]="
-      'CANDEWEB — Candeonato ' + editionNumber() + ', inicio'
-    "
+    [brandAriaLabel]="'CANDEWEB — Candeonato ' + editionNumber() + ', inicio'"
     [inactive]="isVideoFocusMode()"
     [historyUrl]="historyUrl()"
+    [showRegistration]="!isActive()"
     [menuOpen]="isMenuOpen()"
     (menuOpenChange)="isMenuOpen.set($event)"
   />
 
   @if (backgroundVideoUrl()) {
-  <app-sound-switch [muted]="isMuted()" [paused]="isPaused()" [viewingVideo]="isVideoFocusMode()"
-    (soundToggle)="toggleSound()" (playToggle)="togglePlayback()" (viewToggle)="toggleVideoFocus()">
-  </app-sound-switch>
+    <app-sound-switch
+      [muted]="isMuted()"
+      [paused]="isPaused()"
+      [viewingVideo]="isVideoFocusMode()"
+      (soundToggle)="toggleSound()"
+      (playToggle)="togglePlayback()"
+      (viewToggle)="toggleVideoFocus()"
+    >
+    </app-sound-switch>
   }
 
-  <div class="hero-content" [attr.aria-hidden]="isVideoFocusMode() ? 'true' : null"
-    [attr.inert]="isVideoFocusMode() ? '' : null">
+  @if (isActive()) {
+    <div
+      class="hero-live-status"
+      role="status"
+      [attr.aria-hidden]="isVideoFocusMode() ? 'true' : null"
+    >
+      <span aria-hidden="true"></span>
+      <strong>{{ 'candeonato.hero.racing' | translate }}</strong>
+    </div>
+  }
+
+  <div
+    class="hero-content"
+    [attr.aria-hidden]="isVideoFocusMode() ? 'true' : null"
+    [attr.inert]="isVideoFocusMode() ? '' : null"
+  >
     <p class="eyebrow hero-kicker">{{ editionCode() }} / {{ editionSubtitle() }}</p>
     <h1 class="display-title" data-title="CANDEONATO" aria-label="CANDEONATO">CANDEONATO</h1>
     <p class="hero-subtitle">{{ heroSubtitle() }}</p>
@@ -43,8 +78,15 @@
       <span>{{ 'candeonato.hero.online' | translate }}</span>
     </div>
 
-    <div class="countdown" role="timer"
-      [attr.aria-label]="'candeonato.hero.countdown' | translate: { date: dateLabel() }">
+    <div
+      class="countdown"
+      role="timer"
+      [attr.aria-label]="
+        isActive()
+          ? ('candeonato.hero.liveCountdown' | translate)
+          : ('candeonato.hero.countdown' | translate: { date: dateLabel() })
+      "
+    >
       <div>
         <strong>{{ countdown().days }}</strong>
         <span>{{ 'candeonato.hero.days' | translate }}</span>
@@ -66,22 +108,53 @@
       </div>
     </div>
 
-    <div class="hero-actions">
-      <a class="button button-primary" [routerLink]="[]" fragment="inscripcion">{{
-        'candeonato.hero.register' | translate
+    @if (isActive()) {
+      <div class="hero-live-action">
+        <a
+          class="button button-live"
+          [href]="twitchUrl()"
+          target="_blank"
+          rel="noopener noreferrer"
+          [attr.aria-label]="'candeonato.hero.watchTwitchLabel' | translate"
+        >
+          <span aria-hidden="true"></span>
+          {{ 'candeonato.hero.watchTwitch' | translate }}
+        </a>
+      </div>
+
+      <div class="hero-actions hero-actions-live">
+        <a class="button button-secondary" [routerLink]="[]" fragment="reglas">{{
+          'candeonato.hero.viewRules' | translate
         }}</a>
-      <a class="button button-secondary" [routerLink]="[]" fragment="reglas">{{
-        'candeonato.hero.viewRules' | translate
+      </div>
+    } @else {
+      <div class="hero-actions">
+        <a class="button button-primary" [routerLink]="[]" fragment="inscripcion">{{
+          'candeonato.hero.register' | translate
         }}</a>
-    </div>
+        <a class="button button-secondary" [routerLink]="[]" fragment="reglas">{{
+          'candeonato.hero.viewRules' | translate
+        }}</a>
+      </div>
+    }
   </div>
 
-  <a class="scroll-cue" [routerLink]="[]" fragment="evento" [attr.aria-hidden]="isVideoFocusMode() ? 'true' : null"
-    [attr.inert]="isVideoFocusMode() ? '' : null">
+  <a
+    class="scroll-cue"
+    [routerLink]="[]"
+    fragment="evento"
+    [attr.aria-hidden]="isVideoFocusMode() ? 'true' : null"
+    [attr.inert]="isVideoFocusMode() ? '' : null"
+  >
     <span>{{ 'candeonato.hero.discover' | translate }}</span>
     <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="none">
-      <path d="M12 4v15m0 0-5-5m5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-        stroke-linejoin="round" />
+      <path
+        d="M12 4v15m0 0-5-5m5 5 5-5"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
     </svg>
   </a>
 

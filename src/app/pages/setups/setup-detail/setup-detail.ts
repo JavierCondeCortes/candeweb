@@ -6,6 +6,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { RacingSetup, SetupCapabilities, SetupFile } from '../../../core/models/setup.model';
 import { SetupApiService } from '../../../core/services/setup-api.service';
+import { ConfirmationService } from '../../../core/services/confirmation.service';
 
 @Component({
   selector: 'app-setup-detail',
@@ -14,6 +15,7 @@ import { SetupApiService } from '../../../core/services/setup-api.service';
 })
 export class SetupDetail implements OnInit {
   private readonly api = inject(SetupApiService);
+  private readonly confirmation = inject(ConfirmationService);
   private readonly i18n = inject(I18nService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -60,9 +62,15 @@ export class SetupDetail implements OnInit {
       });
   }
 
-  deleteSetup(): void {
+  async deleteSetup(): Promise<void> {
     const setup = this.setup();
-    if (!setup || !window.confirm(this.i18n.translate('home.setups.common.confirmDeleteSetup')))
+    if (
+      !setup ||
+      !(await this.confirmation.confirm({
+        message: this.i18n.translate('home.setups.common.confirmDeleteSetup'),
+        tone: 'danger',
+      }))
+    )
       return;
     this.api.deleteSetup(setup.id).subscribe({
       next: () => void this.router.navigate(['/setups']),
@@ -81,15 +89,16 @@ export class SetupDetail implements OnInit {
     });
   }
 
-  deleteFile(file: SetupFile): void {
+  async deleteFile(file: SetupFile): Promise<void> {
     const setup = this.setup();
     if (
       !setup ||
-      !window.confirm(
-        this.i18n.translate('home.setups.common.confirmDeleteFile', {
+      !(await this.confirmation.confirm({
+        message: this.i18n.translate('home.setups.common.confirmDeleteFile', {
           name: file.originalName,
         }),
-      )
+        tone: 'danger',
+      }))
     )
       return;
     this.api.deleteFile(setup.id, file.id).subscribe({

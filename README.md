@@ -134,10 +134,12 @@ Frankfurt, comprobación `/api/health` y un disco persistente montado sobre `ser
 3. Revisa la instancia `starter` y el disco de 1 GB antes de confirmar el coste.
 4. Introduce `TWITCH_CLIENT_ID` y `TWITCH_CLIENT_SECRET` cuando el Blueprint solicite los secretos;
    sus valores no se guardan en `render.yaml`.
-5. Cuando el servicio esté activo, consulta el valor generado de `ADMIN_SETUP_TOKEN` y abre
+5. Introduce `WEB_UPDATES_API_TOKEN` con el mismo valor configurado como `CANDEWEB_API_TOKEN` en
+   WebUpdates. Es un secreto compartido y Render no debe generar un valor diferente.
+6. Cuando el servicio esté activo, consulta el valor generado de `ADMIN_SETUP_TOKEN` y abre
    `/admin/login` para crear la primera cuenta.
-6. Abre `/admin/seguridad`, vincula TOTP y guarda los códigos de recuperación.
-7. Asocia el dominio y descarga periódicamente las copias generadas por `npm run backup`.
+7. Abre `/admin/seguridad`, vincula TOTP y guarda los códigos de recuperación.
+8. Asocia el dominio y descarga periódicamente las copias generadas por `npm run backup`.
 
 Los servicios gratuitos de Render no conservan SQLite ni las imágenes subidas. No elimines el disco
 del Blueprint ni cambies a un plan sin persistencia.

@@ -5,6 +5,7 @@ import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { SkinContent } from '../../../core/models/skin.model';
 import { AdminApiService } from '../../../core/services/admin-api.service';
+import { ConfirmationService } from '../../../core/services/confirmation.service';
 import { apiErrorMessage } from '../admin-form-errors';
 
 @Component({
@@ -14,6 +15,7 @@ import { apiErrorMessage } from '../admin-form-errors';
 })
 export class AdminSkins implements OnInit {
   private readonly api = inject(AdminApiService);
+  private readonly confirmation = inject(ConfirmationService);
   readonly i18n = inject(I18nService);
   readonly skins = signal<SkinContent[]>([]);
   readonly loading = signal(true);
@@ -38,11 +40,15 @@ export class AdminSkins implements OnInit {
       });
   }
 
-  runAction(skin: SkinContent, action: 'publish' | 'archive'): void {
+  async runAction(skin: SkinContent, action: 'publish' | 'archive'): Promise<void> {
     if (
       action === 'archive' &&
-      !window.confirm(this.i18n.translate('admin.skins.confirmArchive', { name: skin.carName }))
-    ) return;
+      !(await this.confirmation.confirm({
+        message: this.i18n.translate('admin.skins.confirmArchive', { name: skin.carName }),
+        confirmLabel: this.i18n.translate('admin.common.archive'),
+      }))
+    )
+      return;
     this.busyId.set(skin.id);
     this.api
       .skinAction(skin.id, action)
@@ -60,8 +66,15 @@ export class AdminSkins implements OnInit {
       });
   }
 
-  deleteSkin(skin: SkinContent): void {
-    if (!window.confirm(this.i18n.translate('admin.skins.confirmDelete', { name: skin.carName }))) return;
+  async deleteSkin(skin: SkinContent): Promise<void> {
+    if (
+      !(await this.confirmation.confirm({
+        message: this.i18n.translate('admin.skins.confirmDelete', { name: skin.carName }),
+        confirmLabel: this.i18n.translate('admin.common.delete'),
+        tone: 'danger',
+      }))
+    )
+      return;
     this.busyId.set(skin.id);
     this.api
       .deleteSkin(skin.id)

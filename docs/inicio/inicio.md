@@ -75,6 +75,9 @@ En la primera versión no es necesario crear todas las rutas. Las secciones pued
 - [x] Incluir `Saltar al contenido` como primer enlace enfocable.
 - [x] Implementar los destinos internos con `routerLink` y fragmentos para que funcionen también al
       regresar desde otra ruta; activar el desplazamiento a anclas y reservar margen superior.
+- [x] Añadir un punto rojo pulsante a `Candeonato actual` cuando la edición destacada está `active`.
+- [x] Si la edición destacada está `finished` y todavía no existe una nueva, enlazar directamente a
+      `/candeonatos/{externalTournamentId}` en lugar de abrir una landing con inscripciones cerradas.
 
 ### Recomendación visual
 
@@ -263,7 +266,7 @@ página específica del evento ya desarrollada.
 
 - Relación explícita: `Un evento organizado por Candemor`.
 - Número y edición actual del Candeonato.
-- Estado: inscripciones abiertas, próximas, cerradas o evento finalizado.
+- Estado: inscripciones abiertas (`registration`), en curso (`active`) o finalizado (`finished`).
 - Fecha o información pendiente claramente identificada.
 - Imagen o fragmento del vídeo del evento.
 - Acción principal: `Ver el Candeonato`.
@@ -277,6 +280,8 @@ a la presentación de Candemor.
 
 - [x] Crear una fuente de datos única para el estado y la edición del evento.
 - [x] Enlazar a `/candeonato`.
+- [x] Resolver el enlace según el estado: landing durante inscripciones o carrera, y ficha histórica
+      cuando la edición ha finalizado.
 - [x] No inventar fecha, plazas o circuitos si no están confirmados.
 - [x] Mostrar la edición actual seleccionada desde administración; New Era corresponde al torneo
       Fat Cat Race `42` y usa su vídeo de fondo propio.

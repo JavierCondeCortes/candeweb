@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { adminAuthGuard } from './core/guards/admin-auth.guard';
 import { adminOwnerGuard } from './core/guards/admin-owner.guard';
 import { pendingChangesGuard } from './core/guards/pending-changes.guard';
+import { currentChampionshipGuard } from './core/guards/current-championship.guard';
 import { skinAuthGuard } from './core/guards/skin-auth.guard';
 import { setupAuthGuard, setupUploaderGuard } from './core/guards/setup-auth.guard';
 
@@ -14,6 +15,7 @@ export const routes: Routes = [
   {
     path: 'candeonato',
     title: 'candeonato.meta.title',
+    canActivate: [currentChampionshipGuard],
     loadComponent: () =>
       import('./pages/candeonato/candeonato-page').then((module) => module.CandeonatoPage),
   },
