@@ -83,6 +83,35 @@ export class AdminChampionships implements OnInit {
       });
   }
 
+  deleteChampionship(championship: ChampionshipContent): void {
+    if (
+      !window.confirm(
+        this.i18n.translate('admin.championships.confirmDelete', {
+          name: championship.name,
+        }),
+      )
+    )
+      return;
+    this.busyId.set(championship.id);
+    this.message.set('');
+    this.errorMessage.set('');
+    this.api
+      .deleteChampionship(championship.id)
+      .pipe(finalize(() => this.busyId.set('')))
+      .subscribe({
+        next: () => {
+          this.championships.update((items) => items.filter((item) => item.id !== championship.id));
+          this.message.set(this.i18n.translate('admin.championships.deletedMessage'));
+        },
+        error: (error) =>
+          this.errorMessage.set(
+            apiErrorMessage(error, this.i18n.translate('admin.common.operationFailed'), (key) =>
+              this.i18n.translate(key),
+            ),
+          ),
+      });
+  }
+
   private load(): void {
     this.loading.set(true);
     this.api

@@ -2,7 +2,7 @@ import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { createReadStream, existsSync, mkdirSync, statSync } from 'node:fs';
 import { unlink, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
-import { dirname, extname, join, normalize, resolve } from 'node:path';
+import { dirname, extname, join, normalize, resolve, sep } from 'node:path';
 import { constants as zlibConstants, createBrotliCompress, createGzip } from 'node:zlib';
 import QRCode from 'qrcode';
 import sharp from 'sharp';
@@ -1054,6 +1054,37 @@ async function routeAdmin(context) {
       status: championship.status,
     });
     return sendJson(response, 200, { championship: findChampionship(db, current.id) });
+  }
+  if (championshipMatch && method === 'DELETE') {
+    requireAdministrator(session);
+    const championship = findChampionship(db, championshipMatch[1]);
+    if (!championship) throw new ApiError(404, 'NOT_FOUND', 'No existe ese Candeonato.');
+    const linkedMedia = db
+      .prepare(
+        `SELECT storage_path, mobile_storage_path, original_storage_path
+         FROM media_assets WHERE entity_type = 'championship' AND entity_id = ?`,
+      )
+      .all(championship.id);
+
+    db.exec('BEGIN');
+    try {
+      db.prepare(
+        `DELETE FROM media_assets WHERE entity_type = 'championship' AND entity_id = ?`,
+      ).run(championship.id);
+      db.prepare('DELETE FROM championships WHERE id = ?').run(championship.id);
+      recordAudit(db, session.admin.id, 'championship.deleted', 'championship', championship.id, {
+        name: championship.name,
+        slug: championship.slug,
+        externalTournamentId: championship.externalTournamentId,
+      });
+      db.exec('COMMIT');
+    } catch (error) {
+      db.exec('ROLLBACK');
+      throw error;
+    }
+
+    await deleteChampionshipMediaFiles(linkedMedia, context.uploadDir);
+    return sendEmpty(response, 204);
   }
 
   const correctionMatch = path.match(/^\/api\/admin\/championships\/([^/]+)\/corrections$/);
@@ -2441,6 +2472,29 @@ function linkMediaAsset(db, publicUrl, altText, entityType, entityId) {
   db.prepare(
     `UPDATE media_assets SET alt_text = ?, entity_type = ?, entity_id = ? WHERE public_url = ?`,
   ).run(altText, entityType, entityId, publicUrl);
+}
+
+async function deleteChampionshipMediaFiles(mediaAssets, uploadDir) {
+  const allowedRoots = [resolve(uploadDir), resolve(dirname(uploadDir), 'originals')];
+  const paths = new Set(
+    mediaAssets.flatMap((asset) => [
+      asset.storage_path,
+      asset.mobile_storage_path,
+      asset.original_storage_path,
+    ]),
+  );
+  await Promise.all(
+    [...paths]
+      .filter(
+        (filePath) => typeof filePath === 'string' && isInsideMediaRoot(filePath, allowedRoots),
+      )
+      .map((filePath) => unlink(filePath).catch(() => undefined)),
+  );
+}
+
+function isInsideMediaRoot(filePath, allowedRoots) {
+  const resolvedPath = resolve(filePath);
+  return allowedRoots.some((root) => resolvedPath.startsWith(`${root}${sep}`));
 }
 
 function detectImageExtension(buffer, mimeType) {

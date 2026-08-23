@@ -936,12 +936,16 @@ function migrate(db) {
 
 function seed(db) {
   const timestamp = now();
+  const initialContentWasSeeded = Boolean(
+    db.prepare('SELECT 1 FROM site_settings WHERE id = 1').get(),
+  );
   const existingChampionship = db
     .prepare('SELECT id FROM championships WHERE external_tournament_id = 42')
     .get();
-  const championshipId = existingChampionship?.id ?? randomUUID();
+  const championshipId =
+    existingChampionship?.id ?? (initialContentWasSeeded ? null : randomUUID());
 
-  if (!existingChampionship) {
+  if (!initialContentWasSeeded && !existingChampionship) {
     db.prepare(
       `INSERT INTO championships (
         id, external_tournament_id, slug, name, edition_number, subtitle, season, summary,
@@ -967,43 +971,45 @@ function seed(db) {
     );
   }
 
-  db.prepare(
-    `INSERT OR IGNORE INTO championship_translations
-     (championship_id, locale, summary, description, cover_alt)
-     VALUES (?, 'en', ?, ?, ?)`,
-  ).run(
-    championshipId,
-    'A new era of Candeonato: different races, one common standings table and cumulative points.',
-    'A simracing competition organised by Candemor Racing Team and managed through the Fat Cat Race system.',
-    'Racing Mazda MX-5 from the New Era edition of Candeonato',
-  );
-
-  const historicalChampionships = [
-    [46, 'candeonato-its-my-life', "Candeonato it's my life"],
-    [38, 'candeonato-mike-edition', 'Candeonato MIKE Edition'],
-    [36, 'candeonato-super-hot-edition', 'Candeonato Super Hot Edition'],
-    [35, 'candeonato-summer-edition', 'Candeonato Summer Edition'],
-    [34, 'candeonato-spring-edition', 'Candeonato Spring Edition'],
-  ];
-  const insertHistoricalChampionship = db.prepare(
-    `INSERT OR IGNORE INTO championships (
-      id, external_tournament_id, slug, name, summary, status, is_featured, display_order,
-      published_at, created_at, updated_at, updated_by_name
-    ) VALUES (?, ?, ?, ?, ?, 'finished', 0, ?, ?, ?, ?, 'Sistema')`,
-  );
-  historicalChampionships.forEach(([externalId, slug, name], index) => {
-    insertHistoricalChampionship.run(
-      randomUUID(),
-      externalId,
-      slug,
-      name,
-      'Edición histórica del Candeonato con seis sesiones publicadas por la fuente deportiva.',
-      index + 1,
-      timestamp,
-      timestamp,
-      timestamp,
+  if (!initialContentWasSeeded && championshipId) {
+    db.prepare(
+      `INSERT OR IGNORE INTO championship_translations
+       (championship_id, locale, summary, description, cover_alt)
+       VALUES (?, 'en', ?, ?, ?)`,
+    ).run(
+      championshipId,
+      'A new era of Candeonato: different races, one common standings table and cumulative points.',
+      'A simracing competition organised by Candemor Racing Team and managed through the Fat Cat Race system.',
+      'Racing Mazda MX-5 from the New Era edition of Candeonato',
     );
-  });
+
+    const historicalChampionships = [
+      [46, 'candeonato-its-my-life', "Candeonato it's my life"],
+      [38, 'candeonato-mike-edition', 'Candeonato MIKE Edition'],
+      [36, 'candeonato-super-hot-edition', 'Candeonato Super Hot Edition'],
+      [35, 'candeonato-summer-edition', 'Candeonato Summer Edition'],
+      [34, 'candeonato-spring-edition', 'Candeonato Spring Edition'],
+    ];
+    const insertHistoricalChampionship = db.prepare(
+      `INSERT OR IGNORE INTO championships (
+        id, external_tournament_id, slug, name, summary, status, is_featured, display_order,
+        published_at, created_at, updated_at, updated_by_name
+      ) VALUES (?, ?, ?, ?, ?, 'finished', 0, ?, ?, ?, ?, 'Sistema')`,
+    );
+    historicalChampionships.forEach(([externalId, slug, name], index) => {
+      insertHistoricalChampionship.run(
+        randomUUID(),
+        externalId,
+        slug,
+        name,
+        'Edición histórica del Candeonato con seis sesiones publicadas por la fuente deportiva.',
+        index + 1,
+        timestamp,
+        timestamp,
+        timestamp,
+      );
+    });
+  }
 
   db.prepare(
     `INSERT OR IGNORE INTO site_settings (

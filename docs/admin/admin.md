@@ -33,9 +33,9 @@ La primera versión funcional del panel ya está implementada dentro del reposit
 - API propia en Node y base de datos SQLite con migraciones versionadas.
 - Una cuenta propietaria y cuentas administradoras aprobadas por ella, con sesiones independientes,
   protección CSRF, limitación de intentos y TOTP obligatorio para todas las cuentas.
-- CRUD completo, orden, publicación y archivo lógico de miembros, sponsors y Candeonatos. El listado de
-  miembros ofrece `Añadir`, `Editar` y `Eliminar`; eliminar exige confirmación y conserva un borrado
-  lógico en la auditoría.
+- CRUD completo, orden, publicación y archivo de miembros, sponsors y Candeonatos. El listado de
+  Candeonatos permite eliminar definitivamente una edición con confirmación explícita; la auditoría
+  conserva quién realizó la operación y qué edición eliminó.
 - Ajustes globales y auditoría consultables desde `/admin`.
 - Subida de JPEG, PNG, WebP o AVIF; el original se conserva de forma privada y la copia pública se genera
   en WebP con proporción controlada. Las portadas generan además una variante móvil. Cada edición
@@ -266,7 +266,7 @@ debe requerir confirmación y explicar que el perfil desaparecerá de la web pú
 | `published_at`               | Fecha o `null`  | Automático  | Fecha de publicación                                      |
 | `created_at`                 | Fecha           | Automático  | Solo lectura                                              |
 | `updated_at`                 | Fecha           | Automático  | Solo lectura                                              |
-| `deleted_at`                 | Fecha o `null`  | Automático  | Borrado lógico                                            |
+| `deleted_at`                 | Fecha o `null`  | Automático  | Campo histórico; la eliminación desde admin es física     |
 
 ### Fechas, zona horaria y temporizador
 
@@ -294,6 +294,11 @@ Estos valores no deben editarse como campos editoriales normales:
 El panel puede mostrar esos datos en modo lectura, indicar la última sincronización y permitir
 `Sincronizar ahora`. Si se necesita corregir una incidencia, debe crearse una **corrección
 editorial explícita**, con motivo, autor y fecha; nunca alterar silenciosamente el payload externo.
+
+`Eliminar` es una operación distinta de `Archivar`: borra físicamente la edición, sus traducciones,
+snapshots, correcciones y multimedia subida. Libera también el slug y el ID externo para poder crear
+de nuevo una edición de prueba. Exige confirmación y no puede deshacerse desde la web. El registro de
+auditoría se conserva y una edición inicial eliminada no vuelve a sembrarse al reiniciar el servidor.
 
 ### Estados y acciones
 
@@ -432,6 +437,7 @@ GET    /api/admin/championships
 POST   /api/admin/championships
 GET    /api/admin/championships/:id
 PATCH  /api/admin/championships/:id
+DELETE /api/admin/championships/:id
 POST   /api/admin/championships/:id/publish
 POST   /api/admin/championships/:id/archive
 POST   /api/admin/championships/:id/feature
@@ -485,8 +491,8 @@ asociarlo a controles concretos.
 - Proteger las operaciones mutables contra CSRF si se autentican mediante cookies.
 - No guardar secretos en Angular, Git, respuestas públicas ni registros de auditoría.
 - Mantener `.env` ignorado y publicar únicamente `.env.example` sin valores reales.
-- Registrar publicación, archivo, sincronizaciones y correcciones editoriales.
-- Usar borrado lógico para miembros y Candeonatos; el borrado físico será una tarea separada.
+- Registrar publicación, archivo, sincronizaciones, correcciones editoriales y eliminaciones.
+- Exigir confirmación para el borrado físico de Candeonatos y conservar el evento de auditoría.
 
 ## Gestión de imágenes
 
@@ -508,6 +514,8 @@ asociarlo a controles concretos.
 - La implementación genera un derivado WebP de hasta `1600 × 1600` y otro de hasta `900 × 900`
   para móvil. Ambos usan ajuste interior (`contain`) y nunca amplían el archivo original.
 - No reemplazar una URL publicada hasta que el nuevo archivo haya terminado de procesarse.
+- Al eliminar definitivamente una edición, borrar únicamente los assets vinculados a su ID y
+  validar que todas las rutas físicas estén dentro de los directorios multimedia permitidos.
 
 ### Sponsors
 
