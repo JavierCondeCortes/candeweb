@@ -77,6 +77,8 @@
     "saving": "Guardando…",
     "save": "Guardar",
     "cancel": "Cancelar",
+    "pendingChanges": "Hay cambios sin guardar. Si sales ahora, se perderán.",
+    "leave": "Salir sin guardar",
     "edit": "Editar",
     "back": "Volver al listado",
     "system": "Sistema",

@@ -12,6 +12,7 @@ import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 export class Requirements {
   private readonly i18n = inject(I18nService);
   readonly championship = input<ChampionshipContent | null>(null);
+  readonly isActive = computed(() => this.championship()?.status === 'active');
   readonly eventDate = computed(
     () => new Date(this.championship()?.startAt ?? '2026-09-04T18:00:00+02:00'),
   );

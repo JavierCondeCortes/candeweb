@@ -1,12 +1,17 @@
 <a class="skip-link" href="#contenido">{{ 'candeonato.skip' | translate }}</a>
 
-<app-hero [championship]="featured$ | async"></app-hero>
+<app-hero
+  [championship]="featured$ | async"
+  [twitchUrl]="(settings$ | async)?.twitchChannelUrl ?? 'https://www.twitch.tv/candemorracingteam'"
+/>
 
 <main id="contenido" class="site-main" tabindex="-1">
   <app-about [championship]="featured$ | async"></app-about>
   <app-requirements [championship]="featured$ | async"></app-requirements>
   <app-rules></app-rules>
-  <app-form-inscription [registrationUrl]="(featured$ | async)?.registrationUrl ?? null" />
+  @if ((featured$ | async)?.status !== 'active') {
+    <app-form-inscription [registrationUrl]="(featured$ | async)?.registrationUrl ?? null" />
+  }
 </main>
 
 <app-footer></app-footer>

@@ -1,0 +1,145 @@
+:host {
+  display: contents;
+}
+
+.confirmation-dialog {
+  width: min(calc(100% - 2rem), 34rem);
+  max-height: min(42rem, calc(100dvh - 2rem));
+  padding: 0;
+  overflow: auto;
+  border: 1px solid color-mix(in srgb, var(--lime) 58%, var(--border));
+  background:
+    linear-gradient(145deg, rgba(222, 255, 0, 0.07), transparent 45%), var(--surface-raised);
+  color: var(--text);
+  box-shadow:
+    0 1.5rem 5rem rgba(0, 0, 0, 0.72),
+    0 0 2.5rem rgba(222, 255, 0, 0.1);
+  animation: confirmation-enter 180ms ease-out;
+}
+
+.confirmation-dialog.is-danger {
+  border-color: color-mix(in srgb, var(--danger) 70%, var(--border));
+  background:
+    linear-gradient(145deg, rgba(255, 107, 132, 0.1), transparent 45%), var(--surface-raised);
+  box-shadow:
+    0 1.5rem 5rem rgba(0, 0, 0, 0.72),
+    0 0 2.5rem rgba(255, 107, 132, 0.12);
+}
+
+.confirmation-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(6px);
+}
+
+.confirmation-dialog-accent {
+  height: 0.3rem;
+  background: linear-gradient(90deg, var(--lime), var(--magenta));
+}
+
+.confirmation-dialog.is-danger .confirmation-dialog-accent {
+  background: linear-gradient(90deg, var(--danger), var(--magenta));
+}
+
+.confirmation-dialog-body {
+  display: grid;
+  gap: 1rem;
+  padding: clamp(1.4rem, 5vw, 2.25rem);
+}
+
+.confirmation-dialog-eyebrow,
+.confirmation-dialog h2,
+.confirmation-dialog p {
+  margin: 0;
+}
+
+.confirmation-dialog-eyebrow {
+  color: var(--lime);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.confirmation-dialog.is-danger .confirmation-dialog-eyebrow {
+  color: var(--danger);
+}
+
+.confirmation-dialog h2 {
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  font-size: clamp(2rem, 8vw, 3.25rem);
+  font-style: italic;
+  letter-spacing: 0.02em;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.confirmation-dialog p:not(.confirmation-dialog-eyebrow) {
+  max-width: 58ch;
+  color: var(--text-muted);
+}
+
+.confirmation-dialog-actions {
+  display: flex;
+  flex-wrap: wrap-reverse;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.confirmation-dialog-actions button {
+  min-height: 2.9rem;
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    color 150ms ease,
+    transform 150ms ease;
+}
+
+.confirmation-dialog-actions button:hover {
+  border-color: var(--text);
+  background: rgba(245, 245, 242, 0.08);
+  transform: translateY(-2px);
+}
+
+.confirmation-dialog-actions .confirmation-dialog-confirm {
+  border-color: var(--lime);
+  background: var(--lime);
+  color: var(--black);
+}
+
+.confirmation-dialog-actions .confirmation-dialog-confirm.is-danger {
+  border-color: var(--danger);
+  background: var(--danger);
+}
+
+@keyframes confirmation-enter {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem) scale(0.98);
+  }
+}
+
+@media (max-width: 35rem) {
+  .confirmation-dialog-actions,
+  .confirmation-dialog-actions button {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confirmation-dialog,
+  .confirmation-dialog-actions button {
+    animation: none;
+    transition: none;
+  }
+}

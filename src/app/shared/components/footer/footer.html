@@ -17,9 +17,11 @@
       <p class="footer-label">{{ 'candeonato.footer.community' | translate }}</p>
       <nav class="footer-nav">
         <a routerLink="/">Candemor Racing Team</a>
-        <a href="/candeonato/#inscripcion">{{
-          'candeonato.footer.registrationForm' | translate
-        }}</a>
+        @if (registrationOpen$ | async) {
+          <a href="/candeonato/#inscripcion">{{
+            'candeonato.footer.registrationForm' | translate
+          }}</a>
+        }
         <a routerLink="/setups">{{ 'home.footer.setups' | translate }}</a>
         <a routerLink="/skins">{{ 'home.footer.skins' | translate }}</a>
         <a routerLink="/chiquito-spotter">{{ 'home.footer.chiquitoSpotter' | translate }}</a>
@@ -60,10 +62,12 @@
         }
       </nav>
     </div>
-    <div>
-      <p class="footer-label">{{ 'candeonato.footer.privacy' | translate }}</p>
-      <a href="/candeonato#privacidad">{{ 'candeonato.footer.dataUse' | translate }}</a>
-    </div>
+    @if (registrationOpen$ | async) {
+      <div>
+        <p class="footer-label">{{ 'candeonato.footer.privacy' | translate }}</p>
+        <a href="/candeonato#privacidad">{{ 'candeonato.footer.dataUse' | translate }}</a>
+      </div>
+    }
   </div>
   <p class="footer-bottom">
     {{ 'home.footer.legal' | translate: { year: currentYear } }} || CANDEONATO #{{

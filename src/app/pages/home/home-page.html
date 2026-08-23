@@ -1,6 +1,6 @@
 <a class="skip-link" href="#contenido-inicio">{{ 'home.skip' | translate }}</a>
 
-<app-home-hero />
+<app-home-hero [championship]="(settings$ | async)?.featuredChampionship ?? null" />
 
 <main id="contenido-inicio" class="home-main" tabindex="-1">
   <app-community-intro [discordUrl]="(settings$ | async)?.discordUrl || null" />

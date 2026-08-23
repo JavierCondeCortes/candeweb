@@ -77,6 +77,8 @@
     "saving": "Saving…",
     "save": "Save",
     "cancel": "Cancel",
+    "pendingChanges": "There are unsaved changes. They will be lost if you leave now.",
+    "leave": "Leave without saving",
     "edit": "Edit",
     "back": "Back to list",
     "system": "System",

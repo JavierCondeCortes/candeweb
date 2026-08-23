@@ -1,10 +1,12 @@
 import {
   AfterViewInit,
   Component,
+  computed,
   ElementRef,
   HostListener,
   inject,
   OnDestroy,
+  input,
   signal,
   ViewChild,
 } from '@angular/core';
@@ -14,6 +16,7 @@ import { SoundSwitch } from '../../../../pages/candeonato/components/sound-switc
 import { StreamStatusService } from '../../../../core/services/stream-status.service';
 import { LanguageSwitcher } from '../../../../core/i18n/language-switcher/language-switcher';
 import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
+import { ChampionshipContent } from '../../../../core/models/content-admin.model';
 
 @Component({
   selector: 'app-home-hero',
@@ -27,6 +30,14 @@ export class HomeHero implements AfterViewInit, OnDestroy {
   private motionQuery?: MediaQueryList;
 
   readonly streamStatus$ = this.streamService.status$;
+  readonly championship = input<ChampionshipContent | null>(null);
+  readonly isCandeonatoLive = computed(() => this.championship()?.status === 'active');
+  readonly currentEventUrl = computed(() => {
+    const championship = this.championship();
+    return championship?.status === 'finished' && championship.externalTournamentId
+      ? `/candeonatos/${championship.externalTournamentId}`
+      : '/candeonato';
+  });
   readonly isMuted = signal(true);
   readonly isPaused = signal(false);
   readonly isVideoFocusMode = signal(false);

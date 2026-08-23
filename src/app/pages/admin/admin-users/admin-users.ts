@@ -10,6 +10,7 @@ import {
   AdminInvitation,
 } from '../../../core/models/content-admin.model';
 import { AdminApiService } from '../../../core/services/admin-api.service';
+import { ConfirmationService } from '../../../core/services/confirmation.service';
 import { apiErrorMessage } from '../admin-form-errors';
 
 @Component({
@@ -19,6 +20,7 @@ import { apiErrorMessage } from '../admin-form-errors';
 })
 export class AdminUsers implements OnInit {
   private readonly api = inject(AdminApiService);
+  private readonly confirmation = inject(ConfirmationService);
   private readonly i18n = inject(I18nService);
 
   readonly session = this.api.session;
@@ -67,11 +69,12 @@ export class AdminUsers implements OnInit {
     });
   }
 
-  reject(request: AdminAccessRequest): void {
+  async reject(request: AdminAccessRequest): Promise<void> {
     if (
-      !window.confirm(
-        this.i18n.translate('admin.users.confirmReject', { name: request.displayName }),
-      )
+      !(await this.confirmation.confirm({
+        message: this.i18n.translate('admin.users.confirmReject', { name: request.displayName }),
+        tone: 'danger',
+      }))
     )
       return;
     this.run(request.id, this.api.rejectAccessRequest(request.id), () => {
@@ -80,15 +83,16 @@ export class AdminUsers implements OnInit {
     });
   }
 
-  toggle(user: AdminAccount): void {
+  async toggle(user: AdminAccount): Promise<void> {
     const active = !user.active;
     if (
-      !window.confirm(
-        this.i18n.translate(
+      !(await this.confirmation.confirm({
+        message: this.i18n.translate(
           active ? 'admin.users.confirmActivate' : 'admin.users.confirmDeactivate',
           { name: user.displayName },
         ),
-      )
+        tone: active ? 'warning' : 'danger',
+      }))
     )
       return;
     this.run(user.id, this.api.setAdminActive(user.id, active), () => {
@@ -101,9 +105,12 @@ export class AdminUsers implements OnInit {
     });
   }
 
-  revokeSessions(user: AdminAccount): void {
+  async revokeSessions(user: AdminAccount): Promise<void> {
     if (
-      !window.confirm(this.i18n.translate('admin.users.confirmRevoke', { name: user.displayName }))
+      !(await this.confirmation.confirm({
+        message: this.i18n.translate('admin.users.confirmRevoke', { name: user.displayName }),
+        tone: 'danger',
+      }))
     )
       return;
     this.run(user.id, this.api.revokeAdminSessions(user.id), () => {

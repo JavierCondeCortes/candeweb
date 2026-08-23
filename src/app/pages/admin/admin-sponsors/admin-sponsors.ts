@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { SponsorContent } from '../../../core/models/content-admin.model';
 import { AdminApiService } from '../../../core/services/admin-api.service';
+import { ConfirmationService } from '../../../core/services/confirmation.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { apiErrorMessage } from '../admin-form-errors';
@@ -14,6 +15,7 @@ import { apiErrorMessage } from '../admin-form-errors';
 })
 export class AdminSponsors implements OnInit {
   private readonly api = inject(AdminApiService);
+  private readonly confirmation = inject(ConfirmationService);
   readonly i18n = inject(I18nService);
   readonly sponsors = signal<SponsorContent[]>([]);
   readonly loading = signal(true);
@@ -34,10 +36,13 @@ export class AdminSponsors implements OnInit {
     this.load();
   }
 
-  runAction(sponsor: SponsorContent, action: 'publish' | 'archive'): void {
+  async runAction(sponsor: SponsorContent, action: 'publish' | 'archive'): Promise<void> {
     if (
       action === 'archive' &&
-      !window.confirm(this.i18n.translate('admin.sponsors.confirmArchive', { name: sponsor.name }))
+      !(await this.confirmation.confirm({
+        message: this.i18n.translate('admin.sponsors.confirmArchive', { name: sponsor.name }),
+        confirmLabel: this.i18n.translate('admin.common.archive'),
+      }))
     )
       return;
     this.busyId.set(sponsor.id);
@@ -67,9 +72,13 @@ export class AdminSponsors implements OnInit {
       });
   }
 
-  deleteSponsor(sponsor: SponsorContent): void {
+  async deleteSponsor(sponsor: SponsorContent): Promise<void> {
     if (
-      !window.confirm(this.i18n.translate('admin.sponsors.confirmDelete', { name: sponsor.name }))
+      !(await this.confirmation.confirm({
+        message: this.i18n.translate('admin.sponsors.confirmDelete', { name: sponsor.name }),
+        confirmLabel: this.i18n.translate('admin.common.delete'),
+        tone: 'danger',
+      }))
     )
       return;
     this.busyId.set(sponsor.id);

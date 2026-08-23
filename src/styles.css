@@ -455,6 +455,13 @@ details .content-title{
   }
 }
 
+@keyframes interaction-alert-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-0.35rem);
+  }
+}
+
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
     .reveal {

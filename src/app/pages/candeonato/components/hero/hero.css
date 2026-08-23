@@ -76,6 +76,34 @@
   padding-block: 7.5rem 7rem;
 }
 
+.hero-live-status {
+  position: absolute;
+  top: 10rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid rgba(255, 70, 92, 0.65);
+  background: rgba(5, 5, 5, 0.78);
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  backdrop-filter: blur(10px);
+}
+
+.hero-live-status span,
+.button-live span {
+  width: 0.62rem;
+  height: 0.62rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #ff465c;
+  box-shadow: 0 0 0 0 rgba(255, 70, 92, 0.7);
+}
+
 .hero-kicker {
   margin-bottom: 1rem;
 }
@@ -106,6 +134,70 @@
   flex-wrap: wrap;
   gap: 0.75rem;
   margin-top: 1.5rem;
+}
+
+.hero-live-action {
+  margin-top: 1.5rem;
+}
+
+.hero-actions-live {
+  margin-top: 0.75rem;
+}
+
+.button-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  border: 1px solid var(--text);
+  background: var(--black);
+  color: var(--text);
+  font-weight: 900;
+  box-shadow: 0 0 0.9rem rgba(245, 245, 242, 0.2);
+}
+
+.button-live:hover,
+.button-live:focus-visible {
+  border-color: var(--text);
+  background: var(--text);
+  color: var(--black);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-live-status span,
+  .button-live span {
+    animation: live-dot-pulse 1.2s ease-out infinite;
+  }
+
+  .button-live {
+    animation: live-button-flash 2s ease-in-out infinite;
+  }
+
+  .button-live:hover,
+  .button-live:focus-visible {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes live-dot-pulse {
+  70%,
+  100% {
+    box-shadow: 0 0 0 0.55rem rgba(255, 70, 92, 0);
+  }
+}
+
+@keyframes live-button-flash {
+  0%,
+  100% {
+    background: var(--black);
+    color: var(--text);
+    box-shadow: 0 0 0.9rem rgba(245, 245, 242, 0.2);
+  }
+
+  50% {
+    background: var(--text);
+    color: var(--black);
+    box-shadow: 0 0 1.4rem rgba(245, 245, 242, 0.58);
+  }
 }
 
 .scroll-cue {
@@ -149,6 +241,11 @@
   .scroll-cue {
     right: 2.5rem;
     bottom: 2.5rem;
+  }
+
+  .hero-live-status {
+    top: 8.5rem;
+    right: 2.5rem;
   }
 }
 

@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { ChampionshipContent } from '../../../core/models/content-admin.model';
 import { AdminApiService } from '../../../core/services/admin-api.service';
+import { ConfirmationService } from '../../../core/services/confirmation.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { apiErrorMessage } from '../admin-form-errors';
@@ -14,6 +15,7 @@ import { apiErrorMessage } from '../admin-form-errors';
 })
 export class AdminChampionships implements OnInit {
   private readonly api = inject(AdminApiService);
+  private readonly confirmation = inject(ConfirmationService);
   readonly i18n = inject(I18nService);
   readonly championships = signal<ChampionshipContent[]>([]);
   readonly loading = signal(true);
@@ -39,15 +41,18 @@ export class AdminChampionships implements OnInit {
     this.load();
   }
 
-  runAction(
+  async runAction(
     championship: ChampionshipContent,
     action: 'publish' | 'archive' | 'feature' | 'sync',
-  ): void {
+  ): Promise<void> {
     if (
       action === 'archive' &&
-      !window.confirm(
-        this.i18n.translate('admin.championships.confirmArchive', { name: championship.name }),
-      )
+      !(await this.confirmation.confirm({
+        message: this.i18n.translate('admin.championships.confirmArchive', {
+          name: championship.name,
+        }),
+        confirmLabel: this.i18n.translate('admin.common.archive'),
+      }))
     )
       return;
     this.busyId.set(championship.id);
@@ -83,13 +88,15 @@ export class AdminChampionships implements OnInit {
       });
   }
 
-  deleteChampionship(championship: ChampionshipContent): void {
+  async deleteChampionship(championship: ChampionshipContent): Promise<void> {
     if (
-      !window.confirm(
-        this.i18n.translate('admin.championships.confirmDelete', {
+      !(await this.confirmation.confirm({
+        message: this.i18n.translate('admin.championships.confirmDelete', {
           name: championship.name,
         }),
-      )
+        confirmLabel: this.i18n.translate('admin.common.delete'),
+        tone: 'danger',
+      }))
     )
       return;
     this.busyId.set(championship.id);

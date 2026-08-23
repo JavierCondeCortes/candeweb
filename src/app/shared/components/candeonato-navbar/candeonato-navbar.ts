@@ -22,6 +22,7 @@ export class CandeonatoNavbar {
   readonly variant = input<CandeonatoNavbarVariant>('landing');
   readonly historyUrl = input('/candeonatos');
   readonly brandAriaLabel = input('CANDEWEB — Candemor Racing Team');
+  readonly showRegistration = input(true);
   readonly inactive = input(false);
   readonly menuOpen = model(false);
 

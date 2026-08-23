@@ -5,6 +5,14 @@
     "newTab": "opens in a new tab",
     "loading": "Loading…"
   },
+  "interactions": {
+    "warningEyebrow": "Confirm change",
+    "dangerEyebrow": "Permanent action",
+    "confirmTitle": "Continue?",
+    "dangerTitle": "Confirm deletion",
+    "cancel": "Cancel",
+    "confirm": "Confirm"
+  },
   "skip": "Skip to main content",
   "nav": {
     "label": "Main navigation",
@@ -15,6 +23,7 @@
     "content": "Content",
     "sponsors": "Sponsors",
     "currentEvent": "Current Candeonato",
+    "eventLive": "event in progress",
     "championshipHistory": "History",
     "chiquitoSpotter": "Chiquito Spotter",
     "homeLabel": "CANDEWEB — Candemor Racing Team, return to home",

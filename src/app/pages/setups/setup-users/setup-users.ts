@@ -8,6 +8,7 @@ import {
   SetupInvitation,
 } from '../../../core/models/setup.model';
 import { SetupApiService } from '../../../core/services/setup-api.service';
+import { ConfirmationService } from '../../../core/services/confirmation.service';
 
 @Component({
   selector: 'app-setup-users',
@@ -16,6 +17,7 @@ import { SetupApiService } from '../../../core/services/setup-api.service';
 })
 export class SetupUsers implements OnInit {
   private readonly api = inject(SetupApiService);
+  private readonly confirmation = inject(ConfirmationService);
   private readonly i18n = inject(I18nService);
 
   readonly loading = signal(true);
@@ -74,11 +76,14 @@ export class SetupUsers implements OnInit {
     this.update(user, true, !user.canUploadSetups);
   }
 
-  revoke(user: ManagedSetupAccount): void {
+  async revoke(user: ManagedSetupAccount): Promise<void> {
     if (
-      !window.confirm(
-        this.i18n.translate('home.setups.common.confirmRevoke', { name: user.displayName }),
-      )
+      !(await this.confirmation.confirm({
+        message: this.i18n.translate('home.setups.common.confirmRevoke', {
+          name: user.displayName,
+        }),
+        tone: 'danger',
+      }))
     )
       return;
     this.update(user, false, false);

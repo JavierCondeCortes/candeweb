@@ -76,9 +76,20 @@
       <a routerLink="/" fragment="sponsors" (click)="closeMenu()">{{
         'home.nav.sponsors' | translate
       }}</a>
-      <a routerLink="/candeonato" (click)="closeMenu()">{{
-        'home.nav.currentEvent' | translate
-      }}</a>
+      <a
+        class="home-nav-current-event"
+        [class.is-live]="isCandeonatoLive()"
+        [routerLink]="currentEventUrl()"
+        (click)="closeMenu()"
+      >
+        @if (isCandeonatoLive()) {
+          <span class="home-nav-live-dot" aria-hidden="true"></span>
+        }
+        {{ 'home.nav.currentEvent' | translate }}
+        @if (isCandeonatoLive()) {
+          <span class="sr-only">— {{ 'home.nav.eventLive' | translate }}</span>
+        }
+      </a>
       <a routerLink="/candeonatos" (click)="closeMenu()">{{
         'home.nav.championshipHistory' | translate
       }}</a>

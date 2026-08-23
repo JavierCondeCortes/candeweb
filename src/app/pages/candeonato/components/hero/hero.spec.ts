@@ -118,6 +118,23 @@ describe('Hero', () => {
 
     expect(historyLink?.getAttribute('href')).toBe('/candeonatos/42');
   });
+
+  it('turns the active edition into a live Twitch experience without registration', () => {
+    fixture.componentRef.setInput('championship', { ...newEraChampionship, status: 'active' });
+    fixture.componentRef.setInput('twitchUrl', 'https://www.twitch.tv/candemorracingteam');
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const liveLink = host.querySelector<HTMLAnchorElement>('.button-live');
+
+    expect(host.querySelector('.hero-live-status')?.textContent).toContain('Corriendo');
+    expect(
+      Array.from(host.querySelectorAll('.countdown strong')).map((item) => item.textContent),
+    ).toEqual(['00', '00', '00', '00']);
+    expect(liveLink?.href).toBe('https://www.twitch.tv/candemorracingteam');
+    expect(liveLink?.textContent).toContain('Ver en Twitch');
+    expect(host.textContent).not.toContain('Inscripción');
+  });
 });
 
 const newEraChampionship: ChampionshipContent = {

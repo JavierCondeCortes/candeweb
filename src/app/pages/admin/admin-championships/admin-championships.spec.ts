@@ -3,6 +3,7 @@ import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { ChampionshipContent } from '../../../core/models/content-admin.model';
 import { AdminApiService } from '../../../core/services/admin-api.service';
+import { ConfirmationService } from '../../../core/services/confirmation.service';
 import { AdminChampionships } from './admin-championships';
 
 describe('AdminChampionships', () => {
@@ -39,11 +40,15 @@ describe('AdminChampionships', () => {
       getChampionships: vi.fn(() => of({ championships: [championship] })),
       deleteChampionship: vi.fn(() => of(void 0)),
     };
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const confirmation = { confirm: vi.fn(() => Promise.resolve(true)) };
 
     await TestBed.configureTestingModule({
       imports: [AdminChampionships],
-      providers: [provideRouter([]), { provide: AdminApiService, useValue: api }],
+      providers: [
+        provideRouter([]),
+        { provide: AdminApiService, useValue: api },
+        { provide: ConfirmationService, useValue: confirmation },
+      ],
     }).compileComponents();
 
     const fixture = TestBed.createComponent(AdminChampionships);
@@ -55,10 +60,13 @@ describe('AdminChampionships', () => {
       (button: HTMLButtonElement) => button.textContent?.trim() === 'Eliminar',
     ) as HTMLButtonElement;
     deleteButton.click();
+    await fixture.whenStable();
     fixture.detectChanges();
 
-    expect(window.confirm).toHaveBeenCalledWith(
-      expect.stringContaining('¿Eliminar definitivamente Candeonato de prueba?'),
+    expect(confirmation.confirm).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.stringContaining('¿Eliminar definitivamente Candeonato de prueba?'),
+      }),
     );
     expect(api.deleteChampionship).toHaveBeenCalledWith('championship-1');
     expect(fixture.nativeElement.textContent).toContain('Edición eliminada definitivamente.');

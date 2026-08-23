@@ -8,6 +8,7 @@ import {
   SetupInvitation,
 } from '../../../core/models/setup.model';
 import { AdminApiService } from '../../../core/services/admin-api.service';
+import { ConfirmationService } from '../../../core/services/confirmation.service';
 
 @Component({
   selector: 'app-admin-accesses',
@@ -16,6 +17,7 @@ import { AdminApiService } from '../../../core/services/admin-api.service';
 })
 export class AdminAccesses implements OnInit {
   private readonly api = inject(AdminApiService);
+  private readonly confirmation = inject(ConfirmationService);
   private readonly i18n = inject(I18nService);
 
   readonly loading = signal(true);
@@ -86,12 +88,15 @@ export class AdminAccesses implements OnInit {
     });
   }
 
-  setActive(user: ManagedSetupAccount, active: boolean): void {
+  async setActive(user: ManagedSetupAccount, active: boolean): Promise<void> {
     if (
       !active &&
-      !window.confirm(
-        this.i18n.translate('admin.accesses.confirmRevoke', { name: user.displayName }),
-      )
+      !(await this.confirmation.confirm({
+        message: this.i18n.translate('admin.accesses.confirmRevoke', {
+          name: user.displayName,
+        }),
+        tone: 'danger',
+      }))
     ) {
       return;
     }

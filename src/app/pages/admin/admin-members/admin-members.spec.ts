@@ -3,6 +3,7 @@ import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { TeamMemberContent } from '../../../core/models/content-admin.model';
 import { AdminApiService } from '../../../core/services/admin-api.service';
+import { ConfirmationService } from '../../../core/services/confirmation.service';
 import { AdminMembers } from './admin-members';
 
 describe('AdminMembers', () => {
@@ -34,11 +35,15 @@ describe('AdminMembers', () => {
       getMembers: vi.fn(() => of({ members: [member] })),
       deleteMember: vi.fn(() => of(void 0)),
     };
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const confirmation = { confirm: vi.fn(() => Promise.resolve(true)) };
 
     await TestBed.configureTestingModule({
       imports: [AdminMembers],
-      providers: [provideRouter([]), { provide: AdminApiService, useValue: api }],
+      providers: [
+        provideRouter([]),
+        { provide: AdminApiService, useValue: api },
+        { provide: ConfirmationService, useValue: confirmation },
+      ],
     }).compileComponents();
 
     const fixture = TestBed.createComponent(AdminMembers);
@@ -50,9 +55,12 @@ describe('AdminMembers', () => {
       (button: HTMLButtonElement) => button.textContent?.trim() === 'Eliminar',
     ) as HTMLButtonElement;
     deleteButton.click();
+    await fixture.whenStable();
     fixture.detectChanges();
 
-    expect(window.confirm).toHaveBeenCalledWith(expect.stringContaining('¿Eliminar a Andrea?'));
+    expect(confirmation.confirm).toHaveBeenCalledWith(
+      expect.objectContaining({ message: expect.stringContaining('¿Eliminar a Andrea?') }),
+    );
     expect(api.deleteMember).toHaveBeenCalledWith('member-1');
     expect(fixture.nativeElement.textContent).toContain('Miembro eliminado.');
     expect(fixture.nativeElement.textContent).not.toContain('Andrea');

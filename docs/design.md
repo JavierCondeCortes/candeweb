@@ -409,6 +409,21 @@ Variantes:
 - Una columna en móvil; cuatro columnas desde `48rem`.
 - Enlaces subrayados con offset y hover lima.
 
+### 8.8. Alertas y confirmaciones
+
+- Mantener los errores de validación junto al campo que los provoca y anunciarlos con `role="alert"`.
+- Anunciar los mensajes de éxito y los cambios no urgentes con `role="status"` y una región viva.
+- Diferenciar información, éxito y error mediante icono, texto, borde y color; nunca solo mediante color.
+- Las acciones destructivas o que descartan trabajo deben abrir el diálogo compartido de confirmación,
+  con un mensaje que nombre la consecuencia y una acción principal explícita.
+- El botón «Cancelar» recibe el foco inicial. `Escape`, cerrar el diálogo o pulsar el fondo equivalen a
+  cancelar y nunca deben ejecutar la acción.
+- Usar el tono de advertencia en lima para cambios reversibles y el tono de peligro para eliminaciones,
+  revocaciones y pérdidas de datos.
+- No usar `window.alert` ni `window.confirm`: rompen la identidad visual y ofrecen poco control sobre el
+  texto, el foco y el comportamiento responsive.
+- Las entradas visuales de los avisos deben ser breves y respetar `prefers-reduced-motion`.
+
 ## 9. Movimiento e interacción
 
 ### 9.1. Duraciones

@@ -153,7 +153,9 @@ El JSON del torneo devuelve la clasificación ordenada por `puntos_totales` y so
 `piloto_id`. La tabla pública AJAX `GET /resultados/ftct/drivers_unf/{torneoId}` aporta posición,
 nombre, equipo y las mismas estadísticas acumuladas. El servidor solo relaciona ambos registros
 cuando puntos, rondas, vueltas, victorias, podios, top cinco e incidentes coinciden y la pareja es
-única en las dos fuentes. Si la firma falta o se repite, conserva los registros sin relacionarlos.
+única en las dos fuentes. Cuando existe esa relación validada, el adaptador completa las vueltas
+rápidas y poles desde el registro original `pPd`. Si la firma falta o se repite, conserva los
+registros sin relacionarlos y no atribuye esas métricas a ningún nombre.
 
 | Posición derivada | Piloto ID | Puntos | Rondas | Podios | Victorias | Vueltas rápidas |
 | ----------------: | --------: | -----: | -----: | -----: | --------: | --------------: |
@@ -297,7 +299,8 @@ La página promocional `/candeonato` puede enlazar a la edición actual del hist
 
 ### Modelo mental de enlaces
 
-- `/candeonato`: landing promocional del Candeonato actualmente destacado.
+- `/candeonato`: landing promocional durante `registration` y `active`; si la edición destacada está
+  `finished`, redirige a su ficha deportiva.
 - `/candeonatos`: índice visual de todas las ediciones publicadas.
 - `/candeonatos/{torneoId}`: clasificación, rondas y estadísticas de una edición concreta.
 
@@ -366,18 +369,17 @@ Se puede agrupar visualmente por circuito, pero se debe conservar el número rea
 
 ### 5. Resultados por carrera
 
-Este componente queda pendiente de encontrar la fuente de datos adecuada.
-
-Cuando exista, debe incluir:
+Los resultados están integrados bajo demanda dentro del apartado de rondas e incluyen:
 
 - Posición final.
 - Piloto.
 - Equipo.
-- Puntos obtenidos.
-- Diferencia de posiciones, si existe parrilla de salida.
-- Vuelta rápida.
+- Vueltas completadas.
+- Tiempo total y tiempo medio.
 - Incidentes.
-- Estado: finalizó, abandono, descalificación o DNS.
+
+Fat Cat Race no publica actualmente los puntos concedidos a cada piloto por ronda. Candeweb muestra
+los puntos totales en la clasificación general, pero no calcula ni infiere un reparto por carrera.
 
 ### 6. Evolución de puntos
 

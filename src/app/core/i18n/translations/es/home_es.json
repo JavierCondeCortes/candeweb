@@ -5,6 +5,14 @@
     "newTab": "se abre en una pestaña nueva",
     "loading": "Cargando…"
   },
+  "interactions": {
+    "warningEyebrow": "Confirma el cambio",
+    "dangerEyebrow": "Acción permanente",
+    "confirmTitle": "¿Continuamos?",
+    "dangerTitle": "Confirma la eliminación",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar"
+  },
   "skip": "Saltar al contenido principal",
   "nav": {
     "label": "Navegación principal",
@@ -15,6 +23,7 @@
     "content": "Contenido",
     "sponsors": "Sponsors",
     "currentEvent": "Candeonato actual",
+    "eventLive": "evento en marcha",
     "championshipHistory": "Historial",
     "chiquitoSpotter": "Chiquito Spotter",
     "homeLabel": "CANDEWEB — Candemor Racing Team, volver al inicio",
