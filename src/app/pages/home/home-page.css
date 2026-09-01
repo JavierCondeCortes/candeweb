@@ -100,21 +100,6 @@
   border-bottom: 1px solid rgba(245, 245, 242, 0.24);
 }
 
-.home-brand {
-  position: relative;
-  z-index: 2;
-  color: var(--text);
-  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
-  font-size: 1.55rem;
-  font-style: italic;
-  line-height: 1;
-  text-decoration: none;
-}
-
-.home-brand span {
-  color: var(--magenta);
-}
-
 .home-menu-button {
   position: relative;
   z-index: 2;

@@ -2,13 +2,14 @@ import { Component, HostListener, input, model } from '@angular/core';
 import { IsActiveMatchOptions, RouterLink, RouterLinkActive } from '@angular/router';
 import { LanguageSwitcher } from '../../../core/i18n/language-switcher/language-switcher';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { CandeBrand } from '../cande-brand/cande-brand';
 
 export type CandeonatoNavbarVariant = 'landing' | 'detail' | 'archive';
 
 @Component({
   selector: 'app-candeonato-navbar',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, LanguageSwitcher, TranslatePipe],
+  imports: [RouterLink, RouterLinkActive, LanguageSwitcher, TranslatePipe, CandeBrand],
   templateUrl: './candeonato-navbar.html',
   styleUrl: './candeonato-navbar.css',
 })
@@ -21,7 +22,7 @@ export class CandeonatoNavbar {
   };
   readonly variant = input<CandeonatoNavbarVariant>('landing');
   readonly historyUrl = input('/candeonatos');
-  readonly brandAriaLabel = input('CANDEWEB — Candemor Racing Team');
+  readonly brandAriaLabel = input('CANDEONATO — Candemor Racing Team');
   readonly showRegistration = input(true);
   readonly inactive = input(false);
   readonly menuOpen = model(false);

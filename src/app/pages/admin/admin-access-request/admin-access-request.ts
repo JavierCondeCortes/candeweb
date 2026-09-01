@@ -7,10 +7,11 @@ import { LanguageSwitcher } from '../../../core/i18n/language-switcher/language-
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { AdminApiService } from '../../../core/services/admin-api.service';
 import { apiErrorMessage } from '../admin-form-errors';
+import { CandeBrand } from '../../../shared/components/cande-brand/cande-brand';
 
 @Component({
   selector: 'app-admin-access-request',
-  imports: [ReactiveFormsModule, RouterLink, LanguageSwitcher, TranslatePipe],
+  imports: [ReactiveFormsModule, RouterLink, LanguageSwitcher, TranslatePipe, CandeBrand],
   templateUrl: './admin-access-request.html',
 })
 export class AdminAccessRequestPage {

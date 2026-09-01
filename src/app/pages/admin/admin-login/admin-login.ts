@@ -7,10 +7,11 @@ import { LanguageSwitcher } from '../../../core/i18n/language-switcher/language-
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { apiErrorCode, apiErrorMessage } from '../admin-form-errors';
+import { CandeBrand } from '../../../shared/components/cande-brand/cande-brand';
 
 @Component({
   selector: 'app-admin-login',
-  imports: [ReactiveFormsModule, RouterLink, LanguageSwitcher, TranslatePipe],
+  imports: [ReactiveFormsModule, RouterLink, LanguageSwitcher, TranslatePipe, CandeBrand],
   templateUrl: './admin-login.html',
 })
 export class AdminLogin implements OnInit {

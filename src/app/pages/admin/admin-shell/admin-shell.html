@@ -2,13 +2,11 @@
 
 <div class="admin-layout">
   <header class="admin-topbar">
-    <a
-      class="admin-brand"
-      routerLink="/admin"
-      [attr.aria-label]="'admin.shell.homeLabel' | translate"
-    >
-      CND<span>ADMIN</span> 
-    </a>
+    <app-cande-brand
+      variant="admin"
+      route="/admin"
+      [ariaLabel]="'admin.shell.homeLabel' | translate"
+    />
     <div class="admin-identity">
       @if (session()?.admin; as admin) {
         <span>

@@ -1,7 +1,9 @@
 <header class="setup-header" [class.menu-open]="menuOpen()">
-  <a class="setup-brand" [routerLink]="brandRoute()" [attr.aria-label]="brandLabel() | translate">
-    CANDE<span>{{ brandSuffix() }}</span>
-  </a>
+  <app-cande-brand
+    [variant]="library()"
+    [route]="brandRoute()"
+    [ariaLabel]="brandLabel() | translate"
+  />
 
   <nav
     [id]="navigationId()"
@@ -9,6 +11,7 @@
     [class.is-open]="menuOpen()"
     [attr.aria-label]="'home.privateNav.label' | translate"
   >
+  <a routerLink="/" (click)="closeMenu()">{{ 'home.setups.shell.website' | translate }}</a>
     @if (session()?.account?.canAccessSetups) {
       <a
         routerLink="/setups"
@@ -16,7 +19,8 @@
         ariaCurrentWhenActive="page"
         [routerLinkActiveOptions]="{ exact: true }"
         (click)="closeMenu()"
-      >{{ 'home.privateNav.setups' | translate }}</a>
+        >{{ 'home.privateNav.setups' | translate }}</a
+      >
     }
     @if (session()?.account?.canUploadSetups) {
       <a
@@ -24,9 +28,10 @@
         routerLinkActive="is-active"
         ariaCurrentWhenActive="page"
         (click)="closeMenu()"
-      >{{ 'home.setups.shell.newSetup' | translate }}</a>
+        >{{ 'home.setups.shell.newSetup' | translate }}</a
+      >
     }
-    
+
     @if (session()?.account?.canAccessSkins) {
       <a
         routerLink="/skins"
@@ -34,14 +39,16 @@
         ariaCurrentWhenActive="page"
         [routerLinkActiveOptions]="{ exact: true }"
         (click)="closeMenu()"
-      >{{ 'home.privateNav.skins' | translate }}</a>
+        >{{ 'home.privateNav.skins' | translate }}</a
+      >
     }
-    
+
     @if (session()?.account?.role === 'owner' || session()?.account?.role === 'admin') {
       <a routerLink="/admin/skins" (click)="closeMenu()">{{ 'home.skins.manage' | translate }}</a>
-      <a routerLink="/admin/accesos" (click)="closeMenu()">{{ 'home.setups.shell.accesses' | translate }}</a>
+      <a routerLink="/admin/accesos" (click)="closeMenu()">{{
+        'home.setups.shell.accesses' | translate
+      }}</a>
     }
-    <a routerLink="/" (click)="closeMenu()">{{ 'home.setups.shell.website' | translate }}</a>
     <button class="setup-nav-logout" type="button" (click)="logout()">
       {{ 'home.setups.shell.logout' | translate }}
     </button>
@@ -64,6 +71,8 @@
         (menuOpen() ? 'home.setups.common.close' : 'home.setups.shell.menu') | translate
       "
       (click)="toggleMenu()"
-    ><span></span><span></span></button>
+    >
+      <span></span><span></span>
+    </button>
   </div>
 </header>

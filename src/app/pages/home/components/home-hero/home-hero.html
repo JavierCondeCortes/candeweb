@@ -42,15 +42,13 @@
     [attr.aria-hidden]="isVideoFocusMode() ? 'true' : null"
     [attr.inert]="isVideoFocusMode() ? '' : null"
   >
-    <a
-      class="home-brand"
-      routerLink="/"
+    <app-cande-brand
+      variant="web"
+      route="/"
       fragment="inicio"
-      aria-label="CANDEWEB — Candemor Racing Team, inicio"
-      aria-current="page"
-    >
-      CANDE<span>WEB</span>
-    </a>
+      ariaLabel="CANDEWEB — Candemor Racing Team, inicio"
+      ariaCurrent="page"
+    />
     <button
       class="home-menu-button"
       type="button"

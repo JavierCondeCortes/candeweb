@@ -1,7 +1,7 @@
 <main class="setup-auth-page">
   <section class="setup-auth-card" aria-labelledby="access-auth-title">
     <div class="setup-auth-topline">
-      <a class="setup-brand" routerLink="/">CANDE<span>ACCESS</span></a>
+      <app-cande-brand variant="access" route="/" />
       <app-language-switcher />
     </div>
 
@@ -9,34 +9,87 @@
       <p role="status">{{ 'home.setups.common.loading' | translate }}</p>
     } @else if (mode === 'request') {
       <p class="setup-eyebrow">{{ 'home.access.requestEyebrow' | translate }}</p>
-      <h1 id="access-auth-title" class="display-title setup-display-title" [attr.data-title]="'home.access.requestTitle' | translate">{{ 'home.access.requestTitle' | translate }}</h1>
+      <h1
+        id="access-auth-title"
+        class="display-title setup-display-title"
+        [attr.data-title]="'home.access.requestTitle' | translate"
+      >
+        {{ 'home.access.requestTitle' | translate }}
+      </h1>
       <p>{{ 'home.access.requestIntro' | translate }}</p>
       @if (sent()) {
-        <div class="setup-alert is-success" role="status"><strong>{{ 'home.access.sentTitle' | translate }}</strong><p>{{ 'home.access.sentText' | translate }}</p></div>
+        <div class="setup-alert is-success" role="status">
+          <strong>{{ 'home.access.sentTitle' | translate }}</strong>
+          <p>{{ 'home.access.sentText' | translate }}</p>
+        </div>
         <a class="setup-button" routerLink="/">{{ 'home.access.backHome' | translate }}</a>
       } @else {
-        @if (errorMessage()) { <div class="setup-alert is-error" role="alert">{{ errorMessage() }}</div> }
+        @if (errorMessage()) {
+          <div class="setup-alert is-error" role="alert">{{ errorMessage() }}</div>
+        }
         <form class="setup-form" [formGroup]="requestForm" (ngSubmit)="requestAccess()">
-          <label><span>{{ 'home.access.name' | translate }}</span><input type="text" formControlName="displayName" autocomplete="name" /></label>
-          <label><span>{{ 'home.access.email' | translate }}</span><input type="email" formControlName="email" autocomplete="email" /></label>
-          <button class="setup-button is-primary" type="submit" [disabled]="submitting()">{{ 'home.access.sendRequest' | translate }}</button>
+          <label
+            ><span>{{ 'home.access.name' | translate }}</span
+            ><input type="text" formControlName="displayName" autocomplete="name"
+          /></label>
+          <label
+            ><span>{{ 'home.access.email' | translate }}</span
+            ><input type="email" formControlName="email" autocomplete="email"
+          /></label>
+          <button class="setup-button is-primary" type="submit" [disabled]="submitting()">
+            {{ 'home.access.sendRequest' | translate }}
+          </button>
         </form>
-        <p class="setup-auth-secondary"><a routerLink="/acceso">{{ 'home.access.haveAccess' | translate }}</a></p>
+        <p class="setup-auth-secondary">
+          <a routerLink="/acceso">{{ 'home.access.haveAccess' | translate }}</a>
+        </p>
       }
     } @else if (mode === 'invitation') {
       <p class="setup-eyebrow">{{ 'home.access.invitationEyebrow' | translate }}</p>
-      <h1 id="access-auth-title" class="display-title setup-display-title" [attr.data-title]="'home.access.invitationTitle' | translate">{{ 'home.access.invitationTitle' | translate }}</h1>
-      @if (errorMessage()) { <div class="setup-alert is-error" role="alert">{{ errorMessage() }}</div> }
+      <h1
+        id="access-auth-title"
+        class="display-title setup-display-title"
+        [attr.data-title]="'home.access.invitationTitle' | translate"
+      >
+        {{ 'home.access.invitationTitle' | translate }}
+      </h1>
+      @if (errorMessage()) {
+        <div class="setup-alert is-error" role="alert">{{ errorMessage() }}</div>
+      }
       @if (recoveryCodes().length) {
-        <div class="setup-alert is-success" role="status"><strong>{{ 'home.access.recoveryTitle' | translate }}</strong><p>{{ 'home.access.recoveryHelp' | translate }}</p></div>
-        <ul class="admin-recovery-codes">@for (code of recoveryCodes(); track code) { <li><code>{{ code }}</code></li> }</ul>
-        <button class="setup-button is-primary" type="button" (click)="continueAfterSetup()">{{ 'home.access.continue' | translate }}</button>
+        <div class="setup-alert is-success" role="status">
+          <strong>{{ 'home.access.recoveryTitle' | translate }}</strong>
+          <p>{{ 'home.access.recoveryHelp' | translate }}</p>
+        </div>
+        <ul class="admin-recovery-codes">
+          @for (code of recoveryCodes(); track code) {
+            <li>
+              <code>{{ code }}</code>
+            </li>
+          }
+        </ul>
+        <button class="setup-button is-primary" type="button" (click)="continueAfterSetup()">
+          {{ 'home.access.continue' | translate }}
+        </button>
       } @else if (mfaSetup(); as setup) {
         <p>{{ 'home.access.mfaIntro' | translate }}</p>
-        <figure class="admin-totp-qr"><img [src]="setup.qrCodeDataUrl" [alt]="'home.access.qrAlt' | translate" /><figcaption>{{ setup.secret }}</figcaption></figure>
+        <figure class="admin-totp-qr">
+          <img [src]="setup.qrCodeDataUrl" [alt]="'home.access.qrAlt' | translate" />
+          <figcaption>{{ setup.secret }}</figcaption>
+        </figure>
         <form class="setup-form" [formGroup]="mfaForm" (ngSubmit)="confirmMfa()">
-          <label><span>{{ 'home.access.mfaCode' | translate }}</span><input type="text" formControlName="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" /></label>
-          <button class="setup-button is-primary" type="submit" [disabled]="submitting()">{{ 'home.access.confirmMfa' | translate }}</button>
+          <label
+            ><span>{{ 'home.access.mfaCode' | translate }}</span
+            ><input
+              type="text"
+              formControlName="code"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              maxlength="6"
+          /></label>
+          <button class="setup-button is-primary" type="submit" [disabled]="submitting()">
+            {{ 'home.access.confirmMfa' | translate }}
+          </button>
         </form>
       } @else if (invitation(); as data) {
         <p>{{ data.displayName }} · {{ data.email }}</p>
@@ -73,16 +126,29 @@
             </div>
             <small>{{ 'home.access.passwordHelp' | translate }}</small>
           </label>
-          <button class="setup-button is-primary" type="submit" [disabled]="submitting()">{{ 'home.access.activate' | translate }}</button>
+          <button class="setup-button is-primary" type="submit" [disabled]="submitting()">
+            {{ 'home.access.activate' | translate }}
+          </button>
         </form>
       }
     } @else {
       <p class="setup-eyebrow">{{ 'home.access.loginEyebrow' | translate }}</p>
-      <h1 id="access-auth-title" class="display-title setup-display-title" [attr.data-title]="'home.access.loginTitle' | translate">{{ 'home.access.loginTitle' | translate }}</h1>
+      <h1
+        id="access-auth-title"
+        class="display-title setup-display-title"
+        [attr.data-title]="'home.access.loginTitle' | translate"
+      >
+        {{ 'home.access.loginTitle' | translate }}
+      </h1>
       <p>{{ 'home.access.loginIntro' | translate }}</p>
-      @if (errorMessage()) { <div class="setup-alert is-error" role="alert">{{ errorMessage() }}</div> }
+      @if (errorMessage()) {
+        <div class="setup-alert is-error" role="alert">{{ errorMessage() }}</div>
+      }
       <form class="setup-form" [formGroup]="loginForm" (ngSubmit)="login()">
-        <label><span>{{ 'home.access.email' | translate }}</span><input type="email" formControlName="email" autocomplete="username" /></label>
+        <label
+          ><span>{{ 'home.access.email' | translate }}</span
+          ><input type="email" formControlName="email" autocomplete="username"
+        /></label>
         <label>
           <span>{{ 'home.access.password' | translate }}</span>
           <div class="setup-password-field">
@@ -110,15 +176,28 @@
             </button>
           </div>
         </label>
-        <label><span>{{ 'home.access.mfaCode' | translate }}</span><input type="text" formControlName="mfaCode" autocomplete="one-time-code" inputmode="numeric" maxlength="11" /></label>
+        <label
+          ><span>{{ 'home.access.mfaCode' | translate }}</span
+          ><input
+            type="text"
+            formControlName="mfaCode"
+            autocomplete="one-time-code"
+            inputmode="numeric"
+            maxlength="11"
+        /></label>
         <label class="setup-checkbox">
           <input type="checkbox" formControlName="rememberMe" />
           <span>{{ 'home.access.rememberMe' | translate }}</span>
           <small>{{ 'home.access.rememberHelp' | translate }}</small>
         </label>
-        <button class="setup-button is-primary" type="submit" [disabled]="submitting()">{{ 'home.access.login' | translate }}</button>
+        <button class="setup-button is-primary" type="submit" [disabled]="submitting()">
+          {{ 'home.access.login' | translate }}
+        </button>
       </form>
-      <p class="setup-auth-secondary">{{ 'home.access.noAccess' | translate }} <a routerLink="/solicitar-acceso">{{ 'home.access.requestLink' | translate }}</a></p>
+      <p class="setup-auth-secondary">
+        {{ 'home.access.noAccess' | translate }}
+        <a routerLink="/solicitar-acceso">{{ 'home.access.requestLink' | translate }}</a>
+      </p>
     }
   </section>
 </main>

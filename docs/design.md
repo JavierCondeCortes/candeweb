@@ -424,6 +424,18 @@ Variantes:
   texto, el foco y el comportamiento responsive.
 - Las entradas visuales de los avisos deben ser breves y respetar `prefers-reduced-motion`.
 
+### 8.9. Marca compartida en navegación
+
+- Todas las cabeceras y pantallas de acceso deben renderizar la marca mediante
+  `app-cande-brand`; no se escribe `CANDE...` manualmente en cada plantilla.
+- El componente centraliza el prefijo `CANDE`, la tipografía, el magenta del sufijo, el foco
+  visible, el nombre accesible y la ruta predeterminada.
+- Las variantes admitidas son `web`, `candeonato`, `setups`, `skins`, `access` y `admin`.
+- Cada área conserva su sufijo para orientar al usuario: `CANDEWEB`, `CANDEONATO`,
+  `CANDESETUPS`, `CANDESKINS`, `CANDEACCESS` y `CANDEADMIN`.
+- Una cabecera puede especializar la ruta, el fragmento o el nombre accesible sin volver a definir
+  el contenido ni los estilos de la marca.
+
 ## 9. Movimiento e interacción
 
 ### 9.1. Duraciones

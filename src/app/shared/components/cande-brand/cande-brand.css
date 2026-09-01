@@ -1,0 +1,39 @@
+:host {
+  position: relative;
+  z-index: 22;
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.cande-brand {
+  background: linear-gradient(90deg, var(--magenta) 40%, var(--lime) 70%);
+  background-clip: text;
+  width: 11rem;
+  color: transparent;
+  font-family: 'Dog Rough';
+  font-size: 2.55rem;
+  font-style: italic;
+  line-height: 1;
+  text-decoration: none;
+  text-transform: uppercase;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transition: filter 160ms ease;
+}
+
+.cande-brand:hover {
+  filter: brightness(1.18);
+}
+
+.cande-brand:focus-visible {
+  outline: 2px solid var(--lime);
+  outline-offset: 0.3rem;
+}
+
+@media (forced-colors: active) {
+  .cande-brand {
+    background: none;
+    color: LinkText;
+    -webkit-text-fill-color: LinkText;
+  }
+}

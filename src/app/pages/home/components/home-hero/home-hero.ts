@@ -17,10 +17,19 @@ import { StreamStatusService } from '../../../../core/services/stream-status.ser
 import { LanguageSwitcher } from '../../../../core/i18n/language-switcher/language-switcher';
 import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 import { ChampionshipContent } from '../../../../core/models/content-admin.model';
+import { CandeBrand } from '../../../../shared/components/cande-brand/cande-brand';
 
 @Component({
   selector: 'app-home-hero',
-  imports: [AsyncPipe, DecimalPipe, RouterLink, SoundSwitch, LanguageSwitcher, TranslatePipe],
+  imports: [
+    AsyncPipe,
+    DecimalPipe,
+    RouterLink,
+    SoundSwitch,
+    LanguageSwitcher,
+    TranslatePipe,
+    CandeBrand,
+  ],
   templateUrl: './home-hero.html',
 })
 export class HomeHero implements AfterViewInit, OnDestroy {

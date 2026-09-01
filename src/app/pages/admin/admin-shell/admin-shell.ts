@@ -3,10 +3,18 @@ import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/rou
 import { AdminApiService } from '../../../core/services/admin-api.service';
 import { LanguageSwitcher } from '../../../core/i18n/language-switcher/language-switcher';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { CandeBrand } from '../../../shared/components/cande-brand/cande-brand';
 
 @Component({
   selector: 'app-admin-shell',
-  imports: [RouterLink, RouterLinkActive, RouterOutlet, LanguageSwitcher, TranslatePipe],
+  imports: [
+    RouterLink,
+    RouterLinkActive,
+    RouterOutlet,
+    LanguageSwitcher,
+    TranslatePipe,
+    CandeBrand,
+  ],
   templateUrl: './admin-shell.html',
 })
 export class AdminShell {

@@ -8,14 +8,12 @@
   [attr.aria-hidden]="inactive() ? 'true' : null"
   [attr.inert]="inactive() ? '' : null"
 >
-  <a
-    class="candeonato-brand brand detail-brand archive-brand"
-    [routerLink]="variant() === 'landing' ? '/candeonato' : '/'"
+  <app-cande-brand
+    variant="candeonato"
+    [route]="variant() === 'landing' ? '/candeonato' : '/'"
     [fragment]="variant() === 'landing' ? 'inicio' : undefined"
-    [attr.aria-label]="brandAriaLabel()"
-  >
-    CANDE<span>WEB</span>
-  </a>
+    [ariaLabel]="brandAriaLabel()"
+  />
 
   <div
     id="candeonato-navigation-links"
