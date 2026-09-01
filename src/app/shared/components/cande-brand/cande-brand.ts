@@ -3,13 +3,14 @@ import { RouterLink } from '@angular/router';
 
 export type CandeBrandVariant = 'web' | 'candeonato' | 'setups' | 'skins' | 'access' | 'admin';
 
-const BRAND_CONFIG: Record<CandeBrandVariant, { suffix: string; route: string }> = {
-  web: { suffix: 'WEB', route: '/' },
-  candeonato: { suffix: 'ONATO', route: '/candeonato' },
-  setups: { suffix: 'SETUPS', route: '/setups' },
-  skins: { suffix: 'SKINS', route: '/skins' },
-  access: { suffix: 'ACCESS', route: '/acceso' },
-  admin: { suffix: 'ADMIN', route: '/admin' },
+const BRAND_NAME = 'CANDEMOR';
+const BRAND_ROUTES: Record<CandeBrandVariant, string> = {
+  web: '/',
+  candeonato: '/candeonato',
+  setups: '/setups',
+  skins: '/skins',
+  access: '/acceso',
+  admin: '/admin',
 };
 
 @Component({
@@ -26,8 +27,11 @@ export class CandeBrand {
   readonly ariaLabel = input<string | null>(null);
   readonly ariaCurrent = input<'page' | 'location' | null>(null);
 
-  readonly suffix = computed(() => BRAND_CONFIG[this.variant()].suffix);
-  readonly brandName = computed(() => `CANDE${this.suffix()}`);
-  readonly resolvedRoute = computed(() => this.route() ?? BRAND_CONFIG[this.variant()].route);
-  readonly resolvedAriaLabel = computed(() => this.ariaLabel() ?? this.brandName());
+  readonly brandName = BRAND_NAME;
+  readonly resolvedRoute = computed(() => this.route() ?? BRAND_ROUTES[this.variant()]);
+  readonly resolvedAriaLabel = computed(() => {
+    const customLabel = this.ariaLabel()?.trim();
+    if (!customLabel) return BRAND_NAME;
+    return customLabel.includes(BRAND_NAME) ? customLabel : `${BRAND_NAME} — ${customLabel}`;
+  });
 }

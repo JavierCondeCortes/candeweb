@@ -10,15 +10,15 @@ describe('CandeBrand', () => {
     }).compileComponents();
   });
 
-  it('centralizes the name and destination for each Cande area', () => {
+  it('keeps the same brand name while resolving each area destination', () => {
     const fixture = TestBed.createComponent(CandeBrand);
     fixture.componentRef.setInput('variant', 'skins');
     fixture.detectChanges();
 
     const link = fixture.nativeElement.querySelector('a') as HTMLAnchorElement;
-    expect(link.textContent?.replace(/\s/g, '')).toBe('CANDESKINS');
+    expect(link.textContent?.trim()).toBe('CANDEMOR');
     expect(link.getAttribute('href')).toBe('/skins');
-    expect(link.getAttribute('aria-label')).toBe('CANDESKINS');
+    expect(link.getAttribute('aria-label')).toBe('CANDEMOR');
   });
 
   it('allows a navbar to specialize navigation without redefining the brand', () => {
@@ -27,10 +27,12 @@ describe('CandeBrand', () => {
     fixture.componentRef.setInput('route', '/');
     fixture.componentRef.setInput('fragment', 'inicio');
     fixture.componentRef.setInput('ariaCurrent', 'page');
+    fixture.componentRef.setInput('ariaLabel', 'Página principal, inicio');
     fixture.detectChanges();
 
     const link = fixture.nativeElement.querySelector('a') as HTMLAnchorElement;
     expect(link.getAttribute('href')).toBe('/#inicio');
     expect(link.getAttribute('aria-current')).toBe('page');
+    expect(link.getAttribute('aria-label')).toBe('CANDEMOR — Página principal, inicio');
   });
 });
