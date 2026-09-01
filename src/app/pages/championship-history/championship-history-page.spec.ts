@@ -53,7 +53,7 @@ describe('ChampionshipHistoryPage', () => {
       'current-edition.webp',
     );
 
-    const brand = host.querySelector<HTMLAnchorElement>('a.archive-brand');
+    const brand = host.querySelector<HTMLAnchorElement>('[data-testid="cande-brand"]');
     expect(brand?.getAttribute('aria-label')).toContain(brand?.textContent?.trim());
   });
 });

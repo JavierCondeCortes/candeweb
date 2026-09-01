@@ -7,12 +7,13 @@ import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { MfaSetup } from '../../../core/models/content-admin.model';
 import { SetupInvitation } from '../../../core/models/setup.model';
 import { AccessApiService } from '../../../core/services/access-api.service';
+import { CandeBrand } from '../../../shared/components/cande-brand/cande-brand';
 
 type AccessMode = 'login' | 'request' | 'invitation';
 
 @Component({
   selector: 'app-access-auth',
-  imports: [ReactiveFormsModule, RouterLink, LanguageSwitcher, TranslatePipe],
+  imports: [ReactiveFormsModule, RouterLink, LanguageSwitcher, TranslatePipe, CandeBrand],
   templateUrl: './access-auth.html',
 })
 export class AccessAuth implements OnInit {
@@ -58,17 +59,23 @@ export class AccessAuth implements OnInit {
         this.errorMessage.set('La invitación no es válida.');
         return;
       }
-      this.api.verifyInvitation(token).pipe(finalize(() => this.loading.set(false))).subscribe({
-        next: ({ invitation }) => this.invitation.set(invitation),
-        error: (error) => this.errorMessage.set(accessError(error)),
-      });
+      this.api
+        .verifyInvitation(token)
+        .pipe(finalize(() => this.loading.set(false)))
+        .subscribe({
+          next: ({ invitation }) => this.invitation.set(invitation),
+          error: (error) => this.errorMessage.set(accessError(error)),
+        });
       return;
     }
-    this.api.refreshSession().pipe(finalize(() => this.loading.set(false))).subscribe({
-      next: (session) => {
-        if (session.authenticated) void this.navigateToAuthorizedArea();
-      },
-    });
+    this.api
+      .refreshSession()
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe({
+        next: (session) => {
+          if (session.authenticated) void this.navigateToAuthorizedArea();
+        },
+      });
   }
 
   login(): void {
@@ -98,10 +105,13 @@ export class AccessAuth implements OnInit {
     if (this.requestForm.invalid || this.submitting()) return;
     this.submitting.set(true);
     this.errorMessage.set('');
-    this.api.requestAccess(this.requestForm.getRawValue()).pipe(finalize(() => this.submitting.set(false))).subscribe({
-      next: () => this.sent.set(true),
-      error: (error) => this.errorMessage.set(accessError(error)),
-    });
+    this.api
+      .requestAccess(this.requestForm.getRawValue())
+      .pipe(finalize(() => this.submitting.set(false)))
+      .subscribe({
+        next: () => this.sent.set(true),
+        error: (error) => this.errorMessage.set(accessError(error)),
+      });
   }
 
   acceptInvitation(): void {
@@ -127,10 +137,13 @@ export class AccessAuth implements OnInit {
     if (this.mfaForm.invalid || this.submitting()) return;
     this.submitting.set(true);
     this.errorMessage.set('');
-    this.api.confirmMfa(this.mfaForm.controls.code.value).pipe(finalize(() => this.submitting.set(false))).subscribe({
-      next: ({ recoveryCodes }) => this.recoveryCodes.set(recoveryCodes),
-      error: (error) => this.errorMessage.set(accessError(error)),
-    });
+    this.api
+      .confirmMfa(this.mfaForm.controls.code.value)
+      .pipe(finalize(() => this.submitting.set(false)))
+      .subscribe({
+        next: ({ recoveryCodes }) => this.recoveryCodes.set(recoveryCodes),
+        error: (error) => this.errorMessage.set(accessError(error)),
+      });
   }
 
   continueAfterSetup(): void {

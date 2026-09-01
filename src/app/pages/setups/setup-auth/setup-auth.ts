@@ -6,12 +6,13 @@ import { LanguageSwitcher } from '../../../core/i18n/language-switcher/language-
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { SetupInvitation } from '../../../core/models/setup.model';
 import { SetupApiService } from '../../../core/services/setup-api.service';
+import { CandeBrand } from '../../../shared/components/cande-brand/cande-brand';
 
 type SetupAuthMode = 'login' | 'request' | 'invitation';
 
 @Component({
   selector: 'app-setup-auth',
-  imports: [ReactiveFormsModule, RouterLink, LanguageSwitcher, TranslatePipe],
+  imports: [ReactiveFormsModule, RouterLink, LanguageSwitcher, TranslatePipe, CandeBrand],
   templateUrl: './setup-auth.html',
 })
 export class SetupAuth implements OnInit {

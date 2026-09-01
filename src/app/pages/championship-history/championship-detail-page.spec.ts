@@ -142,7 +142,7 @@ describe('ChampionshipDetailPage', () => {
     expect(host.textContent).toContain('Incidencia revisada');
     expect(host.querySelector<HTMLSelectElement>('#edition-select')?.value).toBe('42');
 
-    const brand = host.querySelector<HTMLAnchorElement>('a.detail-brand');
+    const brand = host.querySelector<HTMLAnchorElement>('[data-testid="cande-brand"]');
     expect(brand?.getAttribute('aria-label')).toContain(brand?.textContent?.trim());
 
     for (const group of host.querySelectorAll<HTMLElement>(

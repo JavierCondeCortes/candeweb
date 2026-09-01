@@ -8,10 +8,11 @@ import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { AdminInvitation } from '../../../core/models/content-admin.model';
 import { AdminApiService } from '../../../core/services/admin-api.service';
 import { apiErrorMessage } from '../admin-form-errors';
+import { CandeBrand } from '../../../shared/components/cande-brand/cande-brand';
 
 @Component({
   selector: 'app-admin-accept-invitation',
-  imports: [ReactiveFormsModule, RouterLink, LanguageSwitcher, TranslatePipe],
+  imports: [ReactiveFormsModule, RouterLink, LanguageSwitcher, TranslatePipe, CandeBrand],
   templateUrl: './admin-accept-invitation.html',
 })
 export class AdminAcceptInvitation implements OnInit {

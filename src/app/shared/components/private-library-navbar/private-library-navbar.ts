@@ -3,13 +3,14 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { LanguageSwitcher } from '../../../core/i18n/language-switcher/language-switcher';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { SetupSession } from '../../../core/models/setup.model';
+import { CandeBrand } from '../cande-brand/cande-brand';
 
 export type PrivateLibrary = 'setups' | 'skins';
 
 @Component({
   selector: 'app-private-library-navbar',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, LanguageSwitcher, TranslatePipe],
+  imports: [RouterLink, RouterLinkActive, LanguageSwitcher, TranslatePipe, CandeBrand],
   templateUrl: './private-library-navbar.html',
 })
 export class PrivateLibraryNavbar {
@@ -23,8 +24,6 @@ export class PrivateLibraryNavbar {
   readonly brandLabel = computed(() =>
     this.library() === 'skins' ? 'home.skins.homeLabel' : 'home.setups.shell.homeLabel',
   );
-  readonly brandSuffix = computed(() => (this.library() === 'skins' ? 'SKINS' : 'SETUPS'));
-
   @HostListener('document:keydown.escape')
   closeMenu(): void {
     this.menuOpen.set(false);

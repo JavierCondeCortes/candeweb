@@ -23,19 +23,6 @@
   box-shadow: 1rem 1rem 0 rgba(255, 43, 214, 0.08);
 }
 
-.admin-brand {
-  color: var(--text);
-  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
-  font-size: 1.4rem;
-  font-style: italic;
-  line-height: 1;
-  text-decoration: none;
-}
-
-.admin-brand span {
-  color: var(--magenta);
-}
-
 .admin-auth-card h1,
 .admin-page-header h1 {
   margin: 0.6rem 0;
@@ -1101,10 +1088,22 @@
   background: var(--black);
 }
 
-.admin-access-list li.is-inactive { opacity: 0.68; }
-.admin-access-person { display: grid; min-width: 0; }
-.admin-access-person small { color: var(--text-muted); overflow-wrap: anywhere; }
-.admin-access-permissions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.admin-access-list li.is-inactive {
+  opacity: 0.68;
+}
+.admin-access-person {
+  display: grid;
+  min-width: 0;
+}
+.admin-access-person small {
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+.admin-access-permissions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
 
 .admin-permission-toggle {
   min-height: 2.75rem;
@@ -1119,12 +1118,26 @@
   cursor: pointer;
 }
 
-.admin-permission-toggle.is-skins { order: -1; }
-.admin-permission-toggle.is-on { border-color: var(--lime); color: var(--lime); }
+.admin-permission-toggle.is-skins {
+  order: -1;
+}
+.admin-permission-toggle.is-on {
+  border-color: var(--lime);
+  color: var(--lime);
+}
 .admin-permission-toggle:hover,
-.admin-permission-toggle:focus-visible { border-color: var(--magenta); background: rgb(255 43 214 / 10%); color: var(--text); }
-.admin-permission-toggle:disabled { cursor: not-allowed; opacity: 0.55; }
-.admin-empty-copy { color: var(--text-muted); }
+.admin-permission-toggle:focus-visible {
+  border-color: var(--magenta);
+  background: rgb(255 43 214 / 10%);
+  color: var(--text);
+}
+.admin-permission-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.admin-empty-copy {
+  color: var(--text-muted);
+}
 
 .admin-skin-thumbnail {
   width: 6rem !important;
@@ -1151,12 +1164,20 @@
 }
 
 @media (max-width: 62rem) {
-  .admin-access-list li { grid-template-columns: 1fr; align-items: stretch; }
-  .admin-access-permissions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .admin-access-list li {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+  .admin-access-permissions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 42rem) {
-  .admin-access-permissions { grid-template-columns: 1fr; }
+  .admin-access-permissions {
+    grid-template-columns: 1fr;
+  }
 }
 
 .visually-hidden {

@@ -424,6 +424,17 @@ Variantes:
   texto, el foco y el comportamiento responsive.
 - Las entradas visuales de los avisos deben ser breves y respetar `prefers-reduced-motion`.
 
+### 8.9. Marca compartida en navegación
+
+- Todas las cabeceras y pantallas de acceso deben renderizar la marca mediante
+  `app-cande-brand`; no se escribe `CANDEMOR` manualmente en cada plantilla.
+- El componente centraliza el nombre único `CANDEMOR`, la tipografía, el degradado horizontal de
+  magenta a lima, el foco visible, el nombre accesible y la ruta predeterminada.
+- Las variantes admitidas son `web`, `candeonato`, `setups`, `skins`, `access` y `admin`.
+- Las variantes solo determinan el destino predeterminado; el nombre visible siempre es `CANDEMOR`.
+- Una cabecera puede especializar la ruta, el fragmento o el nombre accesible sin volver a definir
+  el contenido ni los estilos de la marca.
+
 ## 9. Movimiento e interacción
 
 ### 9.1. Duraciones

@@ -14,6 +14,7 @@ import { LanguageSwitcher } from '../../core/i18n/language-switcher/language-swi
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { PublicContentService } from '../../core/services/public-content.service';
 import { Footer } from '../../shared/components/footer/footer';
+import { CandeBrand } from '../../shared/components/cande-brand/cande-brand';
 
 const DEFAULT_PATREON_URL = 'https://www.patreon.com/candemor/posts/chiquitito-151646382';
 
@@ -27,7 +28,7 @@ interface SpotterDemo {
 
 @Component({
   selector: 'app-chiquito-spotter-page',
-  imports: [Footer, LanguageSwitcher, RouterLink, TranslatePipe],
+  imports: [Footer, LanguageSwitcher, RouterLink, TranslatePipe, CandeBrand],
   templateUrl: './chiquito-spotter-page.html',
   styleUrl: './chiquito-spotter-page.css',
 })
