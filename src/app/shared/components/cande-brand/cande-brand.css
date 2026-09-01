@@ -30,6 +30,14 @@
   outline-offset: 0.3rem;
 }
 
+.cande-team{
+  position: absolute;
+  bottom: -1rem;
+  right: 1.2rem;
+  -webkit-text-stroke: 0.8px white;
+  color: transparent;
+}
+
 @media (forced-colors: active) {
   .cande-brand {
     background: none;

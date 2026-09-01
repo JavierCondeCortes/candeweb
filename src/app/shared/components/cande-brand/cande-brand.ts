@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 export type CandeBrandVariant = 'web' | 'candeonato' | 'setups' | 'skins' | 'access' | 'admin';
 
 const BRAND_NAME = 'CANDEMOR';
+// const TEAM = 'RACING TEAM'
 const BRAND_ROUTES: Record<CandeBrandVariant, string> = {
   web: '/',
   candeonato: '/candeonato',
@@ -28,6 +29,7 @@ export class CandeBrand {
   readonly ariaCurrent = input<'page' | 'location' | null>(null);
 
   readonly brandName = BRAND_NAME;
+  // readonly team = TEAM;
   readonly resolvedRoute = computed(() => this.route() ?? BRAND_ROUTES[this.variant()]);
   readonly resolvedAriaLabel = computed(() => {
     const customLabel = this.ariaLabel()?.trim();
