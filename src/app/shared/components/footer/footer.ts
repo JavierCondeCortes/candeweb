@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { catchError, defer, map, of, shareReplay } from 'rxjs';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { PublicContentService } from '../../../core/services/public-content.service';
+import { CandeBrand } from '../cande-brand/cande-brand';
 
 const FALLBACK_SITE_SETTINGS = {
   twitchChannelUrl: 'https://www.twitch.tv/candemorracingteam',
@@ -14,7 +15,7 @@ const FALLBACK_SITE_SETTINGS = {
 
 @Component({
   selector: 'app-footer',
-  imports: [TranslatePipe, RouterLink, AsyncPipe],
+  imports: [TranslatePipe, RouterLink, AsyncPipe, CandeBrand],
   templateUrl: './footer.html',
   styleUrl: './footer.css',
 })
