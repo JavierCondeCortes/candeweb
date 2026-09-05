@@ -1,0 +1,14 @@
+Hola, {{displayName}}:
+
+{{invitedByName}} ha aprobado tu acceso a la zona privada de {{brandName}}.
+
+Confirma el acceso desde este enlace personal y de un solo uso:
+{{confirmationUrl}}
+
+El enlace caduca el {{expiresAt}}. No lo compartas con otras personas.
+
+Si no solicitaste este acceso, puedes ignorar el mensaje.
+Ayuda: {{supportEmail}}
+
+{{brandName}}
+{{websiteUrl}}

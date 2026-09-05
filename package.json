@@ -20,6 +20,11 @@
   "engines": {
     "node": ">=22.13"
   },
+  "overrides": {
+    "cheerio": {
+      "undici": "^7.29.0"
+    }
+  },
   "dependencies": {
     "@angular/common": "^21.2.19",
     "@angular/compiler": "^21.2.19",
@@ -27,6 +32,8 @@
     "@angular/forms": "^21.2.19",
     "@angular/platform-browser": "^21.2.19",
     "@angular/router": "^21.2.19",
+    "juice": "^12.1.2",
+    "nodemailer": "^9.1.1",
     "qrcode": "^1.5.4",
     "rxjs": "~7.8.0",
     "sharp": "^0.35.3",

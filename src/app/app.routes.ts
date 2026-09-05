@@ -274,6 +274,15 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'ajustes/correo',
+        title: 'admin.meta.email',
+        canDeactivate: [pendingChangesGuard],
+        loadComponent: () =>
+          import('./pages/admin/admin-email-template/admin-email-template').then(
+            (module) => module.AdminEmailTemplate,
+          ),
+      },
+      {
         path: 'ajustes',
         title: 'admin.meta.settings',
         loadComponent: () =>

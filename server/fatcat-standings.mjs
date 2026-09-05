@@ -1,5 +1,5 @@
 const DEFAULT_ORIGIN = 'https://fatcatrace.xyz';
-const CACHE_MS = 24 * 60 * 60 * 1000;
+const CACHE_MS = 90 * 1000;
 const MAX_CACHE_ENTRIES = 20;
 const MAX_HTML_SIZE = 2 * 1024 * 1024;
 

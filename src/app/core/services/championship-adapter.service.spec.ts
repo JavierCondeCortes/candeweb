@@ -154,4 +154,43 @@ describe('ChampionshipAdapterService', () => {
     ]);
     expect(named.warnings.map((warning) => warning.code)).not.toContain('missing-driver-names');
   });
+
+  it('keeps the official accumulated totals when the named classification is stale', () => {
+    const resultWithStaleNames = adapter.adapt({
+      ...apiResponse,
+      pPd: apiResponse.pPd.map((standing) => ({
+        ...standing,
+        puntos_totales: '221.0000',
+        rondas: 5,
+        total_laps: '56',
+        victorias: 1,
+        podios: 3,
+      })),
+      namedStandings: [
+        {
+          position: 1,
+          driverId: 801380,
+          driverIdMatch: 'exact-statistics',
+          driverName: 'Oier Zamalloa',
+          team: 'Candemor',
+          rounds: 1,
+          laps: 12,
+          wins: 1,
+          podiums: 1,
+          topFive: 1,
+          incidents: 9,
+          points: 60,
+        },
+      ],
+    });
+
+    expect(resultWithStaleNames.standings[0]).toMatchObject({
+      driverLabel: 'Oier Zamalloa',
+      points: 221,
+      rounds: 5,
+      laps: 56,
+      wins: 1,
+      podiums: 3,
+    });
+  });
 });

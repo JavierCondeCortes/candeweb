@@ -186,3 +186,33 @@ export interface AdminInvitation {
   path?: string;
   expiresAt: string;
 }
+
+export interface AccessInvitationEmailTemplate {
+  templateKey: 'access-invitation';
+  subjectTemplate: string;
+  htmlTemplate: string;
+  css: string;
+  textTemplate: string;
+  isCustom: boolean;
+  updatedAt: string | null;
+  updatedByName: string | null;
+}
+
+export interface EmailTemplateConfiguration {
+  template: AccessInvitationEmailTemplate;
+  smtpConfigured: boolean;
+  smtpIssue: string | null;
+}
+
+export interface EmailTemplatePreview {
+  subject: string;
+  html: string;
+  text: string;
+}
+
+export type EmailDeliveryStatus = 'sent' | 'failed' | 'disabled' | 'not_needed';
+
+export interface EmailDelivery {
+  status: EmailDeliveryStatus;
+  sentAt?: string;
+}

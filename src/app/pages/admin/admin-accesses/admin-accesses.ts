@@ -6,6 +6,7 @@ import {
   ManagedSetupAccount,
   SetupAccessRequest,
   SetupInvitation,
+  EmailDelivery,
 } from '../../../core/models/setup.model';
 import { AdminApiService } from '../../../core/services/admin-api.service';
 import { ConfirmationService } from '../../../core/services/confirmation.service';
@@ -26,6 +27,8 @@ export class AdminAccesses implements OnInit {
   readonly users = signal<ManagedSetupAccount[]>([]);
   readonly requests = signal<SetupAccessRequest[]>([]);
   readonly invitation = signal<SetupInvitation | null>(null);
+  readonly emailDelivery = signal<EmailDelivery | null>(null);
+  readonly copied = signal(false);
 
   ngOnInit(): void {
     this.load();
@@ -48,8 +51,10 @@ export class AdminAccesses implements OnInit {
   approve(request: SetupAccessRequest): void {
     this.run(request.id, () =>
       this.api.approveProductAccessRequest(request.id).subscribe({
-        next: ({ invitation }) => {
+        next: ({ invitation, emailDelivery }) => {
           this.invitation.set(invitation);
+          this.emailDelivery.set(emailDelivery);
+          this.copied.set(false);
           this.busyId.set('');
           this.load();
         },
@@ -114,7 +119,12 @@ export class AdminAccesses implements OnInit {
   }
 
   async copyInvitation(): Promise<void> {
-    await navigator.clipboard.writeText(this.invitationUrl());
+    try {
+      await navigator.clipboard.writeText(this.invitationUrl());
+      this.copied.set(true);
+    } catch {
+      this.errorMessage.set(this.i18n.translate('admin.accesses.copyFailed'));
+    }
   }
 
   private update(

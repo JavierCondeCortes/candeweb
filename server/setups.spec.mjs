@@ -12,6 +12,7 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
   const temporaryRoot = await mkdtemp(join(tmpdir(), 'candemor-setups-'));
   const browserDir = join(temporaryRoot, 'browser');
   const setupDir = join(temporaryRoot, 'data', 'setups');
+  const sentEmails = [];
   await mkdir(browserDir, { recursive: true });
   await writeFile(join(browserDir, 'index.html'), '<!doctype html><app-root></app-root>');
   const app = createCandemorApp({
@@ -21,6 +22,15 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
     setupDir,
     browserDir,
     secureCookies: false,
+    publicAppUrl: 'https://candemor.test',
+    emailService: {
+      isConfigured: () => true,
+      configurationIssue: () => null,
+      async send(message) {
+        sentEmails.push(message);
+        return { status: 'sent', sentAt: new Date().toISOString() };
+      },
+    },
   });
   await listen(app.server);
   const address = app.server.address();
@@ -102,6 +112,33 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
     const adminCookie = sessionCookieFrom(adminLogin.response);
     const adminCsrf = adminLogin.data.csrfToken;
 
+    const emailTemplate = await jsonRequest(
+      baseUrl,
+      '/api/admin/email-templates/access-invitation',
+      { cookie: adminCookie },
+    );
+    assert.equal(emailTemplate.status, 200);
+    assert.equal(emailTemplate.data.template.isCustom, false);
+    assert.equal(emailTemplate.data.smtpConfigured, true);
+    const customizedTemplate = {
+      ...emailTemplate.data.template,
+      subjectTemplate: 'Acceso personalizado para {{displayName}}',
+    };
+    const templateUpdate = await jsonRequest(
+      baseUrl,
+      '/api/admin/email-templates/access-invitation',
+      { method: 'PATCH', cookie: adminCookie, csrf: adminCsrf, body: customizedTemplate },
+    );
+    assert.equal(templateUpdate.status, 200);
+    assert.equal(templateUpdate.data.template.isCustom, true);
+    const templatePreview = await jsonRequest(
+      baseUrl,
+      '/api/admin/email-templates/access-invitation/preview',
+      { method: 'POST', cookie: adminCookie, csrf: adminCsrf, body: customizedTemplate },
+    );
+    assert.equal(templatePreview.status, 200);
+    assert.match(templatePreview.data.preview.subject, /Alex Racing/);
+
     const accessRequest = await jsonRequest(baseUrl, '/api/access/requests', {
       method: 'POST',
       body: { displayName: 'Piloto Invitado', email: 'piloto@candemor.test' },
@@ -127,10 +164,16 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
       { method: 'POST', cookie: adminCookie, csrf: adminCsrf, body: {} },
     );
     assert.equal(approval.status, 201);
+    assert.equal(approval.data.emailDelivery.status, 'sent');
     assert.match(approval.data.invitation.path, /^\/aceptar-invitacion\?token=/);
     const invitationToken = new URL(approval.data.invitation.path, baseUrl).searchParams.get(
       'token',
     );
+    assert.equal(sentEmails.length, 1);
+    assert.equal(sentEmails[0].to, 'piloto@candemor.test');
+    assert.match(sentEmails[0].subject, /Piloto Invitado/);
+    assert.match(sentEmails[0].html, /https:\/\/candemor\.test\/aceptar-invitacion\?token=/);
+    assert.doesNotMatch(sentEmails[0].subject, new RegExp(invitationToken));
     const verified = await jsonRequest(
       baseUrl,
       `/api/access/invitations/verify?token=${encodeURIComponent(invitationToken)}`,
@@ -459,9 +502,8 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
     assert.equal(restoredAccount.status, 200);
     assert.equal(restoredAccount.data.user.active, true);
     assert.equal(
-      app.db
-        .prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action LIKE 'access.%'")
-        .get().count >= 5,
+      app.db.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action LIKE 'access.%'").get()
+        .count >= 5,
       true,
     );
   } finally {

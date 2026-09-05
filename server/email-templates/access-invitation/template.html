@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Acceso a {{ brandName }}</title>
+  </head>
+  <body>
+    <table class="email-shell" role="presentation" width="100%" cellspacing="0" cellpadding="0">
+      <tr>
+        <td class="email-shell__cell" align="center">
+          <table class="email-card" role="presentation" width="600" cellspacing="0" cellpadding="0">
+            <tr>
+              <td class="email-card__accent"></td>
+            </tr>
+            <tr>
+              <td class="email-card__content">
+                <p class="brand">CANDE<span>MOR</span></p>
+                <p class="eyebrow">ACCESO AUTORIZADO</p>
+                <h1>Hola, {{ displayName }}</h1>
+                <p>
+                  {{ invitedByName }} ha aprobado tu acceso a la zona privada de {{ brandName }}.
+                </p>
+                <p class="button-row">
+                  <a class="confirmation-button" href="{{ confirmationUrl }}">Confirmar acceso</a>
+                </p>
+                <p class="secondary-copy">
+                  Si el botón no funciona, copia y pega este enlace en tu navegador:
+                </p>
+                <p class="fallback-link">{{ confirmationUrl }}</p>
+                <div class="notice">
+                  <strong>Enlace personal y de un solo uso.</strong><br />
+                  Caduca el {{ expiresAt }}. No lo compartas con otras personas.
+                </div>
+                <p class="secondary-copy">
+                  Si no solicitaste este acceso, puedes ignorar el mensaje. Ayuda:
+                  {{ supportEmail }}
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td class="email-card__footer">
+                {{ brandName }} · <a href="{{ websiteUrl }}">{{ websiteUrl }}</a>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

@@ -19,6 +19,7 @@
     "editSkin": "Editar Pintura · Administración Candemor",
     "accesses": "Accesos · Administración Candemor",
     "settings": "Ajustes · Administración Candemor",
+    "email": "Correo · Administración Candemor",
     "security": "Seguridad · Administración Candemor",
     "audit": "Auditoría · Administración Candemor"
   },
@@ -68,6 +69,7 @@
     "skins": "Pinturas",
     "accesses": "Accesos",
     "settings": "Ajustes",
+    "email": "Correo",
     "security": "Seguridad",
     "users": "Administradores",
     "audit": "Auditoría"
@@ -392,6 +394,46 @@
     "invalidTwitchLogin": "«{{entry}}» no contiene un login válido de Twitch.",
     "duplicateChannel": "El canal «{{login}}» está repetido."
   },
+  "email": {
+    "eyebrow": "Comunicación de acceso",
+    "title": "Correo de invitación",
+    "intro": "Personaliza el mensaje que recibe una persona cuando apruebas su acceso a Setups y Pinturas.",
+    "loading": "Cargando plantilla de correo…",
+    "smtpReady": "SMTP preparado",
+    "smtpDisabled": "SMTP desactivado",
+    "smtpReadyHelp": "Puedes enviarte una prueba. Al aprobar un acceso, el servidor enviará este diseño y conservará el enlace para copiarlo manualmente.",
+    "smtpDisabledHelp": "Puedes diseñar y previsualizar el correo. Configura las variables SMTP del servidor para activar el envío real.",
+    "smtpInvalidHelp": "SMTP está activado pero su configuración está incompleta. El enlace manual seguirá funcionando.",
+    "content": "Contenido editable",
+    "contentHelp": "El CSS se convierte en estilos inline al generar el correo para mejorar su compatibilidad con Gmail y Outlook.",
+    "subject": "Asunto",
+    "html": "Plantilla HTML",
+    "css": "CSS del correo",
+    "plainText": "Versión de texto plano",
+    "variables": "Variables disponibles",
+    "variablesHelp": "Conserva displayName, confirmationUrl y expiresAt tanto en HTML como en texto plano.",
+    "save": "Guardar diseño",
+    "saved": "Diseño del correo guardado.",
+    "refreshPreview": "Actualizar vista previa",
+    "sendTest": "Enviar prueba",
+    "sendingTest": "Enviando prueba…",
+    "reset": "Restaurar predeterminado",
+    "confirmReset": "¿Restaurar el diseño predeterminado? Se perderá la personalización guardada.",
+    "resetDone": "Se ha restaurado el diseño predeterminado.",
+    "previewEyebrow": "Resultado real",
+    "preview": "Vista previa",
+    "previewSubject": "Asunto renderizado",
+    "previewFrameTitle": "Vista previa del correo de invitación",
+    "viewPlainText": "Ver versión de texto plano",
+    "custom": "Personalizado",
+    "default": "Predeterminado",
+    "testStatus": {
+      "sent": "Correo de prueba enviado a tu cuenta de administración.",
+      "failed": "No se pudo enviar la prueba. Revisa SMTP; el diseño no se ha perdido.",
+      "disabled": "SMTP no está configurado. La vista previa y el enlace manual siguen disponibles.",
+      "not_needed": "No era necesario enviar un correo."
+    }
+  },
   "championships": {
     "eyebrow": "Archivo deportivo",
     "title": "Candeonatos",
@@ -495,6 +537,8 @@
     "invitationHelp": "Envía este enlace únicamente a la persona indicada. Caduca en 24 horas.",
     "invitationLink": "Enlace privado",
     "copy": "Copiar enlace",
+    "copied": "Enlace copiado",
+    "copyFailed": "No se pudo copiar automáticamente. Selecciona el enlace y cópialo manualmente.",
     "close": "Cerrar",
     "requestsEyebrow": "Altas pendientes",
     "requestsTitle": "Solicitudes",
@@ -515,6 +559,12 @@
     "revoke": "Revocar acceso",
     "restore": "Restaurar cuenta",
     "fullAccess": "Acceso completo",
+    "delivery": {
+      "sent": "Invitación creada y correo enviado. El enlace también queda disponible para copiarlo.",
+      "failed": "Invitación creada, pero el correo no se pudo enviar. Copia el enlace manualmente.",
+      "disabled": "Invitación creada. SMTP no está configurado; copia el enlace manualmente.",
+      "not_needed": "La cuenta ya existía: sus permisos se han activado sin crear otra invitación."
+    },
     "confirmRevoke": "¿Revocar la cuenta de {{name}}? Se cerrarán todas sus sesiones."
   },
   "skins": {
