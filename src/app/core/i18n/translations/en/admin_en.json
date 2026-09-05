@@ -19,6 +19,7 @@
     "editSkin": "Edit skin · Candemor administration",
     "accesses": "Access · Candemor administration",
     "settings": "Settings · Candemor administration",
+    "email": "Email · Candemor administration",
     "security": "Security · Candemor administration",
     "audit": "Audit log · Candemor administration"
   },
@@ -68,6 +69,7 @@
     "skins": "Skins",
     "accesses": "Access",
     "settings": "Settings",
+    "email": "Email",
     "security": "Security",
     "users": "Administrators",
     "audit": "Audit log"
@@ -392,6 +394,46 @@
     "invalidTwitchLogin": "“{{entry}}” does not contain a valid Twitch login.",
     "duplicateChannel": "The channel “{{login}}” is duplicated."
   },
+  "email": {
+    "eyebrow": "Access communication",
+    "title": "Invitation email",
+    "intro": "Customize the message people receive when you approve their access to Setups and Skins.",
+    "loading": "Loading email template…",
+    "smtpReady": "SMTP ready",
+    "smtpDisabled": "SMTP disabled",
+    "smtpReadyHelp": "You can send yourself a test. When access is approved, the server will send this design and retain the link for manual copying.",
+    "smtpDisabledHelp": "You can design and preview the email. Configure the server SMTP variables to enable real delivery.",
+    "smtpInvalidHelp": "SMTP is enabled but its configuration is incomplete. The manual link will keep working.",
+    "content": "Editable content",
+    "contentHelp": "CSS is converted into inline styles when generating the email for better Gmail and Outlook compatibility.",
+    "subject": "Subject",
+    "html": "HTML template",
+    "css": "Email CSS",
+    "plainText": "Plain-text version",
+    "variables": "Available variables",
+    "variablesHelp": "Keep displayName, confirmationUrl and expiresAt in both HTML and plain text.",
+    "save": "Save design",
+    "saved": "Email design saved.",
+    "refreshPreview": "Refresh preview",
+    "sendTest": "Send test",
+    "sendingTest": "Sending test…",
+    "reset": "Restore default",
+    "confirmReset": "Restore the default design? The saved customization will be lost.",
+    "resetDone": "The default design has been restored.",
+    "previewEyebrow": "Actual output",
+    "preview": "Preview",
+    "previewSubject": "Rendered subject",
+    "previewFrameTitle": "Invitation email preview",
+    "viewPlainText": "View plain-text version",
+    "custom": "Customized",
+    "default": "Default",
+    "testStatus": {
+      "sent": "Test email sent to your administration account.",
+      "failed": "The test could not be sent. Check SMTP; your design has not been lost.",
+      "disabled": "SMTP is not configured. Preview and manual links remain available.",
+      "not_needed": "No email delivery was needed."
+    }
+  },
   "championships": {
     "eyebrow": "Sporting archive",
     "title": "Candeonatos",
@@ -495,6 +537,8 @@
     "invitationHelp": "Send this link only to the intended person. It expires in 24 hours.",
     "invitationLink": "Private link",
     "copy": "Copy link",
+    "copied": "Link copied",
+    "copyFailed": "The link could not be copied automatically. Select it and copy it manually.",
     "close": "Close",
     "requestsEyebrow": "Pending access",
     "requestsTitle": "Requests",
@@ -515,6 +559,12 @@
     "revoke": "Revoke access",
     "restore": "Restore account",
     "fullAccess": "Full access",
+    "delivery": {
+      "sent": "Invitation created and email sent. The link also remains available for copying.",
+      "failed": "Invitation created, but the email could not be sent. Copy the link manually.",
+      "disabled": "Invitation created. SMTP is not configured; copy the link manually.",
+      "not_needed": "The account already existed: its permissions were enabled without creating another invitation."
+    },
     "confirmRevoke": "Revoke {{name}}'s account? All sessions will be closed."
   },
   "skins": {

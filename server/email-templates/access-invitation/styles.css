@@ -1,0 +1,133 @@
+body {
+  margin: 0;
+  background: #050505;
+  color: #f5f5f2;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.email-shell {
+  width: 100%;
+  background: #050505;
+}
+
+.email-shell__cell {
+  padding: 36px 14px;
+}
+
+.email-card {
+  width: 100%;
+  max-width: 600px;
+  border: 1px solid #343434;
+  background: #101010;
+  color: #f5f5f2;
+}
+
+.email-card__accent {
+  height: 7px;
+  background: #ff1cac;
+  border-right: 300px solid #c8ff00;
+}
+
+.email-card__content {
+  padding: 42px 42px 32px;
+}
+
+.brand {
+  margin: 0 0 32px;
+  color: #ff1cac;
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: -1px;
+}
+
+.brand span {
+  color: #c8ff00;
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  color: #c8ff00;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+h1 {
+  margin: 0 0 20px;
+  color: #ffffff;
+  font-size: 34px;
+  line-height: 1.08;
+}
+
+p {
+  margin: 0 0 20px;
+  color: #e1e1dd;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.button-row {
+  margin: 30px 0;
+}
+
+.confirmation-button {
+  display: inline-block;
+  border: 2px solid #c8ff00;
+  background: #c8ff00;
+  color: #050505;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.7px;
+  padding: 15px 22px;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.secondary-copy {
+  color: #aaa;
+  font-size: 13px;
+}
+
+.fallback-link {
+  border-left: 3px solid #ff1cac;
+  color: #f5f5f2;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  padding-left: 12px;
+  word-break: break-all;
+}
+
+.notice {
+  margin: 28px 0;
+  border: 1px solid #343434;
+  background: #080808;
+  color: #d4d4cf;
+  font-size: 13px;
+  line-height: 1.55;
+  padding: 16px;
+}
+
+.email-card__footer {
+  border-top: 1px solid #2a2a2a;
+  color: #898989;
+  font-size: 12px;
+  padding: 20px 42px;
+}
+
+.email-card__footer a {
+  color: #c8ff00;
+}
+
+@media only screen and (max-width: 620px) {
+  .email-card__content {
+    padding: 32px 24px 24px;
+  }
+
+  .email-card__footer {
+    padding: 18px 24px;
+  }
+
+  h1 {
+    font-size: 29px;
+  }
+}

@@ -3,6 +3,7 @@ import { createReadStream, existsSync, mkdirSync } from 'node:fs';
 import { unlink, writeFile } from 'node:fs/promises';
 import { basename, extname, join, resolve } from 'node:path';
 import { recordAudit } from './database.mjs';
+import { sendAccessInvitation } from './email.mjs';
 import {
   consumeRecoveryCode,
   createSession,
@@ -117,9 +118,7 @@ export async function routeSetupApi(context) {
 
 function setupSession(context) {
   const session = getSession(context.db, context.request);
-  const authorized = Boolean(
-    session?.admin.canAccessSetups && session.admin.mfaEnabled,
-  );
+  const authorized = Boolean(session?.admin.canAccessSetups && session.admin.mfaEnabled);
   return sendJson(context.response, 200, {
     authenticated: authorized,
     account: authorized ? setupAccount(session.admin) : null,
@@ -140,12 +139,16 @@ function accessSession(context) {
 async function loginToAccess(context) {
   const { db, request, response, secureCookies, loginAttempts } = context;
   const input = await readJson(request);
-  const email = String(input.email ?? '').trim().toLowerCase();
+  const email = String(input.email ?? '')
+    .trim()
+    .toLowerCase();
   const password = String(input.password ?? '');
   const rememberMe = input.rememberMe === true;
   const attemptKey = `access:${request.socket.remoteAddress ?? 'local'}:${email}`;
   assertLoginAllowed(loginAttempts, attemptKey);
-  const account = db.prepare('SELECT * FROM admin_profiles WHERE email = ? AND active = 1').get(email);
+  const account = db
+    .prepare('SELECT * FROM admin_profiles WHERE email = ? AND active = 1')
+    .get(email);
   if (!account || !(await verifyPassword(password, account.password_hash))) {
     registerFailedLogin(loginAttempts, attemptKey);
     throw new ApiError(401, 'INVALID_CREDENTIALS', 'El correo o la contraseña no son correctos.');
@@ -446,7 +449,11 @@ async function routeSetupAccessManagement(context) {
          reviewed_by = ? WHERE id = ?`,
       ).run(timestamp.toISOString(), timestamp.toISOString(), session.admin.id, accessRequest.id);
       recordAudit(db, session.admin.id, 'setups.access_granted', 'account', existingAccount.id);
-      return sendJson(response, 200, { activated: true, invitation: null });
+      return sendJson(response, 200, {
+        activated: true,
+        invitation: null,
+        emailDelivery: { status: 'not_needed' },
+      });
     }
     const token = randomBytes(32).toString('base64url');
     const expiresAt = new Date(timestamp.getTime() + 24 * 60 * 60 * 1000);
@@ -487,13 +494,34 @@ async function routeSetupAccessManagement(context) {
       db.exec('ROLLBACK');
       throw error;
     }
+    const invitationPath = `${centralized ? '/aceptar-invitacion' : '/setups/aceptar-invitacion'}?token=${encodeURIComponent(token)}`;
+    const settings = db.prepare('SELECT contact_email FROM site_settings WHERE id = 1').get();
+    const emailDelivery = await sendAccessInvitation({
+      db,
+      emailService: context.emailService,
+      to: accessRequest.email,
+      displayName: accessRequest.display_name,
+      invitationPath,
+      expiresAt,
+      invitedByName: session.admin.displayName,
+      publicAppUrl: context.publicAppUrl,
+      supportEmail: settings?.contact_email,
+    });
+    recordAudit(
+      db,
+      session.admin.id,
+      `access.invitation_email_${emailDelivery.status}`,
+      'setup_access_request',
+      accessRequest.id,
+    );
     return sendJson(response, 201, {
       activated: false,
       invitation: {
         email: accessRequest.email,
-        path: `${centralized ? '/aceptar-invitacion' : '/setups/aceptar-invitacion'}?token=${encodeURIComponent(token)}`,
+        path: invitationPath,
         expiresAt: expiresAt.toISOString(),
       },
+      emailDelivery,
     });
   }
 
@@ -573,7 +601,13 @@ async function routeSetupAccessManagement(context) {
       target.id,
     );
     if (!active) db.prepare('DELETE FROM admin_sessions WHERE admin_id = ?').run(target.id);
-    recordAudit(db, session.admin.id, `access.account_${active ? 'restored' : 'revoked'}`, 'account', target.id);
+    recordAudit(
+      db,
+      session.admin.id,
+      `access.account_${active ? 'restored' : 'revoked'}`,
+      'account',
+      target.id,
+    );
     return sendJson(response, 200, {
       user: setupManagedAccountFromRow(
         db.prepare('SELECT * FROM admin_profiles WHERE id = ?').get(target.id),

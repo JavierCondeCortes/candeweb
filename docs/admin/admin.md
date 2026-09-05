@@ -37,6 +37,8 @@ La primera versión funcional del panel ya está implementada dentro del reposit
   Candeonatos permite eliminar definitivamente una edición con confirmación explícita; la auditoría
   conserva quién realizó la operación y qué edición eliminó.
 - Ajustes globales y auditoría consultables desde `/admin`.
+- Editor del correo de invitación en `/admin/ajustes/correo`, con HTML y CSS personalizables,
+  versión de texto plano, vista previa aislada, envío de prueba y fallback al enlace copiable.
 - Subida de JPEG, PNG, WebP o AVIF; el original se conserva de forma privada y la copia pública se genera
   en WebP con proporción controlada. Las portadas generan además una variante móvil. Cada edición
   admite también un vídeo de fondo MP4 o WebM propio, de hasta 80 MB.
@@ -126,6 +128,7 @@ La web pública nunca debe conectarse con credenciales de administración ni rec
 | `/admin/skins/:id`          | Edición, publicación y retirada                                  |
 | `/admin/accesos`            | Permisos centralizados de Setups y Skins                         |
 | `/admin/ajustes`            | Twitch, contacto, edición destacada y valores globales           |
+| `/admin/ajustes/correo`     | Diseño, vista previa y prueba del correo de invitación           |
 | `/admin/seguridad`          | Alta o rotación de segundo factor y códigos de recuperación      |
 | `/admin/administradores`    | Solicitudes, invitaciones y cuentas; solo para el propietario    |
 | `/admin/auditoria`          | Historial de acciones; puede posponerse visualmente, no en datos |
@@ -153,7 +156,10 @@ gestionan desde `/admin/accesos` los permisos independientes `can_access_setups`
 
 No existe alta administrativa directa. Una solicitud no concede acceso: el enlace generado al
 aprobarla caduca en 24 horas, solo se muestra al propietario y deja de servir al utilizarse o
-renovarse. El envío se hace manualmente con el botón de correo para no exigir un proveedor externo.
+renovarse. La invitación de administradores continúa compartiéndose manualmente. Para las cuentas
+de usuario de Setups y Skins existe un servicio SMTP opcional, reutilizable en el futuro para
+administradores y sin retirar el campo ni el botón de copia; está descrito en
+[Gestión centralizada de accesos](../accesos/accesos.md#envío-opcional-de-invitaciones-por-smtp).
 
 ## Contenido administrable
 

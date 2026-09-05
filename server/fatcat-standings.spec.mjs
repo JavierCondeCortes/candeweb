@@ -52,6 +52,26 @@ test('envía las cabeceras AJAX requeridas y conserva la clasificación', async 
   assert.equal(requests, 1);
 });
 
+test('renueva la clasificación nominal tras la caché corta de una edición activa', async () => {
+  let currentTime = 2_000;
+  let requests = 0;
+  const service = createFatcatStandingsService({
+    now: () => currentTime,
+    fetchImpl: async () => {
+      requests += 1;
+      return new Response(html, { status: 200 });
+    },
+  });
+
+  await service.getStandings(52);
+  currentTime += 89_999;
+  await service.getStandings(52);
+  currentTime += 1;
+  await service.getStandings(52);
+
+  assert.equal(requests, 2);
+});
+
 test('relaciona nombre e ID solo cuando las estadísticas publicadas forman una pareja única', () => {
   const named = [
     {

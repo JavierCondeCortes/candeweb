@@ -1,0 +1,179 @@
+<header class="admin-page-header">
+  <div>
+    <p class="admin-eyebrow">{{ 'admin.email.eyebrow' | translate }}</p>
+    <h1>{{ 'admin.email.title' | translate }}</h1>
+    <p>{{ 'admin.email.intro' | translate }}</p>
+  </div>
+</header>
+
+@if (loading()) {
+  <p role="status">{{ 'admin.email.loading' | translate }}</p>
+} @else {
+  @if (message()) {
+    <p class="admin-alert is-success" role="status">{{ message() }}</p>
+  }
+  @if (errorMessage()) {
+    <div id="email-template-error" class="admin-alert is-error" role="alert" tabindex="-1">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <section class="email-delivery-status" [class.is-ready]="smtpConfigured()">
+    <div>
+      <span class="email-delivery-status__dot" aria-hidden="true"></span>
+      <strong>{{
+        (smtpConfigured() ? 'admin.email.smtpReady' : 'admin.email.smtpDisabled') | translate
+      }}</strong>
+    </div>
+    <p>
+      {{
+        (smtpIssue()
+          ? 'admin.email.smtpInvalidHelp'
+          : smtpConfigured()
+            ? 'admin.email.smtpReadyHelp'
+            : 'admin.email.smtpDisabledHelp'
+        ) | translate
+      }}
+    </p>
+  </section>
+
+  <form class="email-template-layout" [formGroup]="form" (ngSubmit)="save()" novalidate>
+    <div class="email-template-editor">
+      <section class="admin-form-section" aria-labelledby="email-content-title">
+        <div>
+          <h2 id="email-content-title">{{ 'admin.email.content' | translate }}</h2>
+          <p>{{ 'admin.email.contentHelp' | translate }}</p>
+        </div>
+
+        <div class="admin-form-grid">
+          <label class="is-wide">
+            <span>{{ 'admin.email.subject' | translate }}</span>
+            <input
+              type="text"
+              formControlName="subjectTemplate"
+              maxlength="180"
+              [attr.aria-invalid]="fieldErrors()['subjectTemplate'] ? 'true' : null"
+            />
+            @if (fieldErrors()['subjectTemplate']; as error) {
+              <small class="field-error">{{ error }}</small>
+            }
+          </label>
+
+          <label class="is-wide">
+            <span>{{ 'admin.email.html' | translate }}</span>
+            <textarea
+              class="email-code-editor"
+              formControlName="htmlTemplate"
+              rows="20"
+              spellcheck="false"
+              [attr.aria-invalid]="fieldErrors()['htmlTemplate'] ? 'true' : null"
+            ></textarea>
+            @if (fieldErrors()['htmlTemplate']; as error) {
+              <small class="field-error">{{ error }}</small>
+            }
+          </label>
+
+          <label class="is-wide">
+            <span>{{ 'admin.email.css' | translate }}</span>
+            <textarea
+              class="email-code-editor"
+              formControlName="css"
+              rows="16"
+              spellcheck="false"
+              [attr.aria-invalid]="fieldErrors()['css'] ? 'true' : null"
+            ></textarea>
+            @if (fieldErrors()['css']; as error) {
+              <small class="field-error">{{ error }}</small>
+            }
+          </label>
+
+          <label class="is-wide">
+            <span>{{ 'admin.email.plainText' | translate }}</span>
+            <textarea
+              class="email-code-editor"
+              formControlName="textTemplate"
+              rows="12"
+              [attr.aria-invalid]="fieldErrors()['textTemplate'] ? 'true' : null"
+            ></textarea>
+            @if (fieldErrors()['textTemplate']; as error) {
+              <small class="field-error">{{ error }}</small>
+            }
+          </label>
+        </div>
+      </section>
+
+      <aside class="email-variables" aria-labelledby="email-variables-title">
+        <h2 id="email-variables-title">{{ 'admin.email.variables' | translate }}</h2>
+        <p>{{ 'admin.email.variablesHelp' | translate }}</p>
+        <code>{{ '{{displayName}}' }}</code>
+        <code>{{ '{{confirmationUrl}}' }}</code>
+        <code>{{ '{{expiresAt}}' }}</code>
+        <code>{{ '{{invitedByName}}' }}</code>
+        <code>{{ '{{brandName}}' }}</code>
+        <code>{{ '{{supportEmail}}' }}</code>
+        <code>{{ '{{websiteUrl}}' }}</code>
+      </aside>
+
+      <div class="admin-form-actions email-actions">
+        <button class="admin-button is-primary" type="submit" [disabled]="!!busyAction()">
+          {{ (busyAction() === 'save' ? 'admin.common.saving' : 'admin.email.save') | translate }}
+        </button>
+        <button class="admin-button" type="button" (click)="preview()" [disabled]="!!busyAction()">
+          {{ 'admin.email.refreshPreview' | translate }}
+        </button>
+        <button
+          class="admin-button"
+          type="button"
+          (click)="sendTest()"
+          [disabled]="!!busyAction() || !smtpConfigured()"
+        >
+          {{
+            (busyAction() === 'test' ? 'admin.email.sendingTest' : 'admin.email.sendTest')
+              | translate
+          }}
+        </button>
+        <button
+          class="admin-button is-danger"
+          type="button"
+          (click)="reset()"
+          [disabled]="!!busyAction() || !isCustom()"
+        >
+          {{ 'admin.email.reset' | translate }}
+        </button>
+      </div>
+
+      @if (updatedAt(); as date) {
+        <p class="admin-form-meta">
+          {{ 'admin.common.lastUpdated' | translate }}
+          <time [attr.datetime]="date">{{ date | date: 'short' }}</time>
+          · {{ updatedByName() || ('admin.common.system' | translate) }}
+        </p>
+      }
+    </div>
+
+    <section class="email-preview" aria-labelledby="email-preview-title">
+      <div class="email-preview__heading">
+        <div>
+          <p class="admin-eyebrow">{{ 'admin.email.previewEyebrow' | translate }}</p>
+          <h2 id="email-preview-title">{{ 'admin.email.preview' | translate }}</h2>
+        </div>
+        <span>{{
+          isCustom() ? ('admin.email.custom' | translate) : ('admin.email.default' | translate)
+        }}</span>
+      </div>
+      <div class="email-preview__subject">
+        <span>{{ 'admin.email.previewSubject' | translate }}</span>
+        <strong>{{ previewSubject() || '—' }}</strong>
+      </div>
+      <iframe
+        [srcdoc]="previewHtml()"
+        sandbox=""
+        [title]="'admin.email.previewFrameTitle' | translate"
+      ></iframe>
+      <details>
+        <summary>{{ 'admin.email.viewPlainText' | translate }}</summary>
+        <pre>{{ previewText() }}</pre>
+      </details>
+    </section>
+  </form>
+}

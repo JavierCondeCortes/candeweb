@@ -46,8 +46,15 @@
     <a routerLink="/admin/accesos" routerLinkActive="is-active">{{
       'admin.shell.accesses' | translate
     }}</a>
-    <a routerLink="/admin/ajustes" routerLinkActive="is-active">{{
+    <a
+      routerLink="/admin/ajustes"
+      routerLinkActive="is-active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      >{{
       'admin.shell.settings' | translate
+    }}</a>
+    <a routerLink="/admin/ajustes/correo" routerLinkActive="is-active">{{
+      'admin.shell.email' | translate
     }}</a>
     <a routerLink="/admin/seguridad" routerLinkActive="is-active">{{
       'admin.shell.security' | translate

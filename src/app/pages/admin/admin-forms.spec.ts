@@ -8,6 +8,7 @@ import { AdminMemberForm } from './admin-member-form/admin-member-form';
 import { AdminSecurity } from './admin-security/admin-security';
 import { AdminSponsorForm } from './admin-sponsor-form/admin-sponsor-form';
 import { AdminSettings } from './admin-settings/admin-settings';
+import { AdminEmailTemplate } from './admin-email-template/admin-email-template';
 
 describe('Admin reactive forms', () => {
   it('renders the new member form with its controls connected', async () => {
@@ -112,6 +113,48 @@ describe('Admin reactive forms', () => {
     expect(
       host.querySelector<HTMLInputElement>('input[formControlName="chiquitoSpotterUrl"]')?.value,
     ).toBe('https://www.patreon.com/candemor/posts/chiquitito-151646382');
+  });
+
+  it('renders the editable invitation email and its isolated preview', async () => {
+    const template = {
+      templateKey: 'access-invitation' as const,
+      subjectTemplate: 'Acceso para {{displayName}}',
+      htmlTemplate:
+        '<html><body><p>{{displayName}}</p><a href="{{confirmationUrl}}">Entrar</a><p>{{expiresAt}}</p></body></html>',
+      css: 'body { background: #050505; color: #fff; }',
+      textTemplate: '{{displayName}} {{confirmationUrl}} {{expiresAt}}',
+      isCustom: false,
+      updatedAt: null,
+      updatedByName: null,
+    };
+    const api = {
+      getAccessInvitationEmailTemplate: () =>
+        of({ template, smtpConfigured: false, smtpIssue: null }),
+      previewAccessInvitationEmail: () =>
+        of({
+          preview: {
+            subject: 'Acceso para Alex Racing',
+            html: '<html><body><p>Vista previa segura</p></body></html>',
+            text: 'Vista previa segura',
+          },
+        }),
+    };
+    await TestBed.configureTestingModule({
+      imports: [AdminEmailTemplate],
+      providers: [{ provide: AdminApiService, useValue: api }],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(AdminEmailTemplate);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelector('textarea[formControlName="htmlTemplate"]')).toBeTruthy();
+    expect(host.querySelector('textarea[formControlName="css"]')).toBeTruthy();
+    expect(host.querySelector('iframe[sandbox]')?.getAttribute('srcdoc')).toContain(
+      'Vista previa segura',
+    );
+    expect(host.textContent).toContain('SMTP desactivado');
   });
 
   it('renders the second-factor security screen', async () => {

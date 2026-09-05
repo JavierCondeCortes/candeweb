@@ -116,3 +116,10 @@ export interface SetupInvitation {
   path?: string;
   expiresAt: string;
 }
+
+export type EmailDeliveryStatus = 'sent' | 'failed' | 'disabled' | 'not_needed';
+
+export interface EmailDelivery {
+  status: EmailDeliveryStatus;
+  sentAt?: string;
+}

@@ -153,9 +153,11 @@ El JSON del torneo devuelve la clasificación ordenada por `puntos_totales` y so
 `piloto_id`. La tabla pública AJAX `GET /resultados/ftct/drivers_unf/{torneoId}` aporta posición,
 nombre, equipo y las mismas estadísticas acumuladas. El servidor solo relaciona ambos registros
 cuando puntos, rondas, vueltas, victorias, podios, top cinco e incidentes coinciden y la pareja es
-única en las dos fuentes. Cuando existe esa relación validada, el adaptador completa las vueltas
-rápidas y poles desde el registro original `pPd`. Si la firma falta o se repite, conserva los
-registros sin relacionarlos y no atribuye esas métricas a ningún nombre.
+única en las dos fuentes. `pPd` es siempre la fuente de verdad para posición, puntos totales,
+rondas y estadísticas: la tabla AJAX solo enriquece cada `piloto_id` con nombre y equipo. De esta
+forma, una respuesta nominal antigua nunca puede sustituir el acumulado de cinco carreras por los
+puntos de una sola. Si la firma falta o se repite, se conserva el acumulado oficial con el
+identificador neutral del piloto y no se atribuyen sus métricas a ningún nombre.
 
 | Posición derivada | Piloto ID | Puntos | Rondas | Podios | Victorias | Vueltas rápidas |
 | ----------------: | --------: | -----: | -----: | -----: | --------: | --------------: |
@@ -536,8 +538,12 @@ src/app/
 
 - Mantener la URL base y los IDs de torneo en configuración.
 - No repetir el ID `42` en componentes o plantillas.
-- Para una edición activa, usar caché corta y revalidación.
-- Para una edición finalizada, guardar una instantánea estable o utilizar caché prolongada.
+- Para una edición activa, revalidar automáticamente el acumulado de Fat Cat Race cada `90`
+  segundos como máximo y conservar la última instantánea válida si la fuente falla.
+- Para una edición finalizada, obtener una última instantánea automática si todavía no existe una
+  marcada como final y mantenerla estable a partir de entonces.
+- Mantener la tabla auxiliar de nombres y equipos en una caché corta de `90` segundos; nunca usarla
+  como fuente de puntos, rondas ni estadísticas.
 - Añadir timeout y reintento controlado.
 - No realizar reintentos infinitos.
 - Conservar el último resultado válido en caso de error temporal.

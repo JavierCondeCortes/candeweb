@@ -16,6 +16,13 @@ import { createTwitchStatusService } from './twitch.mjs';
 import { routeSetupApi, runSetupCleanup } from './setups.mjs';
 import { routeWebUpdatesApi } from './web-updates.mjs';
 import {
+  createEmailService,
+  getAccessInvitationTemplate,
+  previewAccessInvitation,
+  resetAccessInvitationTemplate,
+  saveAccessInvitationTemplate,
+} from './email.mjs';
+import {
   championshipFromRow,
   memberFromRow,
   openDatabase,
@@ -54,6 +61,7 @@ import {
 
 const JSON_LIMIT = 1024 * 1024;
 const MEDIA_LIMIT = 110 * 1024 * 1024;
+const ACTIVE_CHAMPIONSHIP_REFRESH_MS = 90 * 1000;
 const SESSION_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 const PUBLIC_CHAMPIONSHIP_STATUSES = new Set(['registration', 'active', 'finished']);
 const BASE_SECURITY_HEADERS = {
@@ -95,6 +103,9 @@ export function createCandemorApp(options = {}) {
   const roundResultsService = options.roundResultsService ?? createFatcatRoundResultsService();
   const standingsService = options.standingsService ?? createFatcatStandingsService();
   const googleFormsService = options.googleFormsService ?? createGoogleFormsService();
+  const emailService = options.emailService ?? createEmailService(options.smtp);
+  const publicAppUrl =
+    options.publicAppUrl ?? process.env.PUBLIC_APP_URL ?? 'http://localhost:4200';
   const webUpdatesToken = options.webUpdatesToken ?? process.env.WEB_UPDATES_API_TOKEN ?? '';
   const db = openDatabase(databasePath);
   const loginAttempts = new Map();
@@ -126,6 +137,8 @@ export function createCandemorApp(options = {}) {
         roundResultsService,
         standingsService,
         googleFormsService,
+        emailService,
+        publicAppUrl,
         webUpdatesToken,
       });
     } catch (error) {
@@ -336,12 +349,25 @@ async function routeRequest(context) {
   if (method === 'GET' && publicSportsMatch) {
     const championship = findPublicChampionship(db, publicSportsMatch[1]);
     if (!championship) throw new ApiError(404, 'NOT_FOUND', 'No existe esa edición publicada.');
-    const snapshot = db
+    let snapshot = db
       .prepare(
         `SELECT payload, synced_at, is_final FROM championship_snapshots
          WHERE championship_id = ? ORDER BY is_final DESC, synced_at DESC LIMIT 1`,
       )
       .get(championship.id);
+    const snapshotAge = snapshot ? Date.now() - Date.parse(snapshot.synced_at) : Infinity;
+    const needsActiveRefresh =
+      championship.status === 'active' &&
+      (!snapshot || !Number.isFinite(snapshotAge) || snapshotAge >= ACTIVE_CHAMPIONSHIP_REFRESH_MS);
+    const needsFinalSnapshot =
+      championship.status === 'finished' && (!snapshot || snapshot.is_final !== 1);
+    if (championship.externalTournamentId && (needsActiveRefresh || needsFinalSnapshot)) {
+      try {
+        snapshot = await refreshPublicChampionshipSnapshot(db, championship);
+      } catch (error) {
+        if (!snapshot) throw error;
+      }
+    }
     let payload;
     let syncedAt;
     let isFinal;
@@ -524,6 +550,71 @@ async function routeAdmin(context) {
     return routeAdminUsers(context);
   }
 
+  if (method === 'GET' && path === '/api/admin/email-templates/access-invitation') {
+    return sendJson(response, 200, {
+      template: getAccessInvitationTemplate(db),
+      smtpConfigured: context.emailService.isConfigured(),
+      smtpIssue: context.emailService.configurationIssue?.() ?? null,
+    });
+  }
+
+  if (method === 'PATCH' && path === '/api/admin/email-templates/access-invitation') {
+    const input = await readJson(context.request);
+    const template = saveAccessInvitationTemplate(db, input, session.admin);
+    recordAudit(
+      db,
+      session.admin.id,
+      'email_template.updated',
+      'email_template',
+      'access-invitation',
+    );
+    return sendJson(response, 200, {
+      template,
+      smtpConfigured: context.emailService.isConfigured(),
+      smtpIssue: context.emailService.configurationIssue?.() ?? null,
+    });
+  }
+
+  if (method === 'DELETE' && path === '/api/admin/email-templates/access-invitation') {
+    const template = resetAccessInvitationTemplate(db);
+    recordAudit(
+      db,
+      session.admin.id,
+      'email_template.reset',
+      'email_template',
+      'access-invitation',
+    );
+    return sendJson(response, 200, {
+      template,
+      smtpConfigured: context.emailService.isConfigured(),
+      smtpIssue: context.emailService.configurationIssue?.() ?? null,
+    });
+  }
+
+  if (method === 'POST' && path === '/api/admin/email-templates/access-invitation/preview') {
+    const input = await readJson(context.request);
+    return sendJson(response, 200, {
+      preview: previewAccessInvitation(input, context.publicAppUrl),
+    });
+  }
+
+  if (method === 'POST' && path === '/api/admin/email-templates/access-invitation/test') {
+    const input = await readJson(context.request);
+    const preview = previewAccessInvitation(input, context.publicAppUrl);
+    const delivery = await context.emailService.send({
+      to: session.admin.email,
+      ...preview,
+    });
+    recordAudit(
+      db,
+      session.admin.id,
+      `email_template.test_${delivery.status}`,
+      'email_template',
+      'access-invitation',
+    );
+    return sendJson(response, 200, { delivery });
+  }
+
   if (method === 'POST' && path === '/api/admin/mfa/setup') {
     requireAdministrator(session);
     const secret = generateTotpSecret();
@@ -674,7 +765,11 @@ async function routeAdmin(context) {
     if (!current) throw new ApiError(404, 'NOT_FOUND', 'No existe esa skin.');
     const input = await readJson(context.request);
     if (input.updatedAt && input.updatedAt !== current.updatedAt) {
-      throw new ApiError(409, 'EDIT_CONFLICT', 'Otra persona modificó esta skin. Recarga antes de guardar.');
+      throw new ApiError(
+        409,
+        'EDIT_CONFLICT',
+        'Otra persona modificó esta skin. Recarga antes de guardar.',
+      );
     }
     const skin = validateSkin(input, { publishing: input.status === 'published' });
     const timestamp = new Date().toISOString();
@@ -722,7 +817,13 @@ async function routeAdmin(context) {
       `UPDATE skins SET status = ?, published_at = COALESCE(published_at, ?),
        updated_at = ?, updated_by_name = ? WHERE id = ?`,
     ).run(status, timestamp, timestamp, session.admin.displayName, skin.id);
-    recordAudit(db, session.admin.id, `skin.${action === 'publish' ? 'published' : 'archived'}`, 'skin', skin.id);
+    recordAudit(
+      db,
+      session.admin.id,
+      `skin.${action === 'publish' ? 'published' : 'archived'}`,
+      'skin',
+      skin.id,
+    );
     return sendJson(response, 200, { skin: findSkin(db, skin.id) });
   }
 
@@ -1041,12 +1142,7 @@ async function routeAdmin(context) {
     linkMediaAsset(db, championship.coverUrl, championship.coverAlt, 'championship', current.id);
     linkMediaAsset(db, championship.backgroundVideoUrl, null, 'championship', current.id);
     if (!isPublicChampionshipStatus(championship.status)) {
-      unfeatureChampionship(
-        db,
-        current.id,
-        new Date().toISOString(),
-        session.admin.displayName,
-      );
+      unfeatureChampionship(db, current.id, new Date().toISOString(), session.admin.displayName);
     } else if (championship.isFeatured) {
       featureChampionship(db, current.id, new Date().toISOString(), session.admin.displayName);
     }
@@ -2194,6 +2290,27 @@ async function syncChampionship(db, championship, actorId) {
   }
 }
 
+async function refreshPublicChampionshipSnapshot(db, championship) {
+  const payload = await fetchTournament(championship.externalTournamentId);
+  const serialized = JSON.stringify(payload);
+  const checksum = createHash('sha256').update(serialized).digest('hex');
+  const syncedAt = new Date().toISOString();
+  const isFinal = championship.status === 'finished' ? 1 : 0;
+  db.prepare(
+    `INSERT INTO championship_snapshots
+     (id, championship_id, payload, checksum, source_at, synced_at, is_final)
+     VALUES (?, ?, ?, ?, NULL, ?, ?)
+     ON CONFLICT(championship_id, checksum) DO UPDATE SET
+       synced_at = excluded.synced_at,
+       is_final = MAX(championship_snapshots.is_final, excluded.is_final)`,
+  ).run(randomUUID(), championship.id, serialized, checksum, syncedAt, isFinal);
+  db.prepare(
+    `UPDATE championships SET sync_status = 'success', sync_error = NULL,
+     last_synced_at = ?, updated_at = ? WHERE id = ?`,
+  ).run(syncedAt, syncedAt, championship.id);
+  return { payload: serialized, synced_at: syncedAt, is_final: isFinal };
+}
+
 async function fetchTournament(externalTournamentId) {
   let response;
   try {
@@ -2279,7 +2396,7 @@ async function saveMedia(context, input) {
           ? !validSponsorLogo
           : kind === 'skin'
             ? !validSkinImage
-          : !validMemberPhoto;
+            : !validMemberPhoto;
     if (mediaIsTooSmall) {
       throw new ApiError(
         422,
@@ -2290,7 +2407,7 @@ async function saveMedia(context, input) {
             ? 'El logotipo debe medir al menos 100 × 100 píxeles. Se admiten formatos verticales, cuadrados y horizontales.'
             : kind === 'skin'
               ? 'La imagen de la skin debe medir al menos 600 × 400 píxeles.'
-            : 'La fotografía debe medir al menos 720 × 900 píxeles.',
+              : 'La fotografía debe medir al menos 720 × 900 píxeles.',
       );
     }
     await writeFile(originalStoragePath, buffer, { flag: 'wx' });
@@ -2316,13 +2433,13 @@ async function saveMedia(context, input) {
                 fit: 'inside',
                 withoutEnlargement: true,
               }
-          : {
-              width: 720,
-              height: 900,
-              fit: 'cover',
-              position: 'attention',
-              withoutEnlargement: true,
-            };
+            : {
+                width: 720,
+                height: 900,
+                fit: 'cover',
+                position: 'attention',
+                withoutEnlargement: true,
+              };
     const mainTask = sharp(buffer)
       .rotate()
       .resize(mainResize)

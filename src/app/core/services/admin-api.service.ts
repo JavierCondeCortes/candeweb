@@ -3,6 +3,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { tap } from 'rxjs';
 import {
   AdminSession,
+  AccessInvitationEmailTemplate,
   AdminAccessRequest,
   AdminAccount,
   AdminInvitation,
@@ -15,12 +16,11 @@ import {
   SportsCorrection,
   TeamMemberContent,
   TournamentSourceSummary,
+  EmailDelivery,
+  EmailTemplateConfiguration,
+  EmailTemplatePreview,
 } from '../models/content-admin.model';
-import {
-  ManagedSetupAccount,
-  SetupAccessRequest,
-  SetupInvitation,
-} from '../models/setup.model';
+import { ManagedSetupAccount, SetupAccessRequest, SetupInvitation } from '../models/setup.model';
 import { SkinContent, SkinInput } from '../models/skin.model';
 
 type MemberInput = Omit<
@@ -363,12 +363,49 @@ export class AdminApiService {
     }>('/api/access/users', this.options());
   }
 
-  approveProductAccessRequest(id: string) {
-    return this.http.post<{ invitation: SetupInvitation | null }>(
-      `/api/access/requests/${encodeURIComponent(id)}/approve`,
-      {},
+  getAccessInvitationEmailTemplate() {
+    return this.http.get<EmailTemplateConfiguration>(
+      '/api/admin/email-templates/access-invitation',
+      this.options(),
+    );
+  }
+
+  updateAccessInvitationEmailTemplate(input: AccessInvitationEmailTemplate) {
+    return this.http.patch<EmailTemplateConfiguration>(
+      '/api/admin/email-templates/access-invitation',
+      input,
       this.options(true),
     );
+  }
+
+  resetAccessInvitationEmailTemplate() {
+    return this.http.delete<EmailTemplateConfiguration>(
+      '/api/admin/email-templates/access-invitation',
+      this.options(true),
+    );
+  }
+
+  previewAccessInvitationEmail(input: AccessInvitationEmailTemplate) {
+    return this.http.post<{ preview: EmailTemplatePreview }>(
+      '/api/admin/email-templates/access-invitation/preview',
+      input,
+      this.options(true),
+    );
+  }
+
+  sendAccessInvitationEmailTest(input: AccessInvitationEmailTemplate) {
+    return this.http.post<{ delivery: EmailDelivery }>(
+      '/api/admin/email-templates/access-invitation/test',
+      input,
+      this.options(true),
+    );
+  }
+
+  approveProductAccessRequest(id: string) {
+    return this.http.post<{
+      invitation: SetupInvitation | null;
+      emailDelivery: import('../models/setup.model').EmailDelivery;
+    }>(`/api/access/requests/${encodeURIComponent(id)}/approve`, {}, this.options(true));
   }
 
   rejectProductAccessRequest(id: string) {
@@ -402,7 +439,11 @@ export class AdminApiService {
     );
   }
 
-  async uploadImage(file: File, kind: 'member' | 'championship' | 'sponsor' | 'skin', altText = '') {
+  async uploadImage(
+    file: File,
+    kind: 'member' | 'championship' | 'sponsor' | 'skin',
+    altText = '',
+  ) {
     return this.uploadMedia<{ publicUrl: string }>(file, kind, altText);
   }
 

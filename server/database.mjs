@@ -932,6 +932,23 @@ function migrate(db) {
   db.prepare('INSERT OR IGNORE INTO schema_migrations (version, applied_at) VALUES (25, ?)').run(
     now(),
   );
+
+  const migration26Applied = db.prepare('SELECT 1 FROM schema_migrations WHERE version = 26').get();
+  if (!migration26Applied) {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS email_templates (
+        template_key TEXT PRIMARY KEY,
+        subject_template TEXT NOT NULL,
+        html_template TEXT NOT NULL,
+        css TEXT NOT NULL,
+        text_template TEXT NOT NULL,
+        updated_by TEXT REFERENCES admin_profiles(id) ON DELETE SET NULL,
+        updated_by_name TEXT,
+        updated_at TEXT NOT NULL
+      );
+    `);
+    db.prepare('INSERT INTO schema_migrations (version, applied_at) VALUES (26, ?)').run(now());
+  }
 }
 
 function seed(db) {
