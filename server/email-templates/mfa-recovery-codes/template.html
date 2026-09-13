@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Códigos de recuperación de {{ brandName }}</title>
+  </head>
+  <body>
+    <table class="email-shell" role="presentation" width="100%" cellspacing="0" cellpadding="0">
+      <tr>
+        <td class="email-shell__cell" align="center">
+          <table class="email-card" role="presentation" width="600" cellspacing="0" cellpadding="0">
+            <tr>
+              <td class="email-card__accent"></td>
+            </tr>
+            <tr>
+              <td class="email-card__content">
+                <p class="brand">CANDE<span>MOR</span></p>
+                <p class="eyebrow">SEGURIDAD ACTIVADA</p>
+                <h1>Guarda tus códigos, {{ displayName }}</h1>
+                <p>
+                  Has activado la verificación TOTP. Estos códigos permiten recuperar el acceso si
+                  pierdes tu aplicación de autenticación.
+                </p>
+                <pre class="recovery-codes">{{ recoveryCodes }}</pre>
+                <div class="notice">
+                  <strong>Cada código funciona una sola vez.</strong><br />
+                  Guárdalos también fuera del correo y no los compartas. Cuando termines, elimina
+                  este mensaje si no quieres conservar otra copia.
+                </div>
+                <p class="secondary-copy">
+                  Si no activaste TOTP, cambia tu contraseña y contacta con {{ supportEmail }}.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td class="email-card__footer">
+                {{ brandName }} · <a href="{{ websiteUrl }}">{{ websiteUrl }}</a>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

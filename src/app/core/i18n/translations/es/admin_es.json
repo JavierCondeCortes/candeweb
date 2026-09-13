@@ -291,7 +291,12 @@
     "recoveryCodes": "Códigos de recuperación",
     "recoveryHelp": "Solo se muestran una vez. Cada código permite un único acceso.",
     "copyAll": "Copiar todos",
-    "activatedMessage": "Segundo factor activado. Guarda ahora los códigos de recuperación.",
+    "activatedMessage": {
+      "sent": "Segundo factor activado. Los códigos también se enviaron a tu correo.",
+      "failed": "Segundo factor activado, pero el correo falló. Copia ahora los códigos.",
+      "disabled": "Segundo factor activado. El correo no está configurado: copia ahora los códigos.",
+      "not_needed": "Segundo factor activado. Copia ahora los códigos de recuperación."
+    },
     "secretCopied": "Clave copiada.",
     "codesCopied": "Códigos de recuperación copiados. Guárdalos fuera del navegador."
   },
@@ -558,6 +563,7 @@
     "setupUpload": "Puede subir Setups",
     "revoke": "Revocar acceso",
     "restore": "Restaurar cuenta",
+    "deleteAccount": "Eliminar cuenta",
     "fullAccess": "Acceso completo",
     "delivery": {
       "sent": "Invitación creada y correo enviado. El enlace también queda disponible para copiarlo.",
@@ -565,7 +571,9 @@
       "disabled": "Invitación creada. SMTP no está configurado; copia el enlace manualmente.",
       "not_needed": "La cuenta ya existía: sus permisos se han activado sin crear otra invitación."
     },
-    "confirmRevoke": "¿Revocar la cuenta de {{name}}? Se cerrarán todas sus sesiones."
+    "confirmRevoke": "¿Revocar la cuenta de {{name}}? Se cerrarán todas sus sesiones.",
+    "confirmDelete": "¿Eliminar definitivamente la cuenta de {{name}}? Se cerrarán sus sesiones y el correo quedará disponible para un nuevo registro. Esta acción no se puede deshacer.",
+    "deletedMessage": "Cuenta eliminada definitivamente."
   },
   "skins": {
     "eyebrow": "Biblioteca privada",

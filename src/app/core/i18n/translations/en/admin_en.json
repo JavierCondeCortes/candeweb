@@ -291,7 +291,12 @@
     "recoveryCodes": "Recovery codes",
     "recoveryHelp": "They are shown only once. Each code permits one sign-in.",
     "copyAll": "Copy all",
-    "activatedMessage": "Two-factor authentication enabled. Save the recovery codes now.",
+    "activatedMessage": {
+      "sent": "Two-factor authentication enabled. The codes were also sent to your email.",
+      "failed": "Two-factor authentication enabled, but the email failed. Copy the codes now.",
+      "disabled": "Two-factor authentication enabled. Email is not configured, so copy the codes now.",
+      "not_needed": "Two-factor authentication enabled. Copy the recovery codes now."
+    },
     "secretCopied": "Key copied.",
     "codesCopied": "Recovery codes copied. Store them outside the browser."
   },
@@ -558,6 +563,7 @@
     "setupUpload": "Can upload Setups",
     "revoke": "Revoke access",
     "restore": "Restore account",
+    "deleteAccount": "Delete account",
     "fullAccess": "Full access",
     "delivery": {
       "sent": "Invitation created and email sent. The link also remains available for copying.",
@@ -565,7 +571,9 @@
       "disabled": "Invitation created. SMTP is not configured; copy the link manually.",
       "not_needed": "The account already existed: its permissions were enabled without creating another invitation."
     },
-    "confirmRevoke": "Revoke {{name}}'s account? All sessions will be closed."
+    "confirmRevoke": "Revoke {{name}}'s account? All sessions will be closed.",
+    "confirmDelete": "Permanently delete {{name}}'s account? Their sessions will be closed and the email will become available for a new registration. This action cannot be undone.",
+    "deletedMessage": "Account permanently deleted."
   },
   "skins": {
     "eyebrow": "Private library",

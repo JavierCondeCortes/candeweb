@@ -5,6 +5,7 @@ import {
   getAccessInvitationTemplate,
   previewAccessInvitation,
   renderAccessInvitation,
+  renderMfaRecoveryCodesEmail,
   validateAccessInvitationTemplate,
 } from './email.mjs';
 
@@ -42,6 +43,20 @@ test('rechaza variables desconocidas, campos obligatorios y contenido activo', (
     () => validateAccessInvitationTemplate({ ...template, textTemplate: '{{unknownVariable}}' }),
     (error) => error.code === 'VALIDATION_ERROR' && Boolean(error.fields.textTemplate),
   );
+});
+
+test('renderiza los códigos de recuperación como lista segura en HTML y texto plano', () => {
+  const rendered = renderMfaRecoveryCodesEmail({
+    displayName: '<Owner Candemor>',
+    recoveryCodes: ['ABCD-1234', 'EFGH-5678'],
+    supportEmail: 'hola@candemor.test',
+    websiteUrl: 'https://candemor.test',
+  });
+
+  assert.match(rendered.subject, /códigos de recuperación/i);
+  assert.match(rendered.html, /&lt;Owner Candemor&gt;/);
+  assert.match(rendered.html, /ABCD-1234\nEFGH-5678/);
+  assert.match(rendered.text, /ABCD-1234\nEFGH-5678/);
 });
 
 test('el servicio SMTP distingue entre desactivado y enviado', async () => {

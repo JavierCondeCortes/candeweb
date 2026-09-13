@@ -92,7 +92,7 @@ export class AdminApiService {
   }
 
   confirmMfa(code: string) {
-    return this.http.post<{ recoveryCodes: string[] }>(
+    return this.http.post<{ recoveryCodes: string[]; emailDelivery: EmailDelivery }>(
       '/api/admin/mfa/confirm',
       { code },
       this.options(true),
@@ -435,6 +435,13 @@ export class AdminApiService {
     return this.http.post<{ user: ManagedSetupAccount }>(
       `/api/access/users/${encodeURIComponent(id)}/${active ? 'restore' : 'revoke'}`,
       {},
+      this.options(true),
+    );
+  }
+
+  deleteProductAccount(id: string) {
+    return this.http.delete<void>(
+      `/api/access/users/${encodeURIComponent(id)}`,
       this.options(true),
     );
   }

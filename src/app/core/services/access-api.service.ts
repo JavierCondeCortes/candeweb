@@ -2,7 +2,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { tap } from 'rxjs';
 import { MfaSetup } from '../models/content-admin.model';
-import { SetupInvitation, SetupSession } from '../models/setup.model';
+import { EmailDelivery, SetupInvitation, SetupSession } from '../models/setup.model';
 import { SkinContent } from '../models/skin.model';
 
 @Injectable({ providedIn: 'root' })
@@ -51,7 +51,7 @@ export class AccessApiService {
   }
 
   confirmMfa(code: string) {
-    return this.http.post<{ recoveryCodes: string[] }>(
+    return this.http.post<{ recoveryCodes: string[]; emailDelivery: EmailDelivery }>(
       '/api/access/mfa/confirm',
       { code },
       this.options(true),

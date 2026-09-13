@@ -7,6 +7,11 @@ import { ApiError } from './validation.mjs';
 
 const TEMPLATE_KEY = 'access-invitation';
 const TEMPLATE_DIR = join(dirname(fileURLToPath(import.meta.url)), 'email-templates', TEMPLATE_KEY);
+const RECOVERY_CODES_TEMPLATE_DIR = join(
+  dirname(fileURLToPath(import.meta.url)),
+  'email-templates',
+  'mfa-recovery-codes',
+);
 const DEFAULT_SUBJECT = 'Tu acceso a {{brandName}} está preparado';
 const DEFAULT_TEMPLATE = Object.freeze({
   templateKey: TEMPLATE_KEY,
@@ -14,6 +19,12 @@ const DEFAULT_TEMPLATE = Object.freeze({
   htmlTemplate: readFileSync(join(TEMPLATE_DIR, 'template.html'), 'utf8'),
   css: readFileSync(join(TEMPLATE_DIR, 'styles.css'), 'utf8'),
   textTemplate: readFileSync(join(TEMPLATE_DIR, 'template.txt'), 'utf8'),
+});
+const RECOVERY_CODES_TEMPLATE = Object.freeze({
+  subjectTemplate: 'Tus códigos de recuperación de {{brandName}}',
+  htmlTemplate: readFileSync(join(RECOVERY_CODES_TEMPLATE_DIR, 'template.html'), 'utf8'),
+  css: `${DEFAULT_TEMPLATE.css}\n${readFileSync(join(RECOVERY_CODES_TEMPLATE_DIR, 'styles.css'), 'utf8')}`,
+  textTemplate: readFileSync(join(RECOVERY_CODES_TEMPLATE_DIR, 'template.txt'), 'utf8'),
 });
 const ALLOWED_VARIABLES = new Set([
   'brandName',
@@ -244,6 +255,70 @@ export async function sendAccessInvitation({
   }
 }
 
+export function renderMfaRecoveryCodesEmail(values) {
+  const recoveryCodes = Array.isArray(values.recoveryCodes)
+    ? values.recoveryCodes.map((code) => String(code).trim()).filter(Boolean).slice(0, 20)
+    : [];
+  if (!recoveryCodes.length) {
+    throw new ApiError(
+      422,
+      'RECOVERY_CODES_REQUIRED',
+      'No hay códigos de recuperación para preparar el correo.',
+    );
+  }
+  const normalized = {
+    brandName: values.brandName || 'Candemor Racing Team',
+    displayName: values.displayName || 'Piloto Candemor',
+    recoveryCodes: recoveryCodes.join('\n'),
+    supportEmail: values.supportEmail || 'candemorracingteam@gmail.com',
+    websiteUrl: normalizePublicUrl(values.websiteUrl),
+  };
+  const subject = replaceVariables(
+    RECOVERY_CODES_TEMPLATE.subjectTemplate,
+    normalized,
+    escapePlainText,
+  );
+  const html = replaceVariables(RECOVERY_CODES_TEMPLATE.htmlTemplate, normalized, escapeHtml);
+  const text = replaceVariables(
+    RECOVERY_CODES_TEMPLATE.textTemplate,
+    normalized,
+    (value, name) =>
+      name === 'recoveryCodes' ? escapeMultilinePlainText(value) : escapePlainText(value),
+  );
+  return {
+    subject,
+    html: juice.inlineContent(html, RECOVERY_CODES_TEMPLATE.css, {
+      applyStyleTags: true,
+      preserveMediaQueries: true,
+      removeStyleTags: true,
+    }),
+    text,
+  };
+}
+
+export async function sendMfaRecoveryCodesEmail({
+  emailService,
+  to,
+  displayName,
+  recoveryCodes,
+  publicAppUrl,
+  supportEmail,
+}) {
+  if (!emailService?.isConfigured()) return { status: 'disabled' };
+  try {
+    const rendered = renderMfaRecoveryCodesEmail({
+      displayName,
+      recoveryCodes,
+      supportEmail,
+      websiteUrl: publicAppUrl,
+    });
+    return emailService.send({ to, ...rendered });
+  } catch (error) {
+    console.error('No se pudo preparar el correo con códigos de recuperación.', safeMailError(error));
+    return { status: 'failed' };
+  }
+}
+
 export function previewAccessInvitation(template, publicAppUrl) {
   const websiteUrl = normalizePublicUrl(publicAppUrl);
   return renderAccessInvitation(template, {
@@ -295,7 +370,9 @@ function smtpConfig(options) {
 }
 
 function replaceVariables(template, values, escape) {
-  return template.replace(VARIABLE_PATTERN, (_match, name) => escape(String(values[name] ?? '')));
+  return template.replace(VARIABLE_PATTERN, (_match, name) =>
+    escape(String(values[name] ?? ''), name),
+  );
 }
 
 function escapeHtml(value) {
@@ -309,6 +386,13 @@ function escapeHtml(value) {
 
 function escapePlainText(value) {
   return value.replace(/[\r\n]+/g, ' ').trim();
+}
+
+function escapeMultilinePlainText(value) {
+  return value
+    .replace(/\r\n?/g, '\n')
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
+    .trim();
 }
 
 function normalizePublicUrl(value) {

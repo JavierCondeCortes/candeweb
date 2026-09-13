@@ -169,6 +169,7 @@
     "rememberHelp": "Only on this device. Your session will be kept for 30 days.",
     "mfaCode": "TOTP or recovery code",
     "sendRequest": "Send request",
+    "accountExists": "An account already exists for that email. Sign in instead.",
     "haveAccess": "I already have access",
     "invitationEyebrow": "Private invitation",
     "invitationTitle": "Create account",
@@ -180,6 +181,12 @@
     "confirmMfa": "Confirm TOTP",
     "recoveryTitle": "Save your recovery codes",
     "recoveryHelp": "Each code works once. Store them outside this website.",
+    "recoveryEmail": {
+      "sent": "We have also sent them to your email address.",
+      "failed": "The email could not be sent. Copy the codes before continuing.",
+      "disabled": "Email is not configured. Copy the codes before continuing.",
+      "not_needed": "Copy the codes before continuing."
+    },
     "continue": "Continue",
     "login": "Sign in",
     "noAccess": "Do not have permission yet?",

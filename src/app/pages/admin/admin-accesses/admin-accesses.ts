@@ -24,6 +24,7 @@ export class AdminAccesses implements OnInit {
   readonly loading = signal(true);
   readonly busyId = signal('');
   readonly errorMessage = signal('');
+  readonly message = signal('');
   readonly users = signal<ManagedSetupAccount[]>([]);
   readonly requests = signal<SetupAccessRequest[]>([]);
   readonly invitation = signal<SetupInvitation | null>(null);
@@ -113,6 +114,30 @@ export class AdminAccesses implements OnInit {
     );
   }
 
+  async deleteAccount(user: ManagedSetupAccount): Promise<void> {
+    if (
+      !(await this.confirmation.confirm({
+        message: this.i18n.translate('admin.accesses.confirmDelete', {
+          name: user.displayName,
+        }),
+        confirmLabel: this.i18n.translate('admin.common.delete'),
+        tone: 'danger',
+      }))
+    ) {
+      return;
+    }
+    this.run(user.id, () =>
+      this.api.deleteProductAccount(user.id).subscribe({
+        next: () => {
+          this.users.update((users) => users.filter((current) => current.id !== user.id));
+          this.busyId.set('');
+          this.message.set(this.i18n.translate('admin.accesses.deletedMessage'));
+        },
+        error: (error) => this.fail(error),
+      }),
+    );
+  }
+
   invitationUrl(): string {
     const path = this.invitation()?.path;
     return path ? `${window.location.origin}${path}` : '';
@@ -155,6 +180,7 @@ export class AdminAccesses implements OnInit {
 
   private run(id: string, callback: () => void): void {
     this.errorMessage.set('');
+    this.message.set('');
     this.busyId.set(id);
     callback();
   }
