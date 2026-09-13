@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { LanguageSwitcher } from '../../../core/i18n/language-switcher/language-switcher';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { SetupInvitation } from '../../../core/models/setup.model';
 import { SetupApiService } from '../../../core/services/setup-api.service';
@@ -20,6 +21,7 @@ export class SetupAuth implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly formBuilder = inject(FormBuilder);
+  private readonly i18n = inject(I18nService);
 
   readonly mode = this.route.snapshot.data['mode'] as SetupAuthMode;
   readonly loading = signal(this.mode !== 'request');
@@ -105,7 +107,12 @@ export class SetupAuth implements OnInit {
       .pipe(finalize(() => this.submitting.set(false)))
       .subscribe({
         next: () => this.sent.set(true),
-        error: (error) => this.errorMessage.set(setupError(error)),
+        error: (error) =>
+          this.errorMessage.set(
+            setupErrorCode(error) === 'ACCOUNT_EXISTS'
+              ? this.i18n.translate('home.access.accountExists')
+              : setupError(error),
+          ),
       });
   }
 

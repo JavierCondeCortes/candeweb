@@ -73,6 +73,12 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
       body: { code: totpCode(ownerMfa.data.secret) },
     });
     assert.equal(ownerMfaConfirm.status, 200);
+    assert.equal(ownerMfaConfirm.data.emailDelivery.status, 'sent');
+    assert.equal(sentEmails.length, 1);
+    assert.equal(sentEmails[0].to, 'owner@candemor.test');
+    assert.ok(
+      ownerMfaConfirm.data.recoveryCodes.every((code) => sentEmails[0].text.includes(code)),
+    );
     const ownerManagement = await jsonRequest(baseUrl, '/api/setup-access/users', {
       cookie: ownerCookie,
     });
@@ -169,11 +175,11 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
     const invitationToken = new URL(approval.data.invitation.path, baseUrl).searchParams.get(
       'token',
     );
-    assert.equal(sentEmails.length, 1);
-    assert.equal(sentEmails[0].to, 'piloto@candemor.test');
-    assert.match(sentEmails[0].subject, /Piloto Invitado/);
-    assert.match(sentEmails[0].html, /https:\/\/candemor\.test\/aceptar-invitacion\?token=/);
-    assert.doesNotMatch(sentEmails[0].subject, new RegExp(invitationToken));
+    assert.equal(sentEmails.length, 2);
+    assert.equal(sentEmails[1].to, 'piloto@candemor.test');
+    assert.match(sentEmails[1].subject, /Piloto Invitado/);
+    assert.match(sentEmails[1].html, /https:\/\/candemor\.test\/aceptar-invitacion\?token=/);
+    assert.doesNotMatch(sentEmails[1].subject, new RegExp(invitationToken));
     const verified = await jsonRequest(
       baseUrl,
       `/api/access/invitations/verify?token=${encodeURIComponent(invitationToken)}`,
@@ -214,6 +220,18 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
     });
     assert.equal(userMfaConfirm.status, 200);
     assert.equal(userMfaConfirm.data.recoveryCodes.length, 8);
+    assert.equal(userMfaConfirm.data.emailDelivery.status, 'sent');
+    assert.equal(sentEmails.length, 3);
+    assert.equal(sentEmails[2].to, 'piloto@candemor.test');
+    assert.ok(
+      userMfaConfirm.data.recoveryCodes.every((code) => sentEmails[2].text.includes(code)),
+    );
+    const duplicateAccountRequest = await jsonRequest(baseUrl, '/api/access/requests', {
+      method: 'POST',
+      body: { displayName: 'Piloto repetido', email: 'PILOTO@candemor.test' },
+    });
+    assert.equal(duplicateAccountRequest.status, 409);
+    assert.equal(duplicateAccountRequest.data.error.code, 'ACCOUNT_EXISTS');
 
     const blockedAdmin = await jsonRequest(baseUrl, '/api/admin/dashboard', {
       cookie: userCookie,
@@ -501,6 +519,33 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
     );
     assert.equal(restoredAccount.status, 200);
     assert.equal(restoredAccount.data.user.active, true);
+    const protectedAdministrator = await jsonRequest(baseUrl, `/api/access/users/${adminId}`, {
+      method: 'DELETE',
+      cookie: adminCookie,
+      csrf: adminCsrf,
+    });
+    assert.equal(protectedAdministrator.status, 422);
+    assert.equal(protectedAdministrator.data.error.code, 'ADMIN_PROTECTED');
+    const deletedAccount = await jsonRequest(baseUrl, `/api/access/users/${managedUser.id}`, {
+      method: 'DELETE',
+      cookie: adminCookie,
+      csrf: adminCsrf,
+    });
+    assert.equal(deletedAccount.status, 204);
+    assert.equal(
+      app.db.prepare('SELECT COUNT(*) AS count FROM admin_profiles WHERE id = ?').get(managedUser.id)
+        .count,
+      0,
+    );
+    const deletedAccountSession = await jsonRequest(baseUrl, '/api/access/session', {
+      cookie: userCookie,
+    });
+    assert.equal(deletedAccountSession.data.authenticated, false);
+    const requestAfterDeletion = await jsonRequest(baseUrl, '/api/access/requests', {
+      method: 'POST',
+      body: { displayName: 'Piloto Nuevo', email: 'piloto@candemor.test' },
+    });
+    assert.equal(requestAfterDeletion.status, 202);
     assert.equal(
       app.db.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action LIKE 'access.%'").get()
         .count >= 5,

@@ -1,0 +1,13 @@
+Hola, {{displayName}}:
+
+Has activado la verificación TOTP de {{brandName}}.
+
+Códigos de recuperación:
+{{recoveryCodes}}
+
+Cada código funciona una sola vez. Guárdalos también fuera del correo y no los compartas.
+
+Si no activaste TOTP, cambia tu contraseña y contacta con {{supportEmail}}.
+
+{{brandName}}
+{{websiteUrl}}

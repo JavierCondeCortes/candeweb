@@ -1080,6 +1080,12 @@ test('administra contenidos y cuentas con propietario, invitación y TOTP indepe
     });
     assert.equal(accepted.status, 201);
     assert.equal(accepted.data.admin.role, 'admin');
+    const duplicateAdminRequest = await jsonRequest(baseUrl, '/api/admin/access-requests', {
+      method: 'POST',
+      body: { displayName: 'Administración repetida', email: 'SEGUNDA@candemor.test' },
+    });
+    assert.equal(duplicateAdminRequest.status, 409);
+    assert.equal(duplicateAdminRequest.data.error.code, 'ACCOUNT_EXISTS');
     const secondCookie = sessionCookieFrom(accepted.response);
     const secondCsrf = accepted.data.csrfToken;
     const blockedSecondAdmin = await jsonRequest(baseUrl, '/api/admin/dashboard', {

@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize, switchMap } from 'rxjs';
 import { LanguageSwitcher } from '../../../core/i18n/language-switcher/language-switcher';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { MfaSetup } from '../../../core/models/content-admin.model';
 import { SetupInvitation } from '../../../core/models/setup.model';
@@ -21,6 +22,7 @@ export class AccessAuth implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly formBuilder = inject(FormBuilder);
+  private readonly i18n = inject(I18nService);
 
   readonly mode = this.route.snapshot.data['mode'] as AccessMode;
   readonly loading = signal(this.mode !== 'request');
@@ -30,6 +32,7 @@ export class AccessAuth implements OnInit {
   readonly invitation = signal<SetupInvitation | null>(null);
   readonly mfaSetup = signal<MfaSetup | null>(null);
   readonly recoveryCodes = signal<string[]>([]);
+  readonly recoveryEmailMessage = signal('');
   readonly loginPasswordVisible = signal(false);
   readonly invitationPasswordVisible = signal(false);
 
@@ -110,7 +113,12 @@ export class AccessAuth implements OnInit {
       .pipe(finalize(() => this.submitting.set(false)))
       .subscribe({
         next: () => this.sent.set(true),
-        error: (error) => this.errorMessage.set(accessError(error)),
+        error: (error) =>
+          this.errorMessage.set(
+            accessErrorCode(error) === 'ACCOUNT_EXISTS'
+              ? this.i18n.translate('home.access.accountExists')
+              : accessError(error),
+          ),
       });
   }
 
@@ -141,7 +149,10 @@ export class AccessAuth implements OnInit {
       .confirmMfa(this.mfaForm.controls.code.value)
       .pipe(finalize(() => this.submitting.set(false)))
       .subscribe({
-        next: ({ recoveryCodes }) => this.recoveryCodes.set(recoveryCodes),
+        next: ({ recoveryCodes, emailDelivery }) => {
+          this.recoveryCodes.set(recoveryCodes);
+          this.recoveryEmailMessage.set(`home.access.recoveryEmail.${emailDelivery.status}`);
+        },
         error: (error) => this.errorMessage.set(accessError(error)),
       });
   }
@@ -172,4 +183,8 @@ function accessError(error: unknown): string {
     (error as { error?: { error?: { message?: string } } })?.error?.error?.message ||
     'No se pudo completar la operación.'
   );
+}
+
+function accessErrorCode(error: unknown): string {
+  return (error as { error?: { error?: { code?: string } } })?.error?.error?.code ?? '';
 }

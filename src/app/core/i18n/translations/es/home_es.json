@@ -169,6 +169,7 @@
     "rememberHelp": "Solo en este dispositivo. La sesión se conservará durante 30 días.",
     "mfaCode": "Código TOTP o de recuperación",
     "sendRequest": "Enviar solicitud",
+    "accountExists": "Ya existe una cuenta para ese correo. Inicia sesión.",
     "haveAccess": "Ya tengo acceso",
     "invitationEyebrow": "Invitación privada",
     "invitationTitle": "Crear cuenta",
@@ -180,6 +181,12 @@
     "confirmMfa": "Confirmar TOTP",
     "recoveryTitle": "Guarda tus códigos de recuperación",
     "recoveryHelp": "Cada código sirve una sola vez. Guárdalos fuera de esta web.",
+    "recoveryEmail": {
+      "sent": "También te los hemos enviado a tu correo.",
+      "failed": "No se pudo enviar el correo. Copia los códigos antes de continuar.",
+      "disabled": "El correo no está configurado. Copia los códigos antes de continuar.",
+      "not_needed": "Copia los códigos antes de continuar."
+    },
     "continue": "Continuar",
     "login": "Entrar",
     "noAccess": "¿Todavía no tienes permiso?",

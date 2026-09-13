@@ -95,4 +95,26 @@ describe('AdminApiService', () => {
     expect(request.request.headers.get('X-CSRF-Token')).toBe('csrf-value');
     request.flush({ asset: { publicUrl: '/uploads/video.mp4', mimeType: 'video/mp4' } });
   });
+
+  it('deletes a product account with the current CSRF token', () => {
+    service.refreshSession().subscribe();
+    http.expectOne('/api/admin/session').flush({
+      authenticated: true,
+      needsSetup: false,
+      admin: {
+        id: 'admin-1',
+        email: 'admin@candemor.test',
+        displayName: 'Candemor',
+        role: 'admin',
+      },
+      csrfToken: 'csrf-value',
+    });
+
+    service.deleteProductAccount('user/1').subscribe();
+
+    const request = http.expectOne('/api/access/users/user%2F1');
+    expect(request.request.method).toBe('DELETE');
+    expect(request.request.headers.get('X-CSRF-Token')).toBe('csrf-value');
+    request.flush(null);
+  });
 });

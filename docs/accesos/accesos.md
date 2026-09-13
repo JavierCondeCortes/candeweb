@@ -35,7 +35,7 @@ izquierda a derecha así:
 
 1. **Skins:** `Acceso a Skins`.
 2. **Setups:** `Acceso a Setups` y `Puede subir Setups`.
-3. **Cuenta:** `Revocar acceso` cuando corresponda.
+3. **Cuenta:** `Revocar acceso`, `Restaurar cuenta` o `Eliminar cuenta` cuando corresponda.
 
 De este modo, el permiso de Skins queda a la izquierda del grupo de Setups solicitado y los dos
 productos siguen siendo visualmente independientes. Los estados no se comunicarán solo mediante
@@ -48,6 +48,12 @@ En móvil, cada cuenta se transformará en una tarjeta y mantendrá el mismo ord
 - Retirar `Acceso a Setups` desactiva también `Puede subir Setups`.
 - Retirar un permiso de producto no elimina la cuenta ni afecta al resto de permisos.
 - `Revocar acceso` desactiva la cuenta completa y sus sesiones; debe requerir confirmación.
+- `Eliminar cuenta` borra definitivamente una cuenta de usuario, invalida sus sesiones y libera el
+  correo. Los setups y archivos que hubiera creado se conservan reasignados al administrador que
+  confirma el borrado.
+- Las cuentas owner y admin quedan protegidas en esta pantalla y se gestionan desde su apartado.
+- Una solicitud con el correo de una cuenta existente responde `409 ACCOUNT_EXISTS` y muestra un
+  mensaje para iniciar sesión en lugar de aparentar un registro correcto.
 - Cada cambio se valida en la API, invalida o reevalúa la sesión y genera una entrada de auditoría.
 - Un admin no puede modificar el rol, TOTP ni contraseña de otra persona desde esta pantalla.
 - La gestión de cuentas administrativas y la transferencia de propiedad continúan siendo
@@ -257,6 +263,22 @@ defecto y no se permitirá ejecutar JavaScript ni expresiones arbitrarias:
 | `{{invitedByName}}`   | Nombre del owner o admin que autorizó el acceso | No          |
 | `{{supportEmail}}`    | Correo público de soporte                       | No          |
 | `{{websiteUrl}}`      | URL pública de Candemor                         | No          |
+
+Los códigos de recuperación no existen todavía cuando se envía esta invitación. Se generan después,
+al confirmar TOTP. En ese momento el servidor envía un segundo correo de seguridad con la variable
+`{{recoveryCodes}}`, que representa los códigos separados por saltos de línea.
+
+El correo de códigos cumple estas reglas:
+
+- se envía únicamente a la dirección asociada con la cuenta;
+- cada código continúa siendo de un solo uso;
+- la base de datos conserva solo los hashes, nunca los códigos en texto plano;
+- un fallo SMTP no impide mostrar los códigos en pantalla para poder guardarlos manualmente;
+- la auditoría registra el estado del envío, pero nunca incluye los códigos;
+- el mensaje recomienda guardar otra copia fuera del correo y eliminarlo después.
+
+Enviar códigos por correo facilita su recuperación, pero convierte el buzón en otro punto sensible.
+La opción más segura continúa siendo almacenarlos en un gestor de contraseñas.
 
 El servidor rechazará la publicación si HTML y texto plano no incluyen
 `{{confirmationUrl}}`, o si falta `{{expiresAt}}`. Así se evita enviar un mensaje visualmente

@@ -60,6 +60,9 @@
         <div class="setup-alert is-success" role="status">
           <strong>{{ 'home.access.recoveryTitle' | translate }}</strong>
           <p>{{ 'home.access.recoveryHelp' | translate }}</p>
+          @if (recoveryEmailMessage()) {
+            <p>{{ recoveryEmailMessage() | translate }}</p>
+          }
         </div>
         <ul class="admin-recovery-codes">
           @for (code of recoveryCodes(); track code) {

@@ -262,23 +262,24 @@ async function requestSetupAccess(context) {
   const identity = validateAccessRequest(await readJson(request));
   const timestamp = new Date().toISOString();
   const account = db.prepare('SELECT * FROM admin_profiles WHERE email = ?').get(identity.email);
-  if (!account || (account.account_type === 'setup_user' && account.can_access_setups !== 1)) {
-    const existing = db
-      .prepare('SELECT id, status FROM setup_access_requests WHERE email = ?')
-      .get(identity.email);
-    if (!existing) {
-      db.prepare(
-        `INSERT INTO setup_access_requests
-         (id, email, display_name, status, created_at, updated_at)
-         VALUES (?, ?, ?, 'pending', ?, ?)`,
-      ).run(randomUUID(), identity.email, identity.displayName, timestamp, timestamp);
-    } else if (existing.status === 'rejected' || existing.status === 'activated') {
-      db.prepare(
-        `UPDATE setup_access_requests
-         SET display_name = ?, status = 'pending', updated_at = ?, reviewed_at = NULL,
-             reviewed_by = NULL WHERE id = ?`,
-      ).run(identity.displayName, timestamp, existing.id);
-    }
+  if (account) {
+    throw new ApiError(409, 'ACCOUNT_EXISTS', 'Ya existe una cuenta para ese correo. Inicia sesión.');
+  }
+  const existing = db
+    .prepare('SELECT id, status FROM setup_access_requests WHERE email = ?')
+    .get(identity.email);
+  if (!existing) {
+    db.prepare(
+      `INSERT INTO setup_access_requests
+       (id, email, display_name, status, created_at, updated_at)
+       VALUES (?, ?, ?, 'pending', ?, ?)`,
+    ).run(randomUUID(), identity.email, identity.displayName, timestamp, timestamp);
+  } else if (existing.status === 'rejected' || existing.status === 'activated') {
+    db.prepare(
+      `UPDATE setup_access_requests
+       SET display_name = ?, status = 'pending', updated_at = ?, reviewed_at = NULL,
+           reviewed_by = NULL WHERE id = ?`,
+    ).run(identity.displayName, timestamp, existing.id);
   }
   return sendJson(response, 202, { requested: true });
 }
@@ -613,6 +614,42 @@ async function routeSetupAccessManagement(context) {
         db.prepare('SELECT * FROM admin_profiles WHERE id = ?').get(target.id),
       ),
     });
+  }
+
+  if (method === 'DELETE' && user) {
+    const target = db.prepare('SELECT * FROM admin_profiles WHERE id = ?').get(user[2]);
+    if (!target) throw new ApiError(404, 'NOT_FOUND', 'No existe esa cuenta.');
+    if (target.account_type === 'administrator') {
+      throw new ApiError(422, 'ADMIN_PROTECTED', 'Gestiona administradores desde su apartado.');
+    }
+    if (target.id === session.admin.id) {
+      throw new ApiError(422, 'SELF_ACTION', 'No puedes eliminar tu propia cuenta.');
+    }
+
+    db.exec('BEGIN');
+    try {
+      db.prepare('UPDATE setups SET created_by = ? WHERE created_by = ?').run(
+        session.admin.id,
+        target.id,
+      );
+      db.prepare('UPDATE setup_files SET uploaded_by = ? WHERE uploaded_by = ?').run(
+        session.admin.id,
+        target.id,
+      );
+      db.prepare('UPDATE media_assets SET uploaded_by = ? WHERE uploaded_by = ?').run(
+        session.admin.id,
+        target.id,
+      );
+      db.prepare('DELETE FROM setup_invitations WHERE email = ?').run(target.email);
+      db.prepare('DELETE FROM setup_access_requests WHERE email = ?').run(target.email);
+      db.prepare('DELETE FROM admin_profiles WHERE id = ?').run(target.id);
+      recordAudit(db, session.admin.id, 'access.account_deleted', 'account', target.id);
+      db.exec('COMMIT');
+    } catch (error) {
+      db.exec('ROLLBACK');
+      throw error;
+    }
+    return sendEmpty(response, 204);
   }
 
   throw new ApiError(404, 'NOT_FOUND', 'No existe ese recurso de accesos a setups.');

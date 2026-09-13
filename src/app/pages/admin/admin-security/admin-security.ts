@@ -60,10 +60,12 @@ export class AdminSecurity {
       .confirmMfa(this.form.controls.code.value)
       .pipe(finalize(() => this.confirming.set(false)))
       .subscribe({
-        next: ({ recoveryCodes }) => {
+        next: ({ recoveryCodes, emailDelivery }) => {
           this.recoveryCodes.set(recoveryCodes);
           this.setup.set(null);
-          this.message.set(this.i18n.translate('admin.security.activatedMessage'));
+          this.message.set(
+            this.i18n.translate(`admin.security.activatedMessage.${emailDelivery.status}`),
+          );
           this.api.refreshSession().subscribe();
         },
         error: (error) =>

@@ -1,0 +1,14 @@
+.recovery-codes {
+  margin: 28px 0;
+  border: 1px solid #c8ff00;
+  background: #050505;
+  color: #ffffff;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  line-height: 1.8;
+  padding: 20px;
+  text-align: center;
+  white-space: pre-wrap;
+}

@@ -21,6 +21,7 @@ import {
   previewAccessInvitation,
   resetAccessInvitationTemplate,
   saveAccessInvitationTemplate,
+  sendMfaRecoveryCodesEmail,
 } from './email.mjs';
 import {
   championshipFromRow,
@@ -499,7 +500,23 @@ async function routeRequest(context) {
          totp_enabled = 1, recovery_codes = ?, updated_at = ? WHERE id = ?`,
       ).run(encodedRecoveryCodes, new Date().toISOString(), session.admin.id);
       recordAudit(db, session.admin.id, 'access.mfa_enabled', 'account', session.admin.id);
-      return sendJson(response, 200, { recoveryCodes });
+      const settings = db.prepare('SELECT contact_email FROM site_settings WHERE id = 1').get();
+      const emailDelivery = await sendMfaRecoveryCodesEmail({
+        emailService: context.emailService,
+        to: account.email,
+        displayName: account.display_name,
+        recoveryCodes,
+        publicAppUrl: context.publicAppUrl,
+        supportEmail: settings?.contact_email,
+      });
+      recordAudit(
+        db,
+        session.admin.id,
+        `access.recovery_codes_email_${emailDelivery.status}`,
+        'account',
+        session.admin.id,
+      );
+      return sendJson(response, 200, { recoveryCodes, emailDelivery });
     }
     throw new ApiError(404, 'NOT_FOUND', 'No existe esa ruta de seguridad.');
   }
@@ -661,7 +678,23 @@ async function routeAdmin(context) {
       hashToken(session.token),
     );
     recordAudit(db, session.admin.id, 'admin.mfa_enabled', 'admin_profile', session.admin.id);
-    return sendJson(response, 200, { recoveryCodes });
+    const settings = db.prepare('SELECT contact_email FROM site_settings WHERE id = 1').get();
+    const emailDelivery = await sendMfaRecoveryCodesEmail({
+      emailService: context.emailService,
+      to: admin.email,
+      displayName: admin.display_name,
+      recoveryCodes,
+      publicAppUrl: context.publicAppUrl,
+      supportEmail: settings?.contact_email,
+    });
+    recordAudit(
+      db,
+      session.admin.id,
+      `admin.recovery_codes_email_${emailDelivery.status}`,
+      'admin_profile',
+      session.admin.id,
+    );
+    return sendJson(response, 200, { recoveryCodes, emailDelivery });
   }
 
   if (method === 'GET' && path === '/api/admin/dashboard') {
@@ -1471,23 +1504,24 @@ async function requestAdminAccess(context) {
   const existingAdmin = db
     .prepare('SELECT 1 FROM admin_profiles WHERE email = ? LIMIT 1')
     .get(identity.email);
-  if (!existingAdmin) {
-    const existingRequest = db
-      .prepare('SELECT id, status FROM admin_access_requests WHERE email = ?')
-      .get(identity.email);
-    if (!existingRequest) {
-      db.prepare(
-        `INSERT INTO admin_access_requests
-         (id, email, display_name, status, created_at, updated_at)
-         VALUES (?, ?, ?, 'pending', ?, ?)`,
-      ).run(randomUUID(), identity.email, identity.displayName, timestamp, timestamp);
-    } else if (existingRequest.status === 'rejected') {
-      db.prepare(
-        `UPDATE admin_access_requests
-         SET display_name = ?, status = 'pending', updated_at = ?, reviewed_at = NULL,
-             reviewed_by = NULL WHERE id = ?`,
-      ).run(identity.displayName, timestamp, existingRequest.id);
-    }
+  if (existingAdmin) {
+    throw new ApiError(409, 'ACCOUNT_EXISTS', 'Ya existe una cuenta para ese correo. Inicia sesión.');
+  }
+  const existingRequest = db
+    .prepare('SELECT id, status FROM admin_access_requests WHERE email = ?')
+    .get(identity.email);
+  if (!existingRequest) {
+    db.prepare(
+      `INSERT INTO admin_access_requests
+       (id, email, display_name, status, created_at, updated_at)
+       VALUES (?, ?, ?, 'pending', ?, ?)`,
+    ).run(randomUUID(), identity.email, identity.displayName, timestamp, timestamp);
+  } else if (existingRequest.status === 'rejected') {
+    db.prepare(
+      `UPDATE admin_access_requests
+       SET display_name = ?, status = 'pending', updated_at = ?, reviewed_at = NULL,
+           reviewed_by = NULL WHERE id = ?`,
+    ).run(identity.displayName, timestamp, existingRequest.id);
   }
   return sendJson(response, 202, { requested: true });
 }
