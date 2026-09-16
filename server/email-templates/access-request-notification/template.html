@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nueva solicitud de acceso</title>
+  </head>
+  <body>
+    <table class="email-shell" role="presentation" width="100%" cellspacing="0" cellpadding="0">
+      <tr>
+        <td class="email-shell__cell" align="center">
+          <table class="email-card" role="presentation" width="600" cellspacing="0" cellpadding="0">
+            <tr>
+              <td class="email-card__accent"></td>
+            </tr>
+            <tr>
+              <td class="email-card__content">
+                <p class="brand">CANDE<span>MOR</span></p>
+                <p class="eyebrow">NUEVA SOLICITUD</p>
+                <h1>Hay un acceso pendiente</h1>
+                <p>Una persona ha solicitado acceso a las bibliotecas privadas de Candemor.</p>
+                <div class="request-summary">
+                  <p><strong>Nombre</strong><br />{{ requesterName }}</p>
+                  <p><strong>Correo</strong><br />{{ requesterEmail }}</p>
+                  <p><strong>Fecha</strong><br />{{ requestedAt }}</p>
+                </div>
+                <p><a class="request-button" href="{{ reviewUrl }}">Revisar solicitud</a></p>
+                <p class="secondary-copy">
+                  Este aviso no concede acceso automáticamente. Revisa la solicitud desde el panel.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td class="email-card__footer">
+                {{ brandName }} · <a href="{{ websiteUrl }}">{{ websiteUrl }}</a>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

@@ -3,7 +3,7 @@ import { createReadStream, existsSync, mkdirSync } from 'node:fs';
 import { unlink, writeFile } from 'node:fs/promises';
 import { basename, extname, join, resolve } from 'node:path';
 import { recordAudit } from './database.mjs';
-import { sendAccessInvitation } from './email.mjs';
+import { sendAccessInvitation, sendAccessRequestNotification } from './email.mjs';
 import {
   consumeRecoveryCode,
   createSession,
@@ -263,23 +263,61 @@ async function requestSetupAccess(context) {
   const timestamp = new Date().toISOString();
   const account = db.prepare('SELECT * FROM admin_profiles WHERE email = ?').get(identity.email);
   if (account) {
-    throw new ApiError(409, 'ACCOUNT_EXISTS', 'Ya existe una cuenta para ese correo. Inicia sesión.');
+    throw new ApiError(
+      409,
+      'ACCOUNT_EXISTS',
+      'Ya existe una cuenta para ese correo. Inicia sesión.',
+    );
   }
   const existing = db
     .prepare('SELECT id, status FROM setup_access_requests WHERE email = ?')
     .get(identity.email);
+  const requestId = existing?.id ?? randomUUID();
+  let isNewRequest = false;
   if (!existing) {
     db.prepare(
       `INSERT INTO setup_access_requests
        (id, email, display_name, status, created_at, updated_at)
        VALUES (?, ?, ?, 'pending', ?, ?)`,
-    ).run(randomUUID(), identity.email, identity.displayName, timestamp, timestamp);
+    ).run(requestId, identity.email, identity.displayName, timestamp, timestamp);
+    isNewRequest = true;
   } else if (existing.status === 'rejected' || existing.status === 'activated') {
     db.prepare(
       `UPDATE setup_access_requests
        SET display_name = ?, status = 'pending', updated_at = ?, reviewed_at = NULL,
            reviewed_by = NULL WHERE id = ?`,
     ).run(identity.displayName, timestamp, existing.id);
+    isNewRequest = true;
+  }
+  if (isNewRequest) {
+    const settings = db
+      .prepare('SELECT notify_access_requests FROM site_settings WHERE id = 1')
+      .get();
+    if (settings?.notify_access_requests !== 0) {
+      const recipients = db
+        .prepare(
+          `SELECT email FROM admin_profiles
+           WHERE account_type = 'administrator' AND active = 1
+           ORDER BY is_owner DESC, created_at ASC`,
+        )
+        .all()
+        .map((administrator) => administrator.email);
+      const delivery = await sendAccessRequestNotification({
+        emailService: context.emailService,
+        recipients,
+        requesterName: identity.displayName,
+        requesterEmail: identity.email,
+        requestedAt: timestamp,
+        publicAppUrl: context.publicAppUrl,
+      });
+      recordAudit(
+        db,
+        null,
+        `access.request_notification_${delivery.status}`,
+        'setup_access_request',
+        requestId,
+      );
+    }
   }
   return sendJson(response, 202, { requested: true });
 }
@@ -320,19 +358,41 @@ async function acceptSetupInvitation(context) {
     { setup: true },
   );
   const timestamp = new Date().toISOString();
-  const id = randomUUID();
+  const existingAccount = db
+    .prepare('SELECT * FROM admin_profiles WHERE email = ?')
+    .get(identity.email);
+  if (
+    existingAccount &&
+    (existingAccount.account_type !== 'setup_user' || existingAccount.totp_enabled === 1)
+  ) {
+    throw new ApiError(409, 'ACCOUNT_EXISTS', 'Ya existe una cuenta para ese correo.');
+  }
+  const id = existingAccount?.id ?? randomUUID();
   const passwordHash = await hashPassword(identity.password);
   db.exec('BEGIN');
   try {
-    const inserted = db
-      .prepare(
+    if (existingAccount) {
+      db.prepare(
+        `UPDATE admin_profiles SET display_name = ?, password_hash = ?, active = 1,
+         email_verified_at = COALESCE(email_verified_at, ?),
+         can_access_setups = CASE WHEN ? = 1 THEN 1 ELSE can_access_setups END,
+         updated_at = ? WHERE id = ?`,
+      ).run(
+        identity.displayName,
+        passwordHash,
+        timestamp,
+        invitation.grants_setup_access === 1 ? 1 : 0,
+        timestamp,
+        id,
+      );
+      db.prepare('DELETE FROM admin_sessions WHERE admin_id = ?').run(id);
+    } else {
+      db.prepare(
         `INSERT INTO admin_profiles
          (id, email, display_name, password_hash, role, is_owner, active, email_verified_at,
           account_type, can_access_setups, can_upload_setups, can_access_skins, created_at, updated_at)
-         SELECT ?, ?, ?, ?, 'admin', 0, 1, ?, 'setup_user', ?, 0, 0, ?, ?
-         WHERE NOT EXISTS (SELECT 1 FROM admin_profiles WHERE email = ?)`,
-      )
-      .run(
+         VALUES (?, ?, ?, ?, 'admin', 0, 1, ?, 'setup_user', ?, 0, 0, ?, ?)`,
+      ).run(
         id,
         identity.email,
         identity.displayName,
@@ -341,21 +401,9 @@ async function acceptSetupInvitation(context) {
         invitation.grants_setup_access === 1 ? 1 : 0,
         timestamp,
         timestamp,
-        identity.email,
       );
-    if (inserted.changes === 0) {
-      throw new ApiError(409, 'ACCOUNT_EXISTS', 'Ya existe una cuenta para ese correo.');
     }
-    db.prepare('UPDATE setup_invitations SET accepted_at = ? WHERE id = ?').run(
-      timestamp,
-      invitation.id,
-    );
-    if (invitation.request_id) {
-      db.prepare(
-        `UPDATE setup_access_requests SET status = 'activated', updated_at = ? WHERE id = ?`,
-      ).run(timestamp, invitation.request_id);
-    }
-    recordAudit(db, id, 'access.invitation_accepted', 'account', id, {
+    recordAudit(db, id, 'access.invitation_started', 'account', id, {
       invitedBy: invitation.created_by,
     });
     db.exec('COMMIT');
@@ -366,7 +414,7 @@ async function acceptSetupInvitation(context) {
   const session = createSession(db, id);
   const account = db.prepare('SELECT * FROM admin_profiles WHERE id = ?').get(id);
   response.setHeader('Set-Cookie', sessionCookie(session.token, session.expiresAt, secureCookies));
-  return sendJson(response, 201, {
+  return sendJson(response, existingAccount ? 200 : 201, {
     authenticated: true,
     account: setupAccountFromRow(account),
     csrfToken: session.csrfToken,
@@ -392,7 +440,8 @@ async function routeSetupAccessManagement(context) {
         `SELECT id, email, display_name, account_type, is_owner, active, can_access_setups,
                 can_upload_setups, can_access_skins, totp_enabled, created_at, updated_at
          FROM admin_profiles
-         WHERE account_type IN ('administrator', 'setup_user')
+         WHERE account_type = 'administrator'
+            OR (account_type = 'setup_user' AND totp_enabled = 1)
          ORDER BY account_type ASC, is_owner DESC, display_name ASC`,
       )
       .all()
@@ -437,7 +486,10 @@ async function routeSetupAccessManagement(context) {
       .prepare('SELECT * FROM admin_profiles WHERE email = ?')
       .get(accessRequest.email);
     const timestamp = new Date();
-    if (existingAccount) {
+    if (
+      existingAccount &&
+      (existingAccount.account_type === 'administrator' || existingAccount.totp_enabled === 1)
+    ) {
       db.prepare(
         `UPDATE admin_profiles SET can_access_setups = ?, active = 1, updated_at = ? WHERE id = ?`,
       ).run(
@@ -793,9 +845,7 @@ async function routeSetupLibrary(context) {
 
   const publish = path.match(/^\/api\/setups\/([^/]+)\/publish$/);
   if (method === 'POST' && publish) {
-    requireSetupAdministrator(session);
-    const setup = findSetupRow(db, publish[1]);
-    if (!setup) throw new ApiError(404, 'NOT_FOUND', 'No existe ese setup.');
+    const setup = requireOwnedSetupAction(db, publish[1], session, { draftOnly: true });
     const file = db
       .prepare(
         `SELECT 1 FROM setup_files WHERE setup_id = ? AND deleted_at IS NULL
@@ -865,9 +915,7 @@ async function routeSetupLibrary(context) {
     return sendJson(response, 200, { setup: findSetup(db, current.id, session) });
   }
   if (method === 'DELETE' && setupMatch) {
-    requireSetupAdministrator(session);
-    const setup = findSetupRow(db, setupMatch[1]);
-    if (!setup) throw new ApiError(404, 'NOT_FOUND', 'No existe ese setup.');
+    const setup = requireOwnedSetupAction(db, setupMatch[1], session);
     const files = db
       .prepare('SELECT id, storage_path FROM setup_files WHERE setup_id = ? AND deleted_at IS NULL')
       .all(setup.id);
@@ -1110,6 +1158,19 @@ function requireEditableSetup(db, id, session) {
   return setup;
 }
 
+function requireOwnedSetupAction(db, id, session, { draftOnly = false } = {}) {
+  const setup = findSetupRow(db, id);
+  if (!setup) throw new ApiError(404, 'NOT_FOUND', 'No existe ese setup.');
+  if (isSetupAdministrator(session)) return setup;
+  if (!session.admin.canUploadSetups || setup.created_by !== session.admin.id) {
+    throw new ApiError(403, 'FORBIDDEN', 'Solo puedes gestionar los setups que has creado.');
+  }
+  if (draftOnly && setup.status !== 'draft') {
+    throw new ApiError(409, 'INVALID_SETUP_STATE', 'Solo puedes publicar un borrador propio.');
+  }
+  return setup;
+}
+
 function canViewSetup(setup, session) {
   return (
     setup.status === 'published' ||
@@ -1143,6 +1204,14 @@ function setupFromRow(row, session) {
       (session.admin.canUploadSetups &&
         row.created_by === session.admin.id &&
         row.status === 'draft'),
+    canPublish:
+      isSetupAdministrator(session) ||
+      (session.admin.canUploadSetups &&
+        row.created_by === session.admin.id &&
+        row.status === 'draft'),
+    canDelete:
+      isSetupAdministrator(session) ||
+      (session.admin.canUploadSetups && row.created_by === session.admin.id),
     canManage: isSetupAdministrator(session),
   };
 }

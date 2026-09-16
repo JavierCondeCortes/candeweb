@@ -44,8 +44,9 @@ existentes sin una migración destructiva.
 | Descargar archivos activos                       |  Sí   |  Sí   |         Sí         |           Sí           |
 | Crear un borrador y subir una versión            |  Sí   |  Sí   |         No         |           Sí           |
 | Editar borradores propios                        |  Sí   |  Sí   |         No         |           Sí           |
-| Editar o eliminar cualquier setup                |  Sí   |  Sí   |         No         |           No           |
-| Publicar, archivar o restaurar                   |  Sí   |  Sí   |         No         |           No           |
+| Publicar y eliminar setups propios               |  Sí   |  Sí   |         No         |           Sí           |
+| Editar o eliminar setups de otra persona         |  Sí   |  Sí   |         No         |           No           |
+| Archivar o restaurar                             |  Sí   |  Sí   |         No         |           No           |
 | Definir o ampliar la caducidad                   |  Sí   |  Sí   |         No         |           No           |
 | Aprobar y revocar el acceso a Setups             |  Sí   |  Sí   |         No         |           No           |
 | Conceder o retirar el permiso de colaboración    |  Sí   |  Sí   |         No         |           No           |
@@ -53,12 +54,14 @@ existentes sin una migración destructiva.
 
 ### Decisión recomendada para colaboradores
 
-Dar permiso para subir no debería permitir eliminar o modificar archivos de otras personas. Un
-colaborador podrá crear setups, añadir versiones y editar sus propios borradores. Un owner o admin
-revisará y publicará el contenido, elegirá la caducidad y podrá intervenir en cualquier registro.
+Dar permiso para subir no permite eliminar ni modificar contenido de otras personas. Un colaborador
+puede crear setups, añadir versiones, editar sus borradores, publicar y eliminar los setups de los
+que sea autor. Owner y admins mantienen la capacidad de intervenir en cualquier registro, archivar
+contenido y configurar la caducidad.
 
-Esta separación evita que un permiso puntual de subida se convierta accidentalmente en acceso
-administrativo completo.
+La propiedad se valida siempre en la API mediante `created_by`; ocultar los botones en la interfaz
+solo mejora la experiencia. Esta separación evita que un permiso puntual de subida se convierta
+accidentalmente en acceso administrativo completo.
 
 ## Acceso e invitaciones
 
@@ -68,10 +71,12 @@ administrativo completo.
 2. Si no tiene sesión, puede iniciar sesión o solicitar acceso.
 3. Envía nombre visible y correo desde `/setups/solicitar-acceso`.
 4. Owner o admin acepta o rechaza la solicitud desde `/admin/accesos`.
-5. Al aprobarla se genera una invitación privada, de un solo uso y con caducidad de 24 horas.
-6. La persona define su propia contraseña y activa su cuenta.
+5. Al aprobarla se genera una invitación privada y con caducidad de 24 horas.
+6. La persona define su propia contraseña y confirma su TOTP. Hasta completar el TOTP, la cuenta no
+   figura como autorizada y puede reutilizar la misma invitación.
 7. Entra al catálogo con permiso de descarga.
-8. Owner o admin puede conceder posteriormente `can_upload_setups`.
+8. Owner o admin puede conceder posteriormente `can_upload_setups`, que habilita la creación,
+   publicación y eliminación de setups propios.
 
 La aprobación de Setups nunca debe cambiar el rol de la cuenta a `admin`. Del mismo modo, revocar
 Setups no elimina la cuenta si esa persona conserva otros permisos.
@@ -91,16 +96,16 @@ Setups no elimina la cuenta si esa persona conserva otros permisos.
 
 ## Rutas propuestas
 
-| Ruta                                                                                               | Acceso                    | Función                                      |
-| -------------------------------------------------------------------------------------------------- | ------------------------- | -------------------------------------------- |
-| `/setups`                                                                                          | Cuenta autorizada         | Catálogo, búsqueda, filtros y próximas bajas |
-| `/setups/acceso`                                                                                   | Público                   | Inicio de sesión                             |
-| `/setups/solicitar-acceso`                                                                         | Público                   | Solicitud de acceso                          |
-| `/setups/aceptar-invitacion`                                                                       | Invitación válida         | Alta y elección de contraseña                |
-| `/setups/:id`                                                                                      | Cuenta autorizada         | Detalle, versiones y descarga                |
-| `/setups/nuevo`                                                                                    | Colaborador, admin, owner | Crear borrador y subir archivo               |
-| `/setups/:id/editar`                                                                               | Según propiedad y permiso | Editar metadatos o añadir versión            |
-| `/admin/accesos`                                                                                   | Admin y owner             | Permisos centralizados de Setups y Skins     |
+| Ruta                         | Acceso                    | Función                                      |
+| ---------------------------- | ------------------------- | -------------------------------------------- |
+| `/setups`                    | Cuenta autorizada         | Catálogo, búsqueda, filtros y próximas bajas |
+| `/setups/acceso`             | Público                   | Inicio de sesión                             |
+| `/setups/solicitar-acceso`   | Público                   | Solicitud de acceso                          |
+| `/setups/aceptar-invitacion` | Invitación válida         | Alta y elección de contraseña                |
+| `/setups/:id`                | Cuenta autorizada         | Detalle, versiones y descarga                |
+| `/setups/nuevo`              | Colaborador, admin, owner | Crear borrador y subir archivo               |
+| `/setups/:id/editar`         | Según propiedad y permiso | Editar metadatos o añadir versión            |
+| `/admin/accesos`             | Admin y owner             | Permisos centralizados de Setups y Skins     |
 
 `/setups/usuarios` se conserva temporalmente como redirección a `/admin/accesos`. El inicio de
 sesión puede seguir entrando desde `/setups/acceso`, pero la identidad, TOTP y sesión son comunes a
@@ -326,7 +331,8 @@ Owner y admin obtienen sus capacidades por rol; no es necesario crear filas redu
 ## Seguridad y privacidad
 
 - No revelar el catálogo, nombres de archivos ni autores a personas sin permiso.
-- Tokens de invitación aleatorios, almacenados mediante hash, de un solo uso y con caducidad.
+- Tokens de invitación aleatorios, almacenados mediante hash y con caducidad; se invalidan al
+  completar el TOTP y pueden reutilizarse únicamente mientras el alta siga incompleta.
 - Rate limit en login, solicitudes e invitaciones. Subidas y descargas pueden incorporar un límite
   específico cuando el uso real permita dimensionarlo.
 - Validar autorización en cada descarga; conocer una URL o UUID no concede acceso.

@@ -1,0 +1,9 @@
+Nueva solicitud de acceso a {{brandName}}
+
+Nombre: {{requesterName}}
+Correo: {{requesterEmail}}
+Fecha: {{requestedAt}}
+
+Revisar solicitud: {{reviewUrl}}
+
+Este aviso no concede acceso automáticamente.

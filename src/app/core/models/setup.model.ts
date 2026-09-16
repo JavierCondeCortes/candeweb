@@ -68,6 +68,8 @@ export interface RacingSetup {
   updatedAt: string;
   activeFileCount: number;
   canEdit: boolean;
+  canPublish: boolean;
+  canDelete: boolean;
   canManage: boolean;
   files?: SetupFile[];
 }

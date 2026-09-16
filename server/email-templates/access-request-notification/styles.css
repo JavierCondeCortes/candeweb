@@ -1,0 +1,21 @@
+.request-summary {
+  margin: 24px 0;
+  border-left: 4px solid #ff00b8;
+  background: #111014;
+  padding: 8px 20px;
+}
+
+.request-summary p {
+  margin: 12px 0;
+}
+
+.request-button {
+  display: inline-block;
+  border: 1px solid #c8ff00;
+  background: #c8ff00;
+  color: #050505;
+  font-weight: 800;
+  padding: 14px 22px;
+  text-decoration: none;
+  text-transform: uppercase;
+}

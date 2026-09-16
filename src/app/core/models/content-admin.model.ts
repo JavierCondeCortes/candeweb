@@ -103,6 +103,7 @@ export interface SiteSettings {
   instagramUrl: string | null;
   youtubeUrl: string | null;
   chiquitoSpotterUrl?: string | null;
+  notifyAccessRequests: boolean;
   updatedAt: string;
   updatedByName?: string | null;
 }
