@@ -150,6 +150,40 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
       body: { displayName: 'Piloto Invitado', email: 'piloto@candemor.test' },
     });
     assert.equal(accessRequest.status, 202);
+    const accessNotificationMessages = sentEmails.filter((message) =>
+      /Nueva solicitud de acceso/i.test(message.subject),
+    );
+    assert.deepEqual(
+      new Set(accessNotificationMessages.map((message) => message.to)),
+      new Set(['owner@candemor.test', 'admin-setups@candemor.test']),
+    );
+    assert.equal(accessNotificationMessages.length, 2);
+    assert.ok(
+      accessNotificationMessages.every(
+        (message) =>
+          message.html.includes('piloto@candemor.test') &&
+          message.html.includes('https://candemor.test/admin/accesos'),
+      ),
+    );
+
+    const emailCountAfterNewRequest = sentEmails.length;
+    const repeatedPendingRequest = await jsonRequest(baseUrl, '/api/access/requests', {
+      method: 'POST',
+      body: { displayName: 'Piloto Invitado', email: 'piloto@candemor.test' },
+    });
+    assert.equal(repeatedPendingRequest.status, 202);
+    assert.equal(sentEmails.length, emailCountAfterNewRequest);
+
+    app.db.prepare('UPDATE site_settings SET notify_access_requests = 0 WHERE id = 1').run();
+    const silentAccessRequest = await jsonRequest(baseUrl, '/api/access/requests', {
+      method: 'POST',
+      body: { displayName: 'Solicitud silenciosa', email: 'silent@candemor.test' },
+    });
+    assert.equal(silentAccessRequest.status, 202);
+    assert.equal(sentEmails.length, emailCountAfterNewRequest);
+    app.db.prepare('DELETE FROM setup_access_requests WHERE email = ?').run('silent@candemor.test');
+    app.db.prepare('UPDATE site_settings SET notify_access_requests = 1 WHERE id = 1').run();
+
     const accessManagement = await jsonRequest(baseUrl, '/api/access/users', {
       cookie: adminCookie,
     });
@@ -175,11 +209,14 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
     const invitationToken = new URL(approval.data.invitation.path, baseUrl).searchParams.get(
       'token',
     );
-    assert.equal(sentEmails.length, 2);
-    assert.equal(sentEmails[1].to, 'piloto@candemor.test');
-    assert.match(sentEmails[1].subject, /Piloto Invitado/);
-    assert.match(sentEmails[1].html, /https:\/\/candemor\.test\/aceptar-invitacion\?token=/);
-    assert.doesNotMatch(sentEmails[1].subject, new RegExp(invitationToken));
+    const invitationEmail = sentEmails.find(
+      (message) =>
+        message.to === 'piloto@candemor.test' && /Acceso personalizado/i.test(message.subject),
+    );
+    assert.ok(invitationEmail);
+    assert.match(invitationEmail.subject, /Piloto Invitado/);
+    assert.match(invitationEmail.html, /https:\/\/candemor\.test\/aceptar-invitacion\?token=/);
+    assert.doesNotMatch(invitationEmail.subject, new RegExp(invitationToken));
     const verified = await jsonRequest(
       baseUrl,
       `/api/access/invitations/verify?token=${encodeURIComponent(invitationToken)}`,
@@ -196,8 +233,35 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
     assert.equal(accepted.data.account.canAccessSetups, false);
     assert.equal(accepted.data.account.canAccessSkins, false);
     assert.equal(accepted.data.account.canUploadSetups, false);
-    const userCookie = sessionCookieFrom(accepted.response);
-    const userCsrf = accepted.data.csrfToken;
+    let userCookie = sessionCookieFrom(accepted.response);
+    let userCsrf = accepted.data.csrfToken;
+
+    const reusableBeforeMfa = await jsonRequest(
+      baseUrl,
+      `/api/access/invitations/verify?token=${encodeURIComponent(invitationToken)}`,
+    );
+    assert.equal(reusableBeforeMfa.status, 200);
+    const managementBeforeMfa = await jsonRequest(baseUrl, '/api/access/users', {
+      cookie: adminCookie,
+    });
+    assert.equal(
+      managementBeforeMfa.data.users.some((user) => user.email === 'piloto@candemor.test'),
+      false,
+    );
+    assert.equal(
+      managementBeforeMfa.data.requests.some(
+        (request) => request.email === 'piloto@candemor.test' && request.status === 'approved',
+      ),
+      true,
+    );
+
+    const acceptedAgain = await jsonRequest(baseUrl, '/api/access/invitations/accept', {
+      method: 'POST',
+      body: { token: invitationToken, password: 'password-piloto-123' },
+    });
+    assert.equal(acceptedAgain.status, 200);
+    userCookie = sessionCookieFrom(acceptedAgain.response);
+    userCsrf = acceptedAgain.data.csrfToken;
 
     const blockedBeforeMfa = await jsonRequest(baseUrl, '/api/setups', {
       cookie: userCookie,
@@ -221,10 +285,27 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
     assert.equal(userMfaConfirm.status, 200);
     assert.equal(userMfaConfirm.data.recoveryCodes.length, 8);
     assert.equal(userMfaConfirm.data.emailDelivery.status, 'sent');
-    assert.equal(sentEmails.length, 3);
-    assert.equal(sentEmails[2].to, 'piloto@candemor.test');
-    assert.ok(
-      userMfaConfirm.data.recoveryCodes.every((code) => sentEmails[2].text.includes(code)),
+    const recoveryEmail = sentEmails.find(
+      (message) =>
+        message.to === 'piloto@candemor.test' && /códigos de recuperación/i.test(message.subject),
+    );
+    assert.ok(recoveryEmail);
+    assert.ok(userMfaConfirm.data.recoveryCodes.every((code) => recoveryEmail.text.includes(code)));
+    const expiredInvitation = await jsonRequest(
+      baseUrl,
+      `/api/access/invitations/verify?token=${encodeURIComponent(invitationToken)}`,
+    );
+    assert.equal(expiredInvitation.status, 404);
+    const managementAfterMfa = await jsonRequest(baseUrl, '/api/access/users', {
+      cookie: adminCookie,
+    });
+    assert.equal(
+      managementAfterMfa.data.users.some((user) => user.email === 'piloto@candemor.test'),
+      true,
+    );
+    assert.equal(
+      managementAfterMfa.data.requests.some((request) => request.email === 'piloto@candemor.test'),
+      false,
     );
     const duplicateAccountRequest = await jsonRequest(baseUrl, '/api/access/requests', {
       method: 'POST',
@@ -439,28 +520,107 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
     assert.equal(contributorDraft.status, 201);
     const contributorUpload = await binaryRequest(
       baseUrl,
-      `/api/setups/${contributorDraft.data.setup.id}/files?fileName=pilot.sto&sessionType=wet&retentionDays=365`,
+      `/api/setups/${contributorDraft.data.setup.id}/files?fileName=pilot.sto&sessionType=wet`,
       { cookie: userCookie, csrf: userCsrf, body: Buffer.from('pilot setup') },
     );
     assert.equal(contributorUpload.status, 201);
-    assert.equal(contributorUpload.data.file.retentionDays, null);
+    assert.equal(contributorUpload.data.file.retentionDays, 30);
+    assert.equal(contributorUpload.data.file.canUpdateRetention, true);
+    assert.equal(contributorUpload.data.file.canDelete, true);
+    const administratorVersionInContributorSetup = await binaryRequest(
+      baseUrl,
+      `/api/setups/${contributorDraft.data.setup.id}/files?fileName=admin-version.sto&sessionType=race`,
+      { cookie: adminCookie, csrf: adminCsrf, body: Buffer.from('admin setup version') },
+    );
+    assert.equal(administratorVersionInContributorSetup.status, 201);
+    assert.equal(administratorVersionInContributorSetup.data.file.retentionDays, 30);
     const contributorPublish = await jsonRequest(
       baseUrl,
       `/api/setups/${contributorDraft.data.setup.id}/publish`,
       { method: 'POST', cookie: userCookie, csrf: userCsrf, body: {} },
     );
-    assert.equal(contributorPublish.status, 403);
+    assert.equal(contributorPublish.status, 200);
+    assert.equal(contributorPublish.data.setup.status, 'published');
+    assert.equal(contributorPublish.data.setup.canDelete, true);
 
-    const deletedContributorFile = await jsonRequest(
+    const contributorRetention = await jsonRequest(
+      baseUrl,
+      `/api/setups/${contributorDraft.data.setup.id}/files/${contributorUpload.data.file.id}/retention`,
+      {
+        method: 'PATCH',
+        cookie: userCookie,
+        csrf: userCsrf,
+        body: { retentionDays: 365 },
+      },
+    );
+    assert.equal(contributorRetention.status, 200);
+    assert.equal(contributorRetention.data.file.retentionDays, 365);
+
+    const contributorCannotChangeAdministratorsVersion = await jsonRequest(
+      baseUrl,
+      `/api/setups/${contributorDraft.data.setup.id}/files/${administratorVersionInContributorSetup.data.file.id}/retention`,
+      {
+        method: 'PATCH',
+        cookie: userCookie,
+        csrf: userCsrf,
+        body: { retentionDays: 30 },
+      },
+    );
+    assert.equal(contributorCannotChangeAdministratorsVersion.status, 403);
+    const contributorCannotDeleteAdministratorsVersion = await jsonRequest(
+      baseUrl,
+      `/api/setups/${contributorDraft.data.setup.id}/files/${administratorVersionInContributorSetup.data.file.id}`,
+      { method: 'DELETE', cookie: userCookie, csrf: userCsrf },
+    );
+    assert.equal(contributorCannotDeleteAdministratorsVersion.status, 403);
+
+    const contributorCannotChangeAnotherVersion = await jsonRequest(
+      baseUrl,
+      `/api/setups/${setupId}/files/${uploaded.data.file.id}/retention`,
+      {
+        method: 'PATCH',
+        cookie: userCookie,
+        csrf: userCsrf,
+        body: { retentionDays: 30 },
+      },
+    );
+    assert.equal(contributorCannotChangeAnotherVersion.status, 403);
+    const contributorCannotDeleteAnotherVersion = await jsonRequest(
+      baseUrl,
+      `/api/setups/${setupId}/files/${uploaded.data.file.id}`,
+      { method: 'DELETE', cookie: userCookie, csrf: userCsrf },
+    );
+    assert.equal(contributorCannotDeleteAnotherVersion.status, 403);
+
+    const contributorCannotPublishAnotherSetup = await jsonRequest(
+      baseUrl,
+      `/api/setups/${setupId}/publish`,
+      { method: 'POST', cookie: userCookie, csrf: userCsrf, body: {} },
+    );
+    assert.equal(contributorCannotPublishAnotherSetup.status, 403);
+    const contributorCannotDeleteAnotherSetup = await jsonRequest(
+      baseUrl,
+      `/api/setups/${setupId}`,
+      { method: 'DELETE', cookie: userCookie, csrf: userCsrf },
+    );
+    assert.equal(contributorCannotDeleteAnotherSetup.status, 403);
+
+    const deletedContributorVersion = await jsonRequest(
       baseUrl,
       `/api/setups/${contributorDraft.data.setup.id}/files/${contributorUpload.data.file.id}`,
-      { method: 'DELETE', cookie: adminCookie, csrf: adminCsrf },
+      { method: 'DELETE', cookie: userCookie, csrf: userCsrf },
     );
-    assert.equal(deletedContributorFile.status, 204);
+    assert.equal(deletedContributorVersion.status, 204);
+    assert.equal(
+      app.db.prepare('SELECT status FROM setups WHERE id = ?').get(contributorDraft.data.setup.id)
+        .status,
+      'published',
+    );
+
     const deletedContributorSetup = await jsonRequest(
       baseUrl,
       `/api/setups/${contributorDraft.data.setup.id}`,
-      { method: 'DELETE', cookie: adminCookie, csrf: adminCsrf },
+      { method: 'DELETE', cookie: userCookie, csrf: userCsrf },
     );
     assert.equal(deletedContributorSetup.status, 204);
 
@@ -533,8 +693,9 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
     });
     assert.equal(deletedAccount.status, 204);
     assert.equal(
-      app.db.prepare('SELECT COUNT(*) AS count FROM admin_profiles WHERE id = ?').get(managedUser.id)
-        .count,
+      app.db
+        .prepare('SELECT COUNT(*) AS count FROM admin_profiles WHERE id = ?')
+        .get(managedUser.id).count,
       0,
     );
     const deletedAccountSession = await jsonRequest(baseUrl, '/api/access/session', {

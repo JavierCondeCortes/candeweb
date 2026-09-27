@@ -5,6 +5,7 @@ import {
   getAccessInvitationTemplate,
   previewAccessInvitation,
   renderAccessInvitation,
+  renderAccessRequestNotificationEmail,
   renderMfaRecoveryCodesEmail,
   validateAccessInvitationTemplate,
 } from './email.mjs';
@@ -57,6 +58,21 @@ test('renderiza los códigos de recuperación como lista segura en HTML y texto 
   assert.match(rendered.html, /&lt;Owner Candemor&gt;/);
   assert.match(rendered.html, /ABCD-1234\nEFGH-5678/);
   assert.match(rendered.text, /ABCD-1234\nEFGH-5678/);
+});
+
+test('renderiza el aviso de solicitud con datos escapados y enlace al panel', () => {
+  const rendered = renderAccessRequestNotificationEmail({
+    requesterName: '<Piloto & equipo>',
+    requesterEmail: 'piloto+test@candemor.test',
+    requestedAt: '2026-09-16T18:00:00.000Z',
+    websiteUrl: 'https://candemor.test',
+  });
+
+  assert.match(rendered.subject, /Nueva solicitud de acceso/i);
+  assert.match(rendered.html, /&lt;Piloto &amp; equipo&gt;/);
+  assert.match(rendered.html, /piloto\+test@candemor\.test/);
+  assert.match(rendered.html, /https:\/\/candemor\.test\/admin\/accesos/);
+  assert.match(rendered.text, /https:\/\/candemor\.test\/admin\/accesos/);
 });
 
 test('el servicio SMTP distingue entre desactivado y enviado', async () => {

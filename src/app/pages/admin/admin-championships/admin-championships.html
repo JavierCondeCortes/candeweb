@@ -114,14 +114,9 @@
               'admin.common.edit' | translate
             }}</a>
             @if (championship.status !== 'draft' && championship.status !== 'archived') {
-              <a
-                class="admin-button"
-                [routerLink]="[
-                  '/candeonatos',
-                  championship.externalTournamentId || championship.slug,
-                ]"
-                >{{ 'admin.championships.viewPublic' | translate }}</a
-              >
+              <a class="admin-button" [routerLink]="publicUrl(championship)">{{
+                'admin.championships.viewPublic' | translate
+              }}</a>
             }
             @if (championship.status === 'draft') {
               <button

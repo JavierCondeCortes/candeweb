@@ -19,7 +19,7 @@ la nueva pantalla para no mantener dos fuentes de verdad.
 | ------------------- | ---------------------------------------------------- |
 | `can_access_skins`  | Ver el catálogo privado de Skins y abrir sus enlaces |
 | `can_access_setups` | Ver y descargar Setups                               |
-| `can_upload_setups` | Crear borradores y subir versiones de Setups         |
+| `can_upload_setups` | Crear, publicar y eliminar Setups propios            |
 
 `can_upload_setups` depende de `can_access_setups`: no puede activarse la subida si la cuenta no
 puede entrar en la biblioteca. En la primera versión no existe permiso de subida de Skins para
@@ -62,13 +62,41 @@ En móvil, cada cuenta se transformará en una tarjeta y mantendrá el mismo ord
 ## Flujo de acceso
 
 1. La persona solicita acceso con su nombre y correo.
-2. Owner o admin revisa la solicitud y genera una invitación privada de un solo uso.
-3. La persona configura contraseña, TOTP y códigos de recuperación una única vez.
-4. Desde `/admin/accesos` se activan los productos autorizados.
-5. Al iniciar sesión, la API devuelve los permisos vigentes y cada ruta comprueba el suyo.
+2. Si los avisos están activados, cada owner y admin activo recibe un correo individual con un
+   enlace a `/admin/accesos`.
+3. Owner o admin revisa la solicitud y genera una invitación privada con caducidad.
+4. La persona establece su contraseña. La invitación continúa disponible mientras no haya
+   confirmado el TOTP y no haya caducado.
+5. La persona configura y confirma su TOTP; solo entonces la cuenta pasa a considerarse autorizada,
+   la solicitud queda activada y la invitación se consume.
+6. Desde `/admin/accesos` se activan los productos autorizados.
+7. Al iniciar sesión, la API devuelve los permisos vigentes y cada ruta comprueba el suyo.
 
 La aprobación de la identidad y la concesión de productos son acciones distintas: aceptar una
 cuenta no debe habilitar automáticamente Setups ni Skins.
+
+### Avisos de nuevas solicitudes
+
+- El ajuste **Avisar por correo a owner y administradores** se encuentra en `/admin/ajustes` y está
+  activado por defecto.
+- Una solicitud nueva o una solicitud reabierta envía un mensaje independiente a cada cuenta
+  administrativa activa. No se comparten destinatarios mediante `CC` para evitar exponer correos.
+- Repetir una solicitud que ya está pendiente no genera otro aviso.
+- Desactivar el ajuste detiene únicamente estos avisos internos; las invitaciones aprobadas y los
+  correos de recuperación continúan funcionando.
+- Un fallo SMTP no impide registrar la solicitud. El resultado del envío queda en auditoría sin
+  guardar datos sensibles.
+
+### Alta incompleta y reutilización de la invitación
+
+- Establecer la contraseña crea una cuenta provisional, pero no la muestra dentro de **Cuentas
+  autorizadas**.
+- Mientras el TOTP no se confirme, el mismo enlace de invitación puede abrirse de nuevo hasta su
+  fecha de caducidad. Volver a usarlo permite reiniciar el paso de contraseña y reemplaza las
+  sesiones provisionales anteriores.
+- Confirmar correctamente el TOTP completa el alta de forma atómica: activa la solicitud, consume
+  las invitaciones pendientes del correo y hace visible la cuenta en la gestión de accesos.
+- Tras completar el TOTP, reutilizar el enlace devuelve `INVALID_INVITATION`.
 
 ### Contraseña y permanencia de la sesión
 
@@ -94,7 +122,7 @@ cuenta no debe habilitar automáticamente Setups ni Skins.
 ### Objetivo y alcance
 
 Cuando un owner o admin apruebe desde `/admin/accesos` la solicitud de una persona que todavía no
-tiene cuenta, la API generará la invitación de un solo uso y tratará de enviarla al correo indicado
+tiene cuenta, la API generará una invitación temporal y tratará de enviarla al correo indicado
 en la solicitud. El panel seguirá mostrando el enlace completo y el botón **Copiar enlace** tanto si
 el envío funciona como si falla.
 
@@ -117,6 +145,7 @@ de administradores, que continúan siendo competencia exclusiva del owner.
    - **Invitación creada; el correo no pudo enviarse. Copia el enlace manualmente**.
    - **Invitación creada; SMTP no está configurado. Copia el enlace manualmente**.
 7. La persona abre el enlace, elige su contraseña y configura su TOTP y códigos de recuperación.
+   El enlace se consume al confirmar el TOTP, no al guardar la contraseña.
 
 El fallo del proveedor de correo no debe deshacer la aprobación ni borrar la invitación válida. El
 SMTP es un canal de entrega adicional, no una dependencia para poder conceder acceso.
@@ -198,7 +227,8 @@ El correo tendrá versión de texto plano y HTML mínimo, ambas con la misma inf
 - Botón **Confirmar acceso** enlazado mediante HTTPS.
 - URL completa visible para poder copiarla si el botón no funciona.
 - Fecha y hora de caducidad expresada en zona `Europe/Madrid` e indicando que dura 24 horas.
-- Aviso de enlace personal, de un solo uso y que no debe compartirse.
+- Aviso de enlace personal, temporal y que no debe compartirse. Puede reutilizarse únicamente
+  mientras el alta TOTP siga incompleta.
 - Indicación para ignorar el mensaje si la persona no solicitó acceso.
 - Correo de respuesta o contacto, cuando esté configurado.
 

@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { DeferBlockBehavior, DeferBlockState, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { PublicContentService } from '../../core/services/public-content.service';
@@ -8,8 +8,18 @@ import { HomePage } from './home-page';
 
 describe('HomePage', () => {
   beforeEach(async () => {
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        observe(): void {}
+        unobserve(): void {}
+        disconnect(): void {}
+      },
+    );
+
     await TestBed.configureTestingModule({
       imports: [HomePage],
+      deferBlockBehavior: DeferBlockBehavior.Manual,
       providers: [
         provideRouter([]),
         {
@@ -95,8 +105,15 @@ describe('HomePage', () => {
     }).compileComponents();
   });
 
+  afterEach(() => vi.unstubAllGlobals());
+
   it('renders the public sections, managed sponsors and no merchandise', async () => {
     const fixture = TestBed.createComponent(HomePage);
+    await fixture.whenStable();
+
+    const [twitchBlock] = await fixture.getDeferBlocks();
+    await twitchBlock.render(DeferBlockState.Complete);
+    fixture.detectChanges();
     await fixture.whenStable();
 
     const host = fixture.nativeElement as HTMLElement;

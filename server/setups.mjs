@@ -3,7 +3,7 @@ import { createReadStream, existsSync, mkdirSync } from 'node:fs';
 import { unlink, writeFile } from 'node:fs/promises';
 import { basename, extname, join, resolve } from 'node:path';
 import { recordAudit } from './database.mjs';
-import { sendAccessInvitation } from './email.mjs';
+import { sendAccessInvitation, sendAccessRequestNotification } from './email.mjs';
 import {
   consumeRecoveryCode,
   createSession,
@@ -21,6 +21,7 @@ import { ApiError, validateAccessRequest, validateAdminIdentity } from './valida
 
 const JSON_LIMIT = 1024 * 1024;
 const SETUP_FILE_LIMIT = 25 * 1024 * 1024;
+const DEFAULT_SETUP_RETENTION_DAYS = 30;
 const SESSION_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 const SETUP_EXTENSIONS = new Set([
   '.sto',
@@ -263,23 +264,61 @@ async function requestSetupAccess(context) {
   const timestamp = new Date().toISOString();
   const account = db.prepare('SELECT * FROM admin_profiles WHERE email = ?').get(identity.email);
   if (account) {
-    throw new ApiError(409, 'ACCOUNT_EXISTS', 'Ya existe una cuenta para ese correo. Inicia sesión.');
+    throw new ApiError(
+      409,
+      'ACCOUNT_EXISTS',
+      'Ya existe una cuenta para ese correo. Inicia sesión.',
+    );
   }
   const existing = db
     .prepare('SELECT id, status FROM setup_access_requests WHERE email = ?')
     .get(identity.email);
+  const requestId = existing?.id ?? randomUUID();
+  let isNewRequest = false;
   if (!existing) {
     db.prepare(
       `INSERT INTO setup_access_requests
        (id, email, display_name, status, created_at, updated_at)
        VALUES (?, ?, ?, 'pending', ?, ?)`,
-    ).run(randomUUID(), identity.email, identity.displayName, timestamp, timestamp);
+    ).run(requestId, identity.email, identity.displayName, timestamp, timestamp);
+    isNewRequest = true;
   } else if (existing.status === 'rejected' || existing.status === 'activated') {
     db.prepare(
       `UPDATE setup_access_requests
        SET display_name = ?, status = 'pending', updated_at = ?, reviewed_at = NULL,
            reviewed_by = NULL WHERE id = ?`,
     ).run(identity.displayName, timestamp, existing.id);
+    isNewRequest = true;
+  }
+  if (isNewRequest) {
+    const settings = db
+      .prepare('SELECT notify_access_requests FROM site_settings WHERE id = 1')
+      .get();
+    if (settings?.notify_access_requests !== 0) {
+      const recipients = db
+        .prepare(
+          `SELECT email FROM admin_profiles
+           WHERE account_type = 'administrator' AND active = 1
+           ORDER BY is_owner DESC, created_at ASC`,
+        )
+        .all()
+        .map((administrator) => administrator.email);
+      const delivery = await sendAccessRequestNotification({
+        emailService: context.emailService,
+        recipients,
+        requesterName: identity.displayName,
+        requesterEmail: identity.email,
+        requestedAt: timestamp,
+        publicAppUrl: context.publicAppUrl,
+      });
+      recordAudit(
+        db,
+        null,
+        `access.request_notification_${delivery.status}`,
+        'setup_access_request',
+        requestId,
+      );
+    }
   }
   return sendJson(response, 202, { requested: true });
 }
@@ -320,19 +359,41 @@ async function acceptSetupInvitation(context) {
     { setup: true },
   );
   const timestamp = new Date().toISOString();
-  const id = randomUUID();
+  const existingAccount = db
+    .prepare('SELECT * FROM admin_profiles WHERE email = ?')
+    .get(identity.email);
+  if (
+    existingAccount &&
+    (existingAccount.account_type !== 'setup_user' || existingAccount.totp_enabled === 1)
+  ) {
+    throw new ApiError(409, 'ACCOUNT_EXISTS', 'Ya existe una cuenta para ese correo.');
+  }
+  const id = existingAccount?.id ?? randomUUID();
   const passwordHash = await hashPassword(identity.password);
   db.exec('BEGIN');
   try {
-    const inserted = db
-      .prepare(
+    if (existingAccount) {
+      db.prepare(
+        `UPDATE admin_profiles SET display_name = ?, password_hash = ?, active = 1,
+         email_verified_at = COALESCE(email_verified_at, ?),
+         can_access_setups = CASE WHEN ? = 1 THEN 1 ELSE can_access_setups END,
+         updated_at = ? WHERE id = ?`,
+      ).run(
+        identity.displayName,
+        passwordHash,
+        timestamp,
+        invitation.grants_setup_access === 1 ? 1 : 0,
+        timestamp,
+        id,
+      );
+      db.prepare('DELETE FROM admin_sessions WHERE admin_id = ?').run(id);
+    } else {
+      db.prepare(
         `INSERT INTO admin_profiles
          (id, email, display_name, password_hash, role, is_owner, active, email_verified_at,
           account_type, can_access_setups, can_upload_setups, can_access_skins, created_at, updated_at)
-         SELECT ?, ?, ?, ?, 'admin', 0, 1, ?, 'setup_user', ?, 0, 0, ?, ?
-         WHERE NOT EXISTS (SELECT 1 FROM admin_profiles WHERE email = ?)`,
-      )
-      .run(
+         VALUES (?, ?, ?, ?, 'admin', 0, 1, ?, 'setup_user', ?, 0, 0, ?, ?)`,
+      ).run(
         id,
         identity.email,
         identity.displayName,
@@ -341,21 +402,9 @@ async function acceptSetupInvitation(context) {
         invitation.grants_setup_access === 1 ? 1 : 0,
         timestamp,
         timestamp,
-        identity.email,
       );
-    if (inserted.changes === 0) {
-      throw new ApiError(409, 'ACCOUNT_EXISTS', 'Ya existe una cuenta para ese correo.');
     }
-    db.prepare('UPDATE setup_invitations SET accepted_at = ? WHERE id = ?').run(
-      timestamp,
-      invitation.id,
-    );
-    if (invitation.request_id) {
-      db.prepare(
-        `UPDATE setup_access_requests SET status = 'activated', updated_at = ? WHERE id = ?`,
-      ).run(timestamp, invitation.request_id);
-    }
-    recordAudit(db, id, 'access.invitation_accepted', 'account', id, {
+    recordAudit(db, id, 'access.invitation_started', 'account', id, {
       invitedBy: invitation.created_by,
     });
     db.exec('COMMIT');
@@ -366,7 +415,7 @@ async function acceptSetupInvitation(context) {
   const session = createSession(db, id);
   const account = db.prepare('SELECT * FROM admin_profiles WHERE id = ?').get(id);
   response.setHeader('Set-Cookie', sessionCookie(session.token, session.expiresAt, secureCookies));
-  return sendJson(response, 201, {
+  return sendJson(response, existingAccount ? 200 : 201, {
     authenticated: true,
     account: setupAccountFromRow(account),
     csrfToken: session.csrfToken,
@@ -392,7 +441,8 @@ async function routeSetupAccessManagement(context) {
         `SELECT id, email, display_name, account_type, is_owner, active, can_access_setups,
                 can_upload_setups, can_access_skins, totp_enabled, created_at, updated_at
          FROM admin_profiles
-         WHERE account_type IN ('administrator', 'setup_user')
+         WHERE account_type = 'administrator'
+            OR (account_type = 'setup_user' AND totp_enabled = 1)
          ORDER BY account_type ASC, is_owner DESC, display_name ASC`,
       )
       .all()
@@ -437,7 +487,10 @@ async function routeSetupAccessManagement(context) {
       .prepare('SELECT * FROM admin_profiles WHERE email = ?')
       .get(accessRequest.email);
     const timestamp = new Date();
-    if (existingAccount) {
+    if (
+      existingAccount &&
+      (existingAccount.account_type === 'administrator' || existingAccount.totp_enabled === 1)
+    ) {
       db.prepare(
         `UPDATE admin_profiles SET can_access_setups = ?, active = 1, updated_at = ? WHERE id = ?`,
       ).run(
@@ -743,14 +796,7 @@ async function routeSetupLibrary(context) {
 
   const retention = path.match(/^\/api\/setups\/([^/]+)\/files\/([^/]+)\/retention$/);
   if (method === 'PATCH' && retention) {
-    requireSetupAdministrator(session);
-    const file = db
-      .prepare(
-        `SELECT f.* FROM setup_files f JOIN setups s ON s.id = f.setup_id
-         WHERE f.id = ? AND f.setup_id = ? AND f.deleted_at IS NULL AND s.deleted_at IS NULL`,
-      )
-      .get(retention[2], retention[1]);
-    if (!file) throw new ApiError(404, 'NOT_FOUND', 'No existe ese archivo.');
+    const file = requireOwnedSetupFileAction(db, retention[1], retention[2], session);
     const input = await readJson(context.request);
     const retentionDays = validateRetentionDays(input.retentionDays);
     const expiresAt = retentionDays
@@ -771,31 +817,26 @@ async function routeSetupLibrary(context) {
     return sendJson(response, 200, {
       file: setupFileFromRow(
         db.prepare('SELECT * FROM setup_files WHERE id = ?').get(file.id),
-        administrator,
+        session,
+        file.setup_created_by,
       ),
     });
   }
 
   const deleteFile = path.match(/^\/api\/setups\/([^/]+)\/files\/([^/]+)$/);
   if (method === 'DELETE' && deleteFile) {
-    requireSetupAdministrator(session);
-    const file = db
-      .prepare('SELECT * FROM setup_files WHERE id = ? AND setup_id = ? AND deleted_at IS NULL')
-      .get(deleteFile[2], deleteFile[1]);
-    if (!file) throw new ApiError(404, 'NOT_FOUND', 'No existe ese archivo.');
+    const file = requireOwnedSetupFileAction(db, deleteFile[1], deleteFile[2], session);
     await unlink(file.storage_path).catch(() => undefined);
     const timestamp = new Date().toISOString();
     db.prepare('UPDATE setup_files SET deleted_at = ? WHERE id = ?').run(timestamp, file.id);
-    archiveSetupWithoutFiles(db, file.setup_id, timestamp);
+    archiveSetupWithoutFiles(db, file.setup_id, timestamp, administrator ? 'archived' : 'draft');
     recordAudit(db, session.admin.id, 'setups.file_deleted', 'setup_file', file.id);
     return sendEmpty(response, 204);
   }
 
   const publish = path.match(/^\/api\/setups\/([^/]+)\/publish$/);
   if (method === 'POST' && publish) {
-    requireSetupAdministrator(session);
-    const setup = findSetupRow(db, publish[1]);
-    if (!setup) throw new ApiError(404, 'NOT_FOUND', 'No existe ese setup.');
+    const setup = requireOwnedSetupAction(db, publish[1], session, { draftOnly: true });
     const file = db
       .prepare(
         `SELECT 1 FROM setup_files WHERE setup_id = ? AND deleted_at IS NULL
@@ -865,9 +906,7 @@ async function routeSetupLibrary(context) {
     return sendJson(response, 200, { setup: findSetup(db, current.id, session) });
   }
   if (method === 'DELETE' && setupMatch) {
-    requireSetupAdministrator(session);
-    const setup = findSetupRow(db, setupMatch[1]);
-    if (!setup) throw new ApiError(404, 'NOT_FOUND', 'No existe ese setup.');
+    const setup = requireOwnedSetupAction(db, setupMatch[1], session);
     const files = db
       .prepare('SELECT id, storage_path FROM setup_files WHERE setup_id = ? AND deleted_at IS NULL')
       .all(setup.id);
@@ -913,10 +952,11 @@ async function saveSetupFile(context, setup, session) {
   }
   const notes = cleanOptionalText(context.url.searchParams.get('notes'), 500);
   const sessionType = validateSetupFileSessionType(context.url.searchParams.get('sessionType'));
-  const administrator = isSetupAdministrator(session);
-  const retentionDays = administrator
-    ? validateRetentionDays(context.url.searchParams.get('retentionDays'))
-    : null;
+  const retentionDays = validateRetentionDays(
+    context.url.searchParams.has('retentionDays')
+      ? context.url.searchParams.get('retentionDays')
+      : DEFAULT_SETUP_RETENTION_DAYS,
+  );
   const uploadedAt = new Date();
   const expiresAt = retentionDays
     ? new Date(uploadedAt.getTime() + retentionDays * 86_400_000).toISOString()
@@ -981,7 +1021,8 @@ async function saveSetupFile(context, setup, session) {
   });
   return setupFileFromRow(
     context.db.prepare('SELECT * FROM setup_files WHERE id = ?').get(fileId),
-    administrator,
+    session,
+    setup.created_by,
   );
 }
 
@@ -1088,7 +1129,7 @@ function findSetup(db, id, session) {
        WHERE f.setup_id = ? AND f.deleted_at IS NULL ORDER BY f.version_number DESC`,
     )
     .all(id)
-    .map((file) => setupFileFromRow(file, isSetupAdministrator(session)));
+    .map((file) => setupFileFromRow(file, session, row.created_by));
   return setup;
 }
 
@@ -1108,6 +1149,43 @@ function requireEditableSetup(db, id, session) {
     throw new ApiError(403, 'FORBIDDEN', 'No puedes modificar este setup.');
   }
   return setup;
+}
+
+function requireOwnedSetupAction(db, id, session, { draftOnly = false } = {}) {
+  const setup = findSetupRow(db, id);
+  if (!setup) throw new ApiError(404, 'NOT_FOUND', 'No existe ese setup.');
+  if (isSetupAdministrator(session)) return setup;
+  if (!session.admin.canUploadSetups || setup.created_by !== session.admin.id) {
+    throw new ApiError(403, 'FORBIDDEN', 'Solo puedes gestionar los setups que has creado.');
+  }
+  if (draftOnly && setup.status !== 'draft') {
+    throw new ApiError(409, 'INVALID_SETUP_STATE', 'Solo puedes publicar un borrador propio.');
+  }
+  return setup;
+}
+
+function requireOwnedSetupFileAction(db, setupId, fileId, session) {
+  const file = db
+    .prepare(
+      `SELECT f.*, s.created_by AS setup_created_by
+       FROM setup_files f JOIN setups s ON s.id = f.setup_id
+       WHERE f.id = ? AND f.setup_id = ? AND f.deleted_at IS NULL AND s.deleted_at IS NULL`,
+    )
+    .get(fileId, setupId);
+  if (!file) throw new ApiError(404, 'NOT_FOUND', 'No existe ese archivo.');
+  if (isSetupAdministrator(session)) return file;
+  if (
+    !session.admin.canUploadSetups ||
+    file.setup_created_by !== session.admin.id ||
+    file.uploaded_by !== session.admin.id
+  ) {
+    throw new ApiError(
+      403,
+      'FORBIDDEN',
+      'Solo puedes gestionar las versiones que has subido a tus propios setups.',
+    );
+  }
+  return file;
 }
 
 function canViewSetup(setup, session) {
@@ -1143,11 +1221,25 @@ function setupFromRow(row, session) {
       (session.admin.canUploadSetups &&
         row.created_by === session.admin.id &&
         row.status === 'draft'),
+    canPublish:
+      isSetupAdministrator(session) ||
+      (session.admin.canUploadSetups &&
+        row.created_by === session.admin.id &&
+        row.status === 'draft'),
+    canDelete:
+      isSetupAdministrator(session) ||
+      (session.admin.canUploadSetups && row.created_by === session.admin.id),
     canManage: isSetupAdministrator(session),
   };
 }
 
-function setupFileFromRow(row, includeManagementFields) {
+function setupFileFromRow(row, session, setupCreatedBy) {
+  const administrator = isSetupAdministrator(session);
+  const canManageVersion =
+    administrator ||
+    (session.admin.canUploadSetups &&
+      setupCreatedBy === session.admin.id &&
+      row.uploaded_by === session.admin.id);
   return {
     id: row.id,
     setupId: row.setup_id,
@@ -1162,9 +1254,11 @@ function setupFileFromRow(row, includeManagementFields) {
     uploadedBy: row.uploaded_by,
     uploadedByName: row.uploaded_by_name ?? null,
     uploadedAt: row.uploaded_at,
-    retentionDays: includeManagementFields ? row.retention_days : null,
+    retentionDays: canManageVersion ? row.retention_days : null,
     expiresAt: row.expires_at,
-    downloadCount: includeManagementFields ? row.download_count : null,
+    downloadCount: administrator ? row.download_count : null,
+    canUpdateRetention: canManageVersion,
+    canDelete: canManageVersion,
   };
 }
 

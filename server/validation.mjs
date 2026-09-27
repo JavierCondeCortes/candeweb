@@ -218,6 +218,7 @@ export function validateSettings(input) {
       'chiquitoSpotterUrl',
       fields,
     ),
+    notifyAccessRequests: input.notifyAccessRequests !== false,
   };
 
   if (!settings.twitchChannelUrl) {

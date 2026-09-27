@@ -1101,6 +1101,51 @@ a.sponsor-card:hover {
   list-style: none;
 }
 
+.twitch-async-placeholder {
+  min-height: 32rem;
+}
+
+.twitch-placeholder-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(15rem, 0.75fr);
+  gap: 1rem;
+}
+
+.twitch-placeholder-grid span {
+  min-height: 22rem;
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.055) 45%, transparent 60%),
+    #0c0c0d;
+  background-size: 240% 100%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .twitch-placeholder-grid span {
+    animation: twitch-placeholder-sheen 1.8s ease-in-out infinite;
+  }
+}
+
+@keyframes twitch-placeholder-sheen {
+  to {
+    background-position-x: -240%;
+  }
+}
+
+@media (max-width: 47.99rem) {
+  .twitch-async-placeholder {
+    min-height: 28rem;
+  }
+
+  .twitch-placeholder-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .twitch-placeholder-grid span {
+    min-height: 12rem;
+  }
+}
+
 .twitch-clip-link {
   display: grid;
   min-height: 8.5rem;

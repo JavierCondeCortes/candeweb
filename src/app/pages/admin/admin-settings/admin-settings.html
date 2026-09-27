@@ -116,7 +116,9 @@
                 : 'settings-spotter-help'
             "
           />
-          <small id="settings-spotter-help">{{ 'admin.settings.spotterUrlHelp' | translate }}</small>
+          <small id="settings-spotter-help">{{
+            'admin.settings.spotterUrlHelp' | translate
+          }}</small>
           @if (fieldErrors()['chiquitoSpotterUrl']; as error) {
             <small id="settings-spotter-error" class="field-error">{{ error }}</small>
           }
@@ -181,6 +183,22 @@
           @if (fieldErrors()['youtubeUrl']; as error) {
             <small id="settings-youtube-error" class="field-error">{{ error }}</small>
           }
+        </label>
+      </div>
+    </section>
+
+    <section class="admin-form-section" aria-labelledby="settings-access-notifications-title">
+      <div>
+        <h2 id="settings-access-notifications-title">
+          {{ 'admin.settings.accessNotifications' | translate }}
+        </h2>
+        <p>{{ 'admin.settings.accessNotificationsHelp' | translate }}</p>
+      </div>
+      <div class="admin-form-grid">
+        <label class="admin-checkbox is-wide">
+          <input type="checkbox" formControlName="notifyAccessRequests" />
+          <span>{{ 'admin.settings.notifyAccessRequests' | translate }}</span>
+          <small>{{ 'admin.settings.notifyAccessRequestsHelp' | translate }}</small>
         </label>
       </div>
     </section>

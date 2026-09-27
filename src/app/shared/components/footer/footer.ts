@@ -4,6 +4,8 @@ import { RouterLink } from '@angular/router';
 import { catchError, defer, map, of, shareReplay } from 'rxjs';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { PublicContentService } from '../../../core/services/public-content.service';
+import { ChampionshipContent } from '../../../core/models/content-admin.model';
+import { championshipPublicRoute } from '../../../core/championship-public-route';
 import { CandeBrand } from '../cande-brand/cande-brand';
 
 const FALLBACK_SITE_SETTINGS = {
@@ -47,4 +49,8 @@ export class Footer {
   );
 
   readonly settings$ = this.siteSettings$;
+
+  currentChampionshipUrl(championship: ChampionshipContent): string {
+    return championshipPublicRoute(championship);
+  }
 }

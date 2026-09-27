@@ -7,6 +7,7 @@ import { ConfirmationService } from '../../../core/services/confirmation.service
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { apiErrorMessage } from '../admin-form-errors';
+import { championshipPublicRoute } from '../../../core/championship-public-route';
 
 @Component({
   selector: 'app-admin-championships',
@@ -144,5 +145,9 @@ export class AdminChampionships implements OnInit {
       archived: 'admin.championshipForm.statusArchived',
     };
     return this.i18n.translate(keys[status]);
+  }
+
+  publicUrl(championship: ChampionshipContent): string {
+    return championshipPublicRoute(championship);
   }
 }

@@ -170,7 +170,7 @@
   box-shadow: inset 3px 0 #ff5a83;
 }
 
-.form-field > label,
+.form-field > label:not(.consent-check),
 .form-field legend {
   display: block;
   max-width: calc(100% - 3.5rem);
@@ -307,17 +307,20 @@
 }
 
 .choice-control {
+  display: inline-block;
   flex: 0 0 auto;
   width: 1.15rem;
   height: 1.15rem;
+  aspect-ratio: 1;
+  box-sizing: border-box;
   margin-top: 0.05rem;
   border: 1px solid var(--text-muted);
   background: transparent;
 }
 
-input[type='radio'] + .choice-control {
+/* input[type='radio'] + .choice-control {
   border-radius: 50%;
-}
+} */
 
 .choice-card input:checked + .choice-control,
 .consent-check input:checked + .choice-control {
@@ -603,7 +606,7 @@ input[type='radio'] + .choice-control {
     font-size: 1.25rem;
   }
 
-  .form-field > label,
+  .form-field > label:not(.consent-check),
   .form-field legend {
     max-width: calc(100% - 2.5rem);
   }

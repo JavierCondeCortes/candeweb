@@ -82,12 +82,12 @@ describe('Admin reactive forms', () => {
               },
             ],
             featuredChampionshipId: null,
-            chiquitoSpotterUrl:
-              'https://www.patreon.com/candemor/posts/chiquitito-151646382',
+            chiquitoSpotterUrl: 'https://www.patreon.com/candemor/posts/chiquitito-151646382',
             contactEmail: null,
             discordUrl: 'https://discord.gg/j22XuDEfMk',
             instagramUrl: null,
             youtubeUrl: null,
+            notifyAccessRequests: true,
             updatedAt: '2026-08-11T00:00:00.000Z',
           },
         }),
@@ -113,6 +113,10 @@ describe('Admin reactive forms', () => {
     expect(
       host.querySelector<HTMLInputElement>('input[formControlName="chiquitoSpotterUrl"]')?.value,
     ).toBe('https://www.patreon.com/candemor/posts/chiquitito-151646382');
+    expect(
+      host.querySelector<HTMLInputElement>('input[formControlName="notifyAccessRequests"]')
+        ?.checked,
+    ).toBe(true);
   });
 
   it('renders the editable invitation email and its isolated preview', async () => {

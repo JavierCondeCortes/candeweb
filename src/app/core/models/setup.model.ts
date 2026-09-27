@@ -46,6 +46,8 @@ export interface SetupFile {
   retentionDays: number | null;
   expiresAt: string | null;
   downloadCount: number | null;
+  canUpdateRetention: boolean;
+  canDelete: boolean;
 }
 
 export interface RacingSetup {
@@ -68,6 +70,8 @@ export interface RacingSetup {
   updatedAt: string;
   activeFileCount: number;
   canEdit: boolean;
+  canPublish: boolean;
+  canDelete: boolean;
   canManage: boolean;
   files?: SetupFile[];
 }

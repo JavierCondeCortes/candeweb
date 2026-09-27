@@ -495,11 +495,34 @@ async function routeRequest(context) {
       }
       const recoveryCodes = generateRecoveryCodes();
       const encodedRecoveryCodes = JSON.stringify(recoveryCodes.map(hashRecoveryCode));
-      db.prepare(
-        `UPDATE admin_profiles SET totp_secret = totp_pending_secret, totp_pending_secret = NULL,
-         totp_enabled = 1, recovery_codes = ?, updated_at = ? WHERE id = ?`,
-      ).run(encodedRecoveryCodes, new Date().toISOString(), session.admin.id);
-      recordAudit(db, session.admin.id, 'access.mfa_enabled', 'account', session.admin.id);
+      const timestamp = new Date().toISOString();
+      db.exec('BEGIN');
+      try {
+        db.prepare(
+          `UPDATE admin_profiles SET totp_secret = totp_pending_secret, totp_pending_secret = NULL,
+           totp_enabled = 1, recovery_codes = ?, updated_at = ? WHERE id = ?`,
+        ).run(encodedRecoveryCodes, timestamp, session.admin.id);
+        db.prepare(
+          `UPDATE setup_invitations SET accepted_at = ?
+           WHERE email = ? AND accepted_at IS NULL`,
+        ).run(timestamp, account.email);
+        db.prepare(
+          `UPDATE setup_access_requests SET status = 'activated', updated_at = ?
+           WHERE email = ? AND status = 'approved'`,
+        ).run(timestamp, account.email);
+        recordAudit(
+          db,
+          session.admin.id,
+          'access.invitation_accepted',
+          'account',
+          session.admin.id,
+        );
+        recordAudit(db, session.admin.id, 'access.mfa_enabled', 'account', session.admin.id);
+        db.exec('COMMIT');
+      } catch (error) {
+        db.exec('ROLLBACK');
+        throw error;
+      }
       const settings = db.prepare('SELECT contact_email FROM site_settings WHERE id = 1').get();
       const emailDelivery = await sendMfaRecoveryCodesEmail({
         emailService: context.emailService,
@@ -1364,7 +1387,7 @@ async function routeAdmin(context) {
         `UPDATE site_settings SET twitch_channel_login = ?, twitch_channel_url = ?,
          twitch_channels_json = ?, featured_championship_id = ?, contact_email = ?,
          discord_url = ?, instagram_url = ?, youtube_url = ?, chiquito_spotter_url = ?,
-         updated_at = ?, updated_by_name = ? WHERE id = 1`,
+         notify_access_requests = ?, updated_at = ?, updated_by_name = ? WHERE id = 1`,
       ).run(
         settings.twitchChannelLogin,
         settings.twitchChannelUrl,
@@ -1375,6 +1398,7 @@ async function routeAdmin(context) {
         settings.instagramUrl,
         settings.youtubeUrl,
         settings.chiquitoSpotterUrl,
+        settings.notifyAccessRequests ? 1 : 0,
         timestamp,
         session.admin.displayName,
       );
@@ -1505,7 +1529,11 @@ async function requestAdminAccess(context) {
     .prepare('SELECT 1 FROM admin_profiles WHERE email = ? LIMIT 1')
     .get(identity.email);
   if (existingAdmin) {
-    throw new ApiError(409, 'ACCOUNT_EXISTS', 'Ya existe una cuenta para ese correo. Inicia sesión.');
+    throw new ApiError(
+      409,
+      'ACCOUNT_EXISTS',
+      'Ya existe una cuenta para ese correo. Inicia sesión.',
+    );
   }
   const existingRequest = db
     .prepare('SELECT id, status FROM admin_access_requests WHERE email = ?')

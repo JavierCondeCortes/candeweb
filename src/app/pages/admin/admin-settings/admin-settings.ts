@@ -17,8 +17,7 @@ import {
   focusErrorSummary,
 } from '../admin-form-errors';
 
-const DEFAULT_CHIQUITO_SPOTTER_URL =
-  'https://www.patreon.com/candemor/posts/chiquitito-151646382';
+const DEFAULT_CHIQUITO_SPOTTER_URL = 'https://www.patreon.com/candemor/posts/chiquitito-151646382';
 
 @Component({
   selector: 'app-admin-settings',
@@ -48,6 +47,7 @@ export class AdminSettings implements OnInit {
     discordUrl: [''],
     instagramUrl: [''],
     youtubeUrl: [''],
+    notifyAccessRequests: [true],
   });
 
   ngOnInit(): void {
@@ -74,6 +74,7 @@ export class AdminSettings implements OnInit {
             discordUrl: settings.settings.discordUrl ?? '',
             instagramUrl: settings.settings.instagramUrl ?? '',
             youtubeUrl: settings.settings.youtubeUrl ?? '',
+            notifyAccessRequests: settings.settings.notifyAccessRequests ?? true,
           });
           this.form.markAsPristine();
         },
@@ -139,6 +140,7 @@ export class AdminSettings implements OnInit {
       discordUrl: value.discordUrl || null,
       instagramUrl: value.instagramUrl || null,
       youtubeUrl: value.youtubeUrl || null,
+      notifyAccessRequests: value.notifyAccessRequests,
       updatedAt: this.current()?.updatedAt ?? '',
       updatedByName: this.current()?.updatedByName ?? null,
     };

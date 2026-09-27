@@ -949,6 +949,17 @@ function migrate(db) {
     `);
     db.prepare('INSERT INTO schema_migrations (version, applied_at) VALUES (26, ?)').run(now());
   }
+
+  const migration27Applied = db.prepare('SELECT 1 FROM schema_migrations WHERE version = 27').get();
+  if (!migration27Applied) {
+    const settingsColumns = db.prepare('PRAGMA table_info(site_settings)').all();
+    if (!settingsColumns.some((column) => column.name === 'notify_access_requests')) {
+      db.exec(
+        'ALTER TABLE site_settings ADD COLUMN notify_access_requests INTEGER NOT NULL DEFAULT 1 CHECK (notify_access_requests IN (0, 1));',
+      );
+    }
+    db.prepare('INSERT INTO schema_migrations (version, applied_at) VALUES (27, ?)').run(now());
+  }
 }
 
 function seed(db) {
@@ -1224,6 +1235,7 @@ export function settingsFromRow(row) {
     instagramUrl: row.instagram_url,
     youtubeUrl: row.youtube_url,
     chiquitoSpotterUrl: row.chiquito_spotter_url,
+    notifyAccessRequests: row.notify_access_requests !== 0,
     updatedAt: row.updated_at,
     updatedByName: row.updated_by_name,
   };

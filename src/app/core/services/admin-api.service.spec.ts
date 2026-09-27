@@ -50,6 +50,7 @@ describe('AdminApiService', () => {
         discordUrl: 'https://discord.gg/j22XuDEfMk',
         instagramUrl: null,
         youtubeUrl: null,
+        notifyAccessRequests: true,
         updatedAt: '',
       })
       .subscribe();

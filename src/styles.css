@@ -540,6 +540,32 @@ details .content-title {
   gap: 1rem;
 }
 
+.footer-current-championship {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.footer-live-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: #ff3030;
+  box-shadow: 0 0 0 0.2rem rgba(255, 48, 48, 0.16);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .footer-current-championship.is-live .footer-live-dot {
+    animation: footer-live-pulse 1.2s ease-out infinite;
+  }
+}
+
+@keyframes footer-live-pulse {
+  50% {
+    box-shadow: 0 0 0 0.45rem rgba(255, 48, 48, 0);
+  }
+}
+
 .footer-mark {
   width: fit-content;
   color: var(--text);

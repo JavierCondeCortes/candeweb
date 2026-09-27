@@ -5,7 +5,30 @@
 <main id="contenido-inicio" class="home-main" tabindex="-1">
   <app-community-intro [discordUrl]="(settings$ | async)?.discordUrl || null" />
   <app-team-showcase />
-  <app-experience-gallery />
+  @defer (on viewport; prefetch on idle) {
+    <app-experience-gallery />
+  } @placeholder (minimum 250ms) {
+    <section
+      id="contenido"
+      class="section-shell experiences-section twitch-async-placeholder"
+      aria-labelledby="twitch-placeholder-title"
+      aria-busy="true"
+    >
+      <div class="section-heading experiences-heading">
+        <div>
+          <p class="eyebrow">Twitch</p>
+          <h2 id="twitch-placeholder-title" class="section-title">
+            {{ 'home.content.title' | translate }}
+          </h2>
+        </div>
+        <p class="body-copy" role="status">{{ 'home.content.loading' | translate }}</p>
+      </div>
+      <div class="twitch-placeholder-grid" aria-hidden="true">
+        <span></span>
+        <span></span>
+      </div>
+    </section>
+  }
   <app-event-feature />
   <app-sponsor-strip />
 </main>

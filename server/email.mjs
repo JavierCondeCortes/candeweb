@@ -12,6 +12,11 @@ const RECOVERY_CODES_TEMPLATE_DIR = join(
   'email-templates',
   'mfa-recovery-codes',
 );
+const ACCESS_REQUEST_NOTIFICATION_DIR = join(
+  dirname(fileURLToPath(import.meta.url)),
+  'email-templates',
+  'access-request-notification',
+);
 const DEFAULT_SUBJECT = 'Tu acceso a {{brandName}} está preparado';
 const DEFAULT_TEMPLATE = Object.freeze({
   templateKey: TEMPLATE_KEY,
@@ -25,6 +30,12 @@ const RECOVERY_CODES_TEMPLATE = Object.freeze({
   htmlTemplate: readFileSync(join(RECOVERY_CODES_TEMPLATE_DIR, 'template.html'), 'utf8'),
   css: `${DEFAULT_TEMPLATE.css}\n${readFileSync(join(RECOVERY_CODES_TEMPLATE_DIR, 'styles.css'), 'utf8')}`,
   textTemplate: readFileSync(join(RECOVERY_CODES_TEMPLATE_DIR, 'template.txt'), 'utf8'),
+});
+const ACCESS_REQUEST_NOTIFICATION_TEMPLATE = Object.freeze({
+  subjectTemplate: 'Nueva solicitud de acceso · {{requesterName}}',
+  htmlTemplate: readFileSync(join(ACCESS_REQUEST_NOTIFICATION_DIR, 'template.html'), 'utf8'),
+  css: `${DEFAULT_TEMPLATE.css}\n${readFileSync(join(ACCESS_REQUEST_NOTIFICATION_DIR, 'styles.css'), 'utf8')}`,
+  textTemplate: readFileSync(join(ACCESS_REQUEST_NOTIFICATION_DIR, 'template.txt'), 'utf8'),
 });
 const ALLOWED_VARIABLES = new Set([
   'brandName',
@@ -257,7 +268,10 @@ export async function sendAccessInvitation({
 
 export function renderMfaRecoveryCodesEmail(values) {
   const recoveryCodes = Array.isArray(values.recoveryCodes)
-    ? values.recoveryCodes.map((code) => String(code).trim()).filter(Boolean).slice(0, 20)
+    ? values.recoveryCodes
+        .map((code) => String(code).trim())
+        .filter(Boolean)
+        .slice(0, 20)
     : [];
   if (!recoveryCodes.length) {
     throw new ApiError(
@@ -279,11 +293,8 @@ export function renderMfaRecoveryCodesEmail(values) {
     escapePlainText,
   );
   const html = replaceVariables(RECOVERY_CODES_TEMPLATE.htmlTemplate, normalized, escapeHtml);
-  const text = replaceVariables(
-    RECOVERY_CODES_TEMPLATE.textTemplate,
-    normalized,
-    (value, name) =>
-      name === 'recoveryCodes' ? escapeMultilinePlainText(value) : escapePlainText(value),
+  const text = replaceVariables(RECOVERY_CODES_TEMPLATE.textTemplate, normalized, (value, name) =>
+    name === 'recoveryCodes' ? escapeMultilinePlainText(value) : escapePlainText(value),
   );
   return {
     subject,
@@ -314,7 +325,90 @@ export async function sendMfaRecoveryCodesEmail({
     });
     return emailService.send({ to, ...rendered });
   } catch (error) {
-    console.error('No se pudo preparar el correo con códigos de recuperación.', safeMailError(error));
+    console.error(
+      'No se pudo preparar el correo con códigos de recuperación.',
+      safeMailError(error),
+    );
+    return { status: 'failed' };
+  }
+}
+
+export function renderAccessRequestNotificationEmail(values) {
+  const websiteUrl = normalizePublicUrl(values.websiteUrl);
+  const normalized = {
+    brandName: values.brandName || 'Candemor Racing Team',
+    requesterName: values.requesterName || 'Usuario Candemor',
+    requesterEmail: values.requesterEmail,
+    requestedAt: formatMadridDate(values.requestedAt || new Date()),
+    reviewUrl: new URL('/admin/accesos', `${websiteUrl}/`).toString(),
+    websiteUrl,
+  };
+  const subject = replaceVariables(
+    ACCESS_REQUEST_NOTIFICATION_TEMPLATE.subjectTemplate,
+    normalized,
+    escapePlainText,
+  );
+  const html = replaceVariables(
+    ACCESS_REQUEST_NOTIFICATION_TEMPLATE.htmlTemplate,
+    normalized,
+    escapeHtml,
+  );
+  const text = replaceVariables(
+    ACCESS_REQUEST_NOTIFICATION_TEMPLATE.textTemplate,
+    normalized,
+    escapePlainText,
+  );
+  return {
+    subject,
+    html: juice.inlineContent(html, ACCESS_REQUEST_NOTIFICATION_TEMPLATE.css, {
+      applyStyleTags: true,
+      preserveMediaQueries: true,
+      removeStyleTags: true,
+    }),
+    text,
+  };
+}
+
+export async function sendAccessRequestNotification({
+  emailService,
+  recipients,
+  requesterName,
+  requesterEmail,
+  requestedAt,
+  publicAppUrl,
+}) {
+  const uniqueRecipients = [
+    ...new Set(
+      (Array.isArray(recipients) ? recipients : [])
+        .map((recipient) =>
+          String(recipient ?? '')
+            .trim()
+            .toLowerCase(),
+        )
+        .filter(Boolean),
+    ),
+  ];
+  if (!uniqueRecipients.length) return { status: 'not_needed' };
+  if (!emailService?.isConfigured()) return { status: 'disabled' };
+  try {
+    const rendered = renderAccessRequestNotificationEmail({
+      requesterName,
+      requesterEmail,
+      requestedAt,
+      websiteUrl: publicAppUrl,
+    });
+    const deliveries = await Promise.all(
+      uniqueRecipients.map((to) => emailService.send({ to, ...rendered })),
+    );
+    if (deliveries.every((delivery) => delivery.status === 'sent')) {
+      return { status: 'sent', sentAt: new Date().toISOString() };
+    }
+    if (deliveries.every((delivery) => delivery.status === 'disabled')) {
+      return { status: 'disabled' };
+    }
+    return { status: 'failed' };
+  } catch (error) {
+    console.error('No se pudo preparar el aviso de nueva solicitud.', safeMailError(error));
     return { status: 'failed' };
   }
 }

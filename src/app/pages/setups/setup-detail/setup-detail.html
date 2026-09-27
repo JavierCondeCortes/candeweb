@@ -5,9 +5,7 @@
 } @else if (setup(); as item) {
   <section class="setup-page-heading" aria-labelledby="setup-detail-title">
     <div>
-      <p class="setup-eyebrow">
-        {{ item.simulator }} // {{ periodLabel(item) }}
-      </p>
+      <p class="setup-eyebrow">{{ item.simulator }} // {{ periodLabel(item) }}</p>
       <h1
         id="setup-detail-title"
         class="display-title setup-display-title"
@@ -62,9 +60,9 @@
           <dd>{{ item.files?.length || 0 }}</dd>
         </div>
       </dl>
-      @if (item.canManage) {
+      @if (item.canManage || item.canPublish || item.canDelete) {
         <div class="setup-actions setup-admin-actions">
-          @if (item.status !== 'published') {
+          @if (item.canPublish && item.status !== 'published') {
             <button
               class="setup-button is-primary"
               type="button"
@@ -74,7 +72,7 @@
               {{ 'home.setups.detail.publish' | translate }}
             </button>
           }
-          @if (item.status === 'published') {
+          @if (item.canManage && item.status === 'published') {
             <button
               class="setup-button is-archive"
               type="button"
@@ -84,9 +82,11 @@
               {{ 'home.setups.detail.archive' | translate }}
             </button>
           }
-          <button class="setup-button is-danger" type="button" (click)="deleteSetup()">
-            {{ 'home.setups.detail.delete' | translate }}
-          </button>
+          @if (item.canDelete) {
+            <button class="setup-button is-danger" type="button" (click)="deleteSetup()">
+              {{ 'home.setups.detail.delete' | translate }}
+            </button>
+          }
         </div>
       }
     </section>
@@ -126,7 +126,7 @@
               <a class="setup-button is-primary" [href]="downloadUrl(file)">{{
                 'home.setups.detail.download' | translate
               }}</a>
-              @if (capabilities().canManage) {
+              @if (file.canUpdateRetention) {
                 <label class="setup-inline-control"
                   ><span>{{ 'home.setups.detail.retention' | translate }}</span
                   ><select
@@ -141,6 +141,8 @@
                     <option value="365">365</option>
                   </select></label
                 >
+              }
+              @if (file.canDelete) {
                 <button
                   class="setup-text-button is-danger"
                   type="button"
