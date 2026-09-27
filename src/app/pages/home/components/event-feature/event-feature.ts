@@ -6,6 +6,7 @@ import { ChampionshipContent } from '../../../../core/models/content-admin.model
 import { I18nService } from '../../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 import { PublicContentService } from '../../../../core/services/public-content.service';
+import { championshipPublicRoute } from '../../../../core/championship-public-route';
 
 @Component({
   selector: 'app-event-feature',
@@ -24,9 +25,7 @@ export class EventFeature {
   );
 
   eventUrl(event: ChampionshipContent): string {
-    return event.status === 'finished' && event.externalTournamentId
-      ? `/candeonatos/${event.externalTournamentId}`
-      : '/candeonato';
+    return championshipPublicRoute(event);
   }
 
   statusLabel(status: ChampionshipContent['status']): string {

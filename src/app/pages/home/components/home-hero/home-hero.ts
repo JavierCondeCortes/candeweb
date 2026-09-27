@@ -18,6 +18,7 @@ import { LanguageSwitcher } from '../../../../core/i18n/language-switcher/langua
 import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 import { ChampionshipContent } from '../../../../core/models/content-admin.model';
 import { CandeBrand } from '../../../../shared/components/cande-brand/cande-brand';
+import { championshipPublicRoute } from '../../../../core/championship-public-route';
 
 @Component({
   selector: 'app-home-hero',
@@ -43,9 +44,7 @@ export class HomeHero implements AfterViewInit, OnDestroy {
   readonly isCandeonatoLive = computed(() => this.championship()?.status === 'active');
   readonly currentEventUrl = computed(() => {
     const championship = this.championship();
-    return championship?.status === 'finished' && championship.externalTournamentId
-      ? `/candeonatos/${championship.externalTournamentId}`
-      : '/candeonato';
+    return championship ? championshipPublicRoute(championship) : '/candeonato';
   });
   readonly isMuted = signal(true);
   readonly isPaused = signal(false);

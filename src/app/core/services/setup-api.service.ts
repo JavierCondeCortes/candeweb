@@ -109,7 +109,9 @@ export class SetupApiService {
   ) {
     const query = new URLSearchParams({ fileName: file.name, sessionType: input.sessionType });
     if (input.notes) query.set('notes', input.notes);
-    if (input.retentionDays) query.set('retentionDays', String(input.retentionDays));
+    if (input.retentionDays !== undefined) {
+      query.set('retentionDays', input.retentionDays === null ? '' : String(input.retentionDays));
+    }
     const options = this.options(true);
     const headers = (options.headers ?? new HttpHeaders()).set(
       'Content-Type',

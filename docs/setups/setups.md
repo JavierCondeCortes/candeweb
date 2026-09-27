@@ -47,7 +47,9 @@ existentes sin una migración destructiva.
 | Publicar y eliminar setups propios               |  Sí   |  Sí   |         No         |           Sí           |
 | Editar o eliminar setups de otra persona         |  Sí   |  Sí   |         No         |           No           |
 | Archivar o restaurar                             |  Sí   |  Sí   |         No         |           No           |
-| Definir o ampliar la caducidad                   |  Sí   |  Sí   |         No         |           No           |
+| Cambiar caducidad de versiones propias           |  Sí   |  Sí   |         No         |           Sí           |
+| Eliminar versiones propias                       |  Sí   |  Sí   |         No         |           Sí           |
+| Gestionar versiones de otra persona              |  Sí   |  Sí   |         No         |           No           |
 | Aprobar y revocar el acceso a Setups             |  Sí   |  Sí   |         No         |           No           |
 | Conceder o retirar el permiso de colaboración    |  Sí   |  Sí   |         No         |           No           |
 | Gestionar administradores o transferir propiedad |  Sí   |  No   |         No         |           No           |
@@ -56,12 +58,14 @@ existentes sin una migración destructiva.
 
 Dar permiso para subir no permite eliminar ni modificar contenido de otras personas. Un colaborador
 puede crear setups, añadir versiones, editar sus borradores, publicar y eliminar los setups de los
-que sea autor. Owner y admins mantienen la capacidad de intervenir en cualquier registro, archivar
-contenido y configurar la caducidad.
+que sea autor. También puede cambiar la caducidad o eliminar una versión cuando sea autor tanto del
+setup como del archivo. Owner y admins mantienen la capacidad de intervenir en cualquier registro y
+archivar contenido.
 
-La propiedad se valida siempre en la API mediante `created_by`; ocultar los botones en la interfaz
-solo mejora la experiencia. Esta separación evita que un permiso puntual de subida se convierta
-accidentalmente en acceso administrativo completo.
+La propiedad se valida siempre en la API mediante `setups.created_by` y
+`setup_files.uploaded_by`; ocultar los botones en la interfaz solo mejora la experiencia. Esta
+separación evita que un permiso puntual de subida se convierta accidentalmente en acceso
+administrativo completo.
 
 ## Acceso e invitaciones
 
@@ -143,25 +147,25 @@ versiones anteriores.
 
 ### Archivo y versión
 
-| Campo             | Tipo            | Reglas                                                      |
-| ----------------- | --------------- | ----------------------------------------------------------- |
-| `id`              | UUID            | Generado por el sistema                                     |
-| `setup_id`        | UUID            | Relación con el setup                                       |
-| `version_number`  | Entero          | Incremental dentro del setup                                |
-| `original_name`   | Texto           | Solo para presentación; nunca se usa como ruta física       |
-| `storage_key`     | Texto           | Nombre interno aleatorio y no público                       |
-| `extension`       | Texto           | Debe estar en la lista permitida                            |
-| `mime_type`       | Texto           | Declarado en la subida; la descarga fuerza tipo binario     |
-| `byte_size`       | Entero          | Validado antes de guardar                                   |
-| `checksum_sha256` | Texto           | Integridad, duplicados y auditoría                          |
-| `session_type`    | Enum            | Tipo de sesión específico de esta versión                   |
-| `notes`           | Texto o `null`  | Cambios de la versión                                       |
-| `uploaded_by`     | Cuenta          | Autor de la subida                                          |
-| `uploaded_at`     | Fecha           | Punto de partida de la retención                            |
-| `retention_days`  | Entero o `null` | Solo owner/admin; `null` significa sin caducidad automática |
-| `expires_at`      | Fecha o `null`  | `uploaded_at + retention_days`                              |
-| `download_count`  | Entero          | Métrica operativa, no pública                               |
-| `deleted_at`      | Fecha o `null`  | Momento de retirada física o lógica                         |
+| Campo             | Tipo            | Reglas                                                    |
+| ----------------- | --------------- | --------------------------------------------------------- |
+| `id`              | UUID            | Generado por el sistema                                   |
+| `setup_id`        | UUID            | Relación con el setup                                     |
+| `version_number`  | Entero          | Incremental dentro del setup                              |
+| `original_name`   | Texto           | Solo para presentación; nunca se usa como ruta física     |
+| `storage_key`     | Texto           | Nombre interno aleatorio y no público                     |
+| `extension`       | Texto           | Debe estar en la lista permitida                          |
+| `mime_type`       | Texto           | Declarado en la subida; la descarga fuerza tipo binario   |
+| `byte_size`       | Entero          | Validado antes de guardar                                 |
+| `checksum_sha256` | Texto           | Integridad, duplicados y auditoría                        |
+| `session_type`    | Enum            | Tipo de sesión específico de esta versión                 |
+| `notes`           | Texto o `null`  | Cambios de la versión                                     |
+| `uploaded_by`     | Cuenta          | Autor de la subida                                        |
+| `uploaded_at`     | Fecha           | Punto de partida de la retención                          |
+| `retention_days`  | Entero o `null` | Por defecto 30; `null` significa sin caducidad automática |
+| `expires_at`      | Fecha o `null`  | `uploaded_at + retention_days`                            |
+| `download_count`  | Entero          | Métrica operativa, no pública                             |
+| `deleted_at`      | Fecha o `null`  | Momento de retirada física o lógica                       |
 
 Los tipos de sesión disponibles son `race`, `qualifying`, `wet`, `endurance`, `endurance_safe`,
 `qualifying_endurance`, `qualifying_safe`, `race_endurance`, `race_safe` y `other`. El tipo se pide
@@ -211,10 +215,12 @@ descargas usarán URLs firmadas de duración corta.
 
 ### Configuración
 
-- Owner y admin eligen la retención al publicar cada versión: por ejemplo 7, 30, 90, 180 o 365 días,
-  además de `Sin caducidad`.
+- Cada versión nueva caduca a los 30 días por defecto. Al subirla se puede elegir, por ejemplo, 7,
+  30, 90, 180 o 365 días, además de `Sin caducidad`.
 - La fecha se calcula desde `uploaded_at`, tal como requiere la idea original.
-- Solo owner y admin pueden cambiar `retention_days` o `expires_at`.
+- Owner y admin pueden cambiar la retención de cualquier versión. Un colaborador puede cambiarla
+  únicamente si creó el setup y también subió esa versión.
+- El mismo control de doble propiedad se aplica al borrado manual de versiones.
 - Una versión nueva tiene su propia fecha; subirla no amplía automáticamente las versiones antiguas.
 - La interfaz muestra fecha absoluta y tiempo restante.
 
@@ -225,9 +231,10 @@ descargas usarán URLs firmadas de duración corta.
 3. La tarea elimina el binario, conserva el registro de auditoría y marca su borrado lógico.
 4. Si un setup se queda sin versiones activas, pasa a `expired`.
 
-La gestión muestra el número de archivos que caducarán durante los siguientes siete días. Owner o
-admin pueden ampliar o retirar la retención antes del vencimiento. El MVP no ofrece papelera ni
-recuperación después de eliminar el binario; una gracia configurable es una mejora posterior.
+La gestión muestra el número de archivos que caducarán durante los siguientes siete días. Quien
+tenga permiso sobre la versión puede ampliar o retirar la retención antes del vencimiento. El MVP
+no ofrece papelera ni recuperación después de eliminar el binario; una gracia configurable es una
+mejora posterior.
 
 ### Control de capacidad
 
@@ -260,7 +267,8 @@ POST   /api/setup-access/invitations/accept
 ```
 
 La subida binaria a `POST /api/setups/:id/files` exige `sessionType` en la query junto a
-`fileName`; `notes` y `retentionDays` continúan siendo opcionales.
+`fileName`; `notes` y `retentionDays` continúan siendo opcionales. Si se omite `retentionDays`, el
+servidor aplica 30 días.
 
 Las operaciones mutables requieren CSRF. Las subidas deben ser binarias o `multipart/form-data`, no
 Base64, para evitar aumentar el tamaño y repetir el problema de límites del proxy.

@@ -21,6 +21,7 @@ import { ApiError, validateAccessRequest, validateAdminIdentity } from './valida
 
 const JSON_LIMIT = 1024 * 1024;
 const SETUP_FILE_LIMIT = 25 * 1024 * 1024;
+const DEFAULT_SETUP_RETENTION_DAYS = 30;
 const SESSION_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 const SETUP_EXTENSIONS = new Set([
   '.sto',
@@ -795,14 +796,7 @@ async function routeSetupLibrary(context) {
 
   const retention = path.match(/^\/api\/setups\/([^/]+)\/files\/([^/]+)\/retention$/);
   if (method === 'PATCH' && retention) {
-    requireSetupAdministrator(session);
-    const file = db
-      .prepare(
-        `SELECT f.* FROM setup_files f JOIN setups s ON s.id = f.setup_id
-         WHERE f.id = ? AND f.setup_id = ? AND f.deleted_at IS NULL AND s.deleted_at IS NULL`,
-      )
-      .get(retention[2], retention[1]);
-    if (!file) throw new ApiError(404, 'NOT_FOUND', 'No existe ese archivo.');
+    const file = requireOwnedSetupFileAction(db, retention[1], retention[2], session);
     const input = await readJson(context.request);
     const retentionDays = validateRetentionDays(input.retentionDays);
     const expiresAt = retentionDays
@@ -823,22 +817,19 @@ async function routeSetupLibrary(context) {
     return sendJson(response, 200, {
       file: setupFileFromRow(
         db.prepare('SELECT * FROM setup_files WHERE id = ?').get(file.id),
-        administrator,
+        session,
+        file.setup_created_by,
       ),
     });
   }
 
   const deleteFile = path.match(/^\/api\/setups\/([^/]+)\/files\/([^/]+)$/);
   if (method === 'DELETE' && deleteFile) {
-    requireSetupAdministrator(session);
-    const file = db
-      .prepare('SELECT * FROM setup_files WHERE id = ? AND setup_id = ? AND deleted_at IS NULL')
-      .get(deleteFile[2], deleteFile[1]);
-    if (!file) throw new ApiError(404, 'NOT_FOUND', 'No existe ese archivo.');
+    const file = requireOwnedSetupFileAction(db, deleteFile[1], deleteFile[2], session);
     await unlink(file.storage_path).catch(() => undefined);
     const timestamp = new Date().toISOString();
     db.prepare('UPDATE setup_files SET deleted_at = ? WHERE id = ?').run(timestamp, file.id);
-    archiveSetupWithoutFiles(db, file.setup_id, timestamp);
+    archiveSetupWithoutFiles(db, file.setup_id, timestamp, administrator ? 'archived' : 'draft');
     recordAudit(db, session.admin.id, 'setups.file_deleted', 'setup_file', file.id);
     return sendEmpty(response, 204);
   }
@@ -961,10 +952,11 @@ async function saveSetupFile(context, setup, session) {
   }
   const notes = cleanOptionalText(context.url.searchParams.get('notes'), 500);
   const sessionType = validateSetupFileSessionType(context.url.searchParams.get('sessionType'));
-  const administrator = isSetupAdministrator(session);
-  const retentionDays = administrator
-    ? validateRetentionDays(context.url.searchParams.get('retentionDays'))
-    : null;
+  const retentionDays = validateRetentionDays(
+    context.url.searchParams.has('retentionDays')
+      ? context.url.searchParams.get('retentionDays')
+      : DEFAULT_SETUP_RETENTION_DAYS,
+  );
   const uploadedAt = new Date();
   const expiresAt = retentionDays
     ? new Date(uploadedAt.getTime() + retentionDays * 86_400_000).toISOString()
@@ -1029,7 +1021,8 @@ async function saveSetupFile(context, setup, session) {
   });
   return setupFileFromRow(
     context.db.prepare('SELECT * FROM setup_files WHERE id = ?').get(fileId),
-    administrator,
+    session,
+    setup.created_by,
   );
 }
 
@@ -1136,7 +1129,7 @@ function findSetup(db, id, session) {
        WHERE f.setup_id = ? AND f.deleted_at IS NULL ORDER BY f.version_number DESC`,
     )
     .all(id)
-    .map((file) => setupFileFromRow(file, isSetupAdministrator(session)));
+    .map((file) => setupFileFromRow(file, session, row.created_by));
   return setup;
 }
 
@@ -1169,6 +1162,30 @@ function requireOwnedSetupAction(db, id, session, { draftOnly = false } = {}) {
     throw new ApiError(409, 'INVALID_SETUP_STATE', 'Solo puedes publicar un borrador propio.');
   }
   return setup;
+}
+
+function requireOwnedSetupFileAction(db, setupId, fileId, session) {
+  const file = db
+    .prepare(
+      `SELECT f.*, s.created_by AS setup_created_by
+       FROM setup_files f JOIN setups s ON s.id = f.setup_id
+       WHERE f.id = ? AND f.setup_id = ? AND f.deleted_at IS NULL AND s.deleted_at IS NULL`,
+    )
+    .get(fileId, setupId);
+  if (!file) throw new ApiError(404, 'NOT_FOUND', 'No existe ese archivo.');
+  if (isSetupAdministrator(session)) return file;
+  if (
+    !session.admin.canUploadSetups ||
+    file.setup_created_by !== session.admin.id ||
+    file.uploaded_by !== session.admin.id
+  ) {
+    throw new ApiError(
+      403,
+      'FORBIDDEN',
+      'Solo puedes gestionar las versiones que has subido a tus propios setups.',
+    );
+  }
+  return file;
 }
 
 function canViewSetup(setup, session) {
@@ -1216,7 +1233,13 @@ function setupFromRow(row, session) {
   };
 }
 
-function setupFileFromRow(row, includeManagementFields) {
+function setupFileFromRow(row, session, setupCreatedBy) {
+  const administrator = isSetupAdministrator(session);
+  const canManageVersion =
+    administrator ||
+    (session.admin.canUploadSetups &&
+      setupCreatedBy === session.admin.id &&
+      row.uploaded_by === session.admin.id);
   return {
     id: row.id,
     setupId: row.setup_id,
@@ -1231,9 +1254,11 @@ function setupFileFromRow(row, includeManagementFields) {
     uploadedBy: row.uploaded_by,
     uploadedByName: row.uploaded_by_name ?? null,
     uploadedAt: row.uploaded_at,
-    retentionDays: includeManagementFields ? row.retention_days : null,
+    retentionDays: canManageVersion ? row.retention_days : null,
     expiresAt: row.expires_at,
-    downloadCount: includeManagementFields ? row.download_count : null,
+    downloadCount: administrator ? row.download_count : null,
+    canUpdateRetention: canManageVersion,
+    canDelete: canManageVersion,
   };
 }
 

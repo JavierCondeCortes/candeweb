@@ -520,11 +520,20 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
     assert.equal(contributorDraft.status, 201);
     const contributorUpload = await binaryRequest(
       baseUrl,
-      `/api/setups/${contributorDraft.data.setup.id}/files?fileName=pilot.sto&sessionType=wet&retentionDays=365`,
+      `/api/setups/${contributorDraft.data.setup.id}/files?fileName=pilot.sto&sessionType=wet`,
       { cookie: userCookie, csrf: userCsrf, body: Buffer.from('pilot setup') },
     );
     assert.equal(contributorUpload.status, 201);
-    assert.equal(contributorUpload.data.file.retentionDays, null);
+    assert.equal(contributorUpload.data.file.retentionDays, 30);
+    assert.equal(contributorUpload.data.file.canUpdateRetention, true);
+    assert.equal(contributorUpload.data.file.canDelete, true);
+    const administratorVersionInContributorSetup = await binaryRequest(
+      baseUrl,
+      `/api/setups/${contributorDraft.data.setup.id}/files?fileName=admin-version.sto&sessionType=race`,
+      { cookie: adminCookie, csrf: adminCsrf, body: Buffer.from('admin setup version') },
+    );
+    assert.equal(administratorVersionInContributorSetup.status, 201);
+    assert.equal(administratorVersionInContributorSetup.data.file.retentionDays, 30);
     const contributorPublish = await jsonRequest(
       baseUrl,
       `/api/setups/${contributorDraft.data.setup.id}/publish`,
@@ -533,6 +542,55 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
     assert.equal(contributorPublish.status, 200);
     assert.equal(contributorPublish.data.setup.status, 'published');
     assert.equal(contributorPublish.data.setup.canDelete, true);
+
+    const contributorRetention = await jsonRequest(
+      baseUrl,
+      `/api/setups/${contributorDraft.data.setup.id}/files/${contributorUpload.data.file.id}/retention`,
+      {
+        method: 'PATCH',
+        cookie: userCookie,
+        csrf: userCsrf,
+        body: { retentionDays: 365 },
+      },
+    );
+    assert.equal(contributorRetention.status, 200);
+    assert.equal(contributorRetention.data.file.retentionDays, 365);
+
+    const contributorCannotChangeAdministratorsVersion = await jsonRequest(
+      baseUrl,
+      `/api/setups/${contributorDraft.data.setup.id}/files/${administratorVersionInContributorSetup.data.file.id}/retention`,
+      {
+        method: 'PATCH',
+        cookie: userCookie,
+        csrf: userCsrf,
+        body: { retentionDays: 30 },
+      },
+    );
+    assert.equal(contributorCannotChangeAdministratorsVersion.status, 403);
+    const contributorCannotDeleteAdministratorsVersion = await jsonRequest(
+      baseUrl,
+      `/api/setups/${contributorDraft.data.setup.id}/files/${administratorVersionInContributorSetup.data.file.id}`,
+      { method: 'DELETE', cookie: userCookie, csrf: userCsrf },
+    );
+    assert.equal(contributorCannotDeleteAdministratorsVersion.status, 403);
+
+    const contributorCannotChangeAnotherVersion = await jsonRequest(
+      baseUrl,
+      `/api/setups/${setupId}/files/${uploaded.data.file.id}/retention`,
+      {
+        method: 'PATCH',
+        cookie: userCookie,
+        csrf: userCsrf,
+        body: { retentionDays: 30 },
+      },
+    );
+    assert.equal(contributorCannotChangeAnotherVersion.status, 403);
+    const contributorCannotDeleteAnotherVersion = await jsonRequest(
+      baseUrl,
+      `/api/setups/${setupId}/files/${uploaded.data.file.id}`,
+      { method: 'DELETE', cookie: userCookie, csrf: userCsrf },
+    );
+    assert.equal(contributorCannotDeleteAnotherVersion.status, 403);
 
     const contributorCannotPublishAnotherSetup = await jsonRequest(
       baseUrl,
@@ -546,6 +604,18 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
       { method: 'DELETE', cookie: userCookie, csrf: userCsrf },
     );
     assert.equal(contributorCannotDeleteAnotherSetup.status, 403);
+
+    const deletedContributorVersion = await jsonRequest(
+      baseUrl,
+      `/api/setups/${contributorDraft.data.setup.id}/files/${contributorUpload.data.file.id}`,
+      { method: 'DELETE', cookie: userCookie, csrf: userCsrf },
+    );
+    assert.equal(deletedContributorVersion.status, 204);
+    assert.equal(
+      app.db.prepare('SELECT status FROM setups WHERE id = ?').get(contributorDraft.data.setup.id)
+        .status,
+      'published',
+    );
 
     const deletedContributorSetup = await jsonRequest(
       baseUrl,

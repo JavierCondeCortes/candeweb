@@ -4,7 +4,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
-import { RacingSetup, SetupCapabilities, SetupFile } from '../../../core/models/setup.model';
+import { RacingSetup, SetupFile } from '../../../core/models/setup.model';
 import { SetupApiService } from '../../../core/services/setup-api.service';
 import { ConfirmationService } from '../../../core/services/confirmation.service';
 
@@ -24,11 +24,6 @@ export class SetupDetail implements OnInit {
   readonly busy = signal(false);
   readonly errorMessage = signal('');
   readonly setup = signal<RacingSetup | null>(null);
-  readonly capabilities = signal<SetupCapabilities>({
-    canAccess: true,
-    canUpload: false,
-    canManage: false,
-  });
 
   ngOnInit(): void {
     this.load();
@@ -40,9 +35,8 @@ export class SetupDetail implements OnInit {
       .getSetup(this.route.snapshot.paramMap.get('id') ?? '')
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
-        next: ({ setup, capabilities }) => {
+        next: ({ setup }) => {
           this.setup.set(setup);
-          this.capabilities.set(capabilities);
         },
         error: (error) => this.errorMessage.set(setupError(error)),
       });

@@ -23,7 +23,6 @@ export class SetupForm implements OnInit {
   readonly errorMessage = signal('');
   readonly selectedFile = signal<File | null>(null);
   readonly existing = signal<RacingSetup | null>(null);
-  readonly canManage = signal(false);
 
   readonly form = this.formBuilder.nonNullable.group({
     title: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(120)]],
@@ -33,24 +32,25 @@ export class SetupForm implements OnInit {
     configuration: ['', [Validators.maxLength(100)]],
     season: [1, [Validators.required, Validators.min(1), Validators.max(99)]],
     week: [1, [Validators.required, Validators.min(1), Validators.max(99)]],
-    year: [new Date().getFullYear(), [Validators.required, Validators.min(2000), Validators.max(2100)]],
+    year: [
+      new Date().getFullYear(),
+      [Validators.required, Validators.min(2000), Validators.max(2100)],
+    ],
     description: ['', [Validators.maxLength(1000)]],
     tags: [''],
     fileSessionType: ['race' as SetupSessionType, [Validators.required]],
     notes: ['', [Validators.maxLength(500)]],
-    retentionDays: ['90'],
+    retentionDays: ['30'],
   });
 
   ngOnInit(): void {
-    this.canManage.set(['owner', 'admin'].includes(this.api.session()?.account?.role ?? ''));
     if (!this.id) return;
     this.api
       .getSetup(this.id)
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
-        next: ({ setup, capabilities }) => {
+        next: ({ setup }) => {
           this.existing.set(setup);
-          this.canManage.set(capabilities.canManage);
           this.form.patchValue({
             title: setup.title,
             simulator: setup.simulator,
@@ -124,9 +124,11 @@ export class SetupForm implements OnInit {
             sessionType: value.fileSessionType,
             notes: value.notes,
             retentionDays:
-              this.canManage() && Number.isInteger(parsedRetention) && parsedRetention > 0
-                ? parsedRetention
-                : null,
+              value.retentionDays === ''
+                ? null
+                : Number.isInteger(parsedRetention) && parsedRetention > 0
+                  ? parsedRetention
+                  : 30,
           });
         }),
         finalize(() => this.saving.set(false)),

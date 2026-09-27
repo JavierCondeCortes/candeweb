@@ -345,6 +345,7 @@
       "fileHelp": "Formats: STO, SVM, SET, SETUP, INI, JSON, XML or ZIP. Maximum 25 MB.",
       "notes": "Version notes",
       "retention": "Delete after",
+      "retentionHelp": "The default is 30 days and can be changed later.",
       "days": "days",
       "noExpiry": "No expiry"
     },
