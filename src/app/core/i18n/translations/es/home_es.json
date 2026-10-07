@@ -364,7 +364,21 @@
       "noExpiry": "Sin caducidad automática",
       "download": "Descargar setup",
       "retention": "Días",
-      "deleteFile": "Eliminar archivo"
+      "deleteFile": "Eliminar archivo",
+      "packageEyebrow": "Instalación completa",
+      "packageTitle": "Descarga todo el setup",
+      "packageIntro": "Obtén todas las versiones disponibles con una sola descarga.",
+      "downloadPackage": "Descargar todo",
+      "downloadsHelp": "Opcional: puedes guardar los archivos directamente en una carpeta.",
+      "installFolder": "Guardar en otra carpeta",
+      "installSavedFolder": "Guardar en {{folder}}",
+      "changeFolder": "Cambiar carpeta",
+      "forgetFolder": "Olvidar carpeta",
+      "rememberFolder": "Recordar esta carpeta para próximas descargas",
+      "installingFiles": "Instalando {{completed}} de {{total}} archivos…",
+      "installSuccess": "{{count}} archivos instalados en «{{folder}}».",
+      "installError": "No se pudo completar la instalación. Comprueba el permiso de la carpeta e inténtalo de nuevo.",
+      "folderForgotten": "La carpeta guardada se ha olvidado."
     },
     "users": {
       "eyebrow": "Permisos independientes",

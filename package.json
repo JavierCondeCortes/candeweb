@@ -32,6 +32,7 @@
     "@angular/forms": "^21.2.19",
     "@angular/platform-browser": "^21.2.19",
     "@angular/router": "^21.2.19",
+    "archiver": "^8.0.0",
     "juice": "^12.1.2",
     "nodemailer": "^9.1.1",
     "qrcode": "^1.5.4",

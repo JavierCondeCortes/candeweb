@@ -254,6 +254,7 @@ PATCH  /api/setups/:id
 POST   /api/setups/:id/publish
 POST   /api/setups/:id/archive
 POST   /api/setups/:id/files
+GET    /api/setups/:id/package/download
 GET    /api/setups/:id/files/:fileId/download
 PATCH  /api/setups/:id/files/:fileId/retention
 DELETE /api/setups/:id/files/:fileId
@@ -313,6 +314,16 @@ Owner y admin obtienen sus capacidades por rol; no es necesario crear filas redu
 - Descripción, autor, fecha de actualización y lista de versiones.
 - Cada versión muestra su tipo de sesión antes del nombre del archivo.
 - Botón `Descargar setup` con nombre y peso del archivo antes de iniciar la descarga.
+- Botón `Descargar paquete (.zip)` para reunir todas las versiones activas y guardarlas en la
+  carpeta de Descargas configurada en el navegador.
+- En Chrome y Edge sobre HTTPS o localhost, opción `Elegir carpeta e instalar` para escribir cada
+  versión directamente en una carpeta local. La web guarda el permiso de esa carpeta en IndexedDB,
+  separado por cuenta, cuando la persona marca `Recordar esta carpeta`.
+- Permitir cambiar u olvidar la carpeta guardada. El navegador puede volver a pedir autorización
+  después de reiniciarse; la aplicación nunca guarda ni transmite la ruta completa del equipo.
+- La descarga completa es siempre la acción principal. La selección de carpeta se muestra únicamente
+  cuando el navegador la admite; si no es compatible, se oculta sin enseñar mensajes técnicos ni
+  pedir configuración adicional al usuario.
 - Fecha de eliminación expresada de forma absoluta: `Se elimina el 20 de septiembre de 2026`.
 - Checksum disponible para quien necesite verificar la descarga.
 

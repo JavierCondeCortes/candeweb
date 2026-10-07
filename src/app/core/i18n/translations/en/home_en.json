@@ -364,7 +364,21 @@
       "noExpiry": "No automatic expiry",
       "download": "Download setup",
       "retention": "Days",
-      "deleteFile": "Delete file"
+      "deleteFile": "Delete file",
+      "packageEyebrow": "Complete installation",
+      "packageTitle": "Download the complete setup",
+      "packageIntro": "Get every available version in a single download.",
+      "downloadPackage": "Download all",
+      "downloadsHelp": "Optional: save the files directly into a folder.",
+      "installFolder": "Save in another folder",
+      "installSavedFolder": "Save in {{folder}}",
+      "changeFolder": "Change folder",
+      "forgetFolder": "Forget folder",
+      "rememberFolder": "Remember this folder for future downloads",
+      "installingFiles": "Installing {{completed}} of {{total}} files…",
+      "installSuccess": "{{count}} files installed in “{{folder}}”.",
+      "installError": "The installation could not be completed. Check the folder permission and try again.",
+      "folderForgotten": "The saved folder has been forgotten."
     },
     "users": {
       "eyebrow": "Independent permissions",

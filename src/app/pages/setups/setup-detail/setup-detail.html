@@ -102,6 +102,78 @@
         <div class="setup-empty">
           <p>{{ 'home.setups.detail.noFiles' | translate }}</p>
         </div>
+      } @else {
+        <aside class="setup-package-installer" aria-labelledby="setup-package-title">
+          <div>
+            <p class="setup-eyebrow">{{ 'home.setups.detail.packageEyebrow' | translate }}</p>
+            <h3 id="setup-package-title">{{ 'home.setups.detail.packageTitle' | translate }}</h3>
+            <p>{{ 'home.setups.detail.packageIntro' | translate }}</p>
+          </div>
+          <div class="setup-package-actions">
+            <a class="setup-button is-primary" [href]="packageDownloadUrl(item)">
+              {{ 'home.setups.detail.downloadPackage' | translate }}
+            </a>
+            @if (folderInstallSupported) {
+              <button
+                class="setup-button"
+                type="button"
+                [disabled]="installBusy()"
+                (click)="installInFolder(item)"
+              >
+                @if (savedDirectory(); as directory) {
+                  {{
+                    'home.setups.detail.installSavedFolder' | translate: { folder: directory.name }
+                  }}
+                } @else {
+                  {{ 'home.setups.detail.installFolder' | translate }}
+                }
+              </button>
+              <small>{{ 'home.setups.detail.downloadsHelp' | translate }}</small>
+              <label class="setup-remember-folder">
+                <input
+                  type="checkbox"
+                  [checked]="rememberDirectory()"
+                  (change)="rememberDirectory.set($any($event.target).checked)"
+                />
+                <span>{{ 'home.setups.detail.rememberFolder' | translate }}</span>
+              </label>
+              @if (savedDirectory()) {
+                <div class="setup-saved-folder-actions">
+                  <button
+                    class="setup-text-button"
+                    type="button"
+                    [disabled]="installBusy()"
+                    (click)="installInFolder(item, true)"
+                  >
+                    {{ 'home.setups.detail.changeFolder' | translate }}
+                  </button>
+                  <button
+                    class="setup-text-button is-danger"
+                    type="button"
+                    [disabled]="installBusy()"
+                    (click)="forgetSavedDirectory()"
+                  >
+                    {{ 'home.setups.detail.forgetFolder' | translate }}
+                  </button>
+                </div>
+              }
+            }
+          </div>
+          @if (installProgress(); as progress) {
+            <p class="setup-install-status" role="status" aria-live="polite">
+              {{
+                'home.setups.detail.installingFiles'
+                  | translate: { completed: progress.completed, total: progress.total }
+              }}
+            </p>
+          }
+          @if (installMessage()) {
+            <p class="setup-install-status is-success" role="status">{{ installMessage() }}</p>
+          }
+          @if (installError()) {
+            <p class="setup-install-status is-error" role="alert">{{ installError() }}</p>
+          }
+        </aside>
       }
       <div class="setup-file-list">
         @for (file of item.files; track file.id) {
