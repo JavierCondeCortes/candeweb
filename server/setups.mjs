@@ -2,6 +2,7 @@ import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { createReadStream, existsSync, mkdirSync } from 'node:fs';
 import { unlink, writeFile } from 'node:fs/promises';
 import { basename, extname, join, resolve } from 'node:path';
+import { ZipArchive } from 'archiver';
 import { recordAudit } from './database.mjs';
 import { sendAccessInvitation, sendAccessRequestNotification } from './email.mjs';
 import {
@@ -794,6 +795,11 @@ async function routeSetupLibrary(context) {
     return downloadSetupFile(context, download[1], download[2], session);
   }
 
+  const packageDownload = path.match(/^\/api\/setups\/([^/]+)\/package\/download$/);
+  if (method === 'GET' && packageDownload) {
+    return downloadSetupPackage(context, packageDownload[1], session);
+  }
+
   const retention = path.match(/^\/api\/setups\/([^/]+)\/files\/([^/]+)\/retention$/);
   if (method === 'PATCH' && retention) {
     const file = requireOwnedSetupFileAction(db, retention[1], retention[2], session);
@@ -1073,6 +1079,115 @@ function downloadSetupFile(context, setupId, fileId, session) {
     'Cache-Control': 'private, no-store',
   });
   createReadStream(row.storage_path).pipe(context.response);
+}
+
+async function downloadSetupPackage(context, setupId, session) {
+  const setup = context.db
+    .prepare('SELECT * FROM setups WHERE id = ? AND deleted_at IS NULL')
+    .get(setupId);
+  if (!setup) throw new ApiError(404, 'NOT_FOUND', 'No existe ese setup.');
+
+  const canViewDraft = isSetupAdministrator(session) || setup.created_by === session.admin.id;
+  if (setup.status !== 'published' && !canViewDraft) {
+    throw new ApiError(404, 'NOT_FOUND', 'No existe ese setup.');
+  }
+
+  const now = new Date().toISOString();
+  const files = context.db
+    .prepare(
+      `SELECT * FROM setup_files
+       WHERE setup_id = ? AND deleted_at IS NULL
+         AND (expires_at IS NULL OR expires_at > ?)
+       ORDER BY version_number ASC`,
+    )
+    .all(setup.id, now);
+  if (!files.length) {
+    throw new ApiError(410, 'SETUP_FILES_MISSING', 'Este setup no tiene archivos disponibles.');
+  }
+  if (files.some((file) => !existsSync(file.storage_path))) {
+    throw new ApiError(
+      410,
+      'SETUP_FILE_MISSING',
+      'El paquete está incompleto y no se puede descargar.',
+    );
+  }
+
+  context.db.exec('BEGIN');
+  try {
+    const increment = context.db.prepare(
+      'UPDATE setup_files SET download_count = download_count + 1 WHERE id = ?',
+    );
+    const insertDownload = context.db.prepare(
+      'INSERT INTO setup_downloads (id, file_id, account_id, downloaded_at) VALUES (?, ?, ?, ?)',
+    );
+    for (const file of files) {
+      increment.run(file.id);
+      insertDownload.run(randomUUID(), file.id, session.admin.id, now);
+    }
+    recordAudit(context.db, session.admin.id, 'setups.package_downloaded', 'setup', setup.id, {
+      fileCount: files.length,
+      fileIds: files.map((file) => file.id),
+    });
+    context.db.exec('COMMIT');
+  } catch (error) {
+    context.db.exec('ROLLBACK');
+    throw error;
+  }
+
+  const archiveName = `${safeArchiveName(setup.title)}.zip`;
+  const encodedName = encodeURIComponent(archiveName).replace(
+    /['()]/g,
+    (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`,
+  );
+  context.response.writeHead(200, {
+    ...SECURITY_HEADERS,
+    'Content-Type': 'application/zip',
+    'Content-Disposition': `attachment; filename="${archiveName}"; filename*=UTF-8''${encodedName}`,
+    'Cache-Control': 'private, no-store',
+  });
+
+  const archive = new ZipArchive({ zlib: { level: 9 } });
+  const usedNames = new Set();
+  archive.pipe(context.response);
+  for (const file of files) {
+    archive.file(file.storage_path, { name: uniqueArchiveEntryName(file, usedNames) });
+  }
+
+  await new Promise((resolvePromise, rejectPromise) => {
+    archive.once('error', rejectPromise);
+    context.response.once('finish', resolvePromise);
+    context.response.once('error', rejectPromise);
+    archive.finalize().catch(rejectPromise);
+  });
+}
+
+function safeArchiveName(value) {
+  const normalized = String(value ?? 'setup')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9_-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
+  return normalized || 'setup';
+}
+
+function uniqueArchiveEntryName(file, usedNames) {
+  const original = basename(String(file.original_name ?? `setup${file.extension ?? ''}`))
+    .replace(/[\u0000-\u001f<>:"/\\|?*]/g, '_')
+    .replace(/[. ]+$/g, '')
+    .slice(0, 180);
+  const fallback = `setup-v${file.version_number}${file.extension ?? ''}`;
+  const preferred = original || fallback;
+  let candidate = preferred;
+  let duplicate = 2;
+  while (usedNames.has(candidate.toLowerCase())) {
+    const extension = extname(preferred);
+    const stem = basename(preferred, extension).slice(0, 150);
+    candidate = `${stem}-${duplicate}${extension}`;
+    duplicate += 1;
+  }
+  usedNames.add(candidate.toLowerCase());
+  return candidate;
 }
 
 export async function runSetupCleanup(db, setupDir, timestamp = new Date()) {

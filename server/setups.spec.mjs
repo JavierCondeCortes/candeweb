@@ -459,11 +459,30 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
     assert.equal(downloaded.status, 200);
     assert.deepEqual(downloaded.body, setupBytes);
     assert.match(downloaded.response.headers.get('content-disposition'), /mazda-spa\.sto/);
+    const packageDownload = await rawRequest(baseUrl, `/api/setups/${setupId}/package/download`, {
+      cookie: userCookie,
+    });
+    assert.equal(packageDownload.status, 200);
+    assert.equal(packageDownload.response.headers.get('content-type'), 'application/zip');
+    assert.match(packageDownload.response.headers.get('content-disposition'), /\.zip/);
+    assert.deepEqual(packageDownload.body.subarray(0, 2), Buffer.from('PK'));
+    assert.equal(packageDownload.body.includes(Buffer.from('mazda-spa.sto')), true);
+    assert.equal(
+      app.db
+        .prepare('SELECT download_count FROM setup_files WHERE id = ?')
+        .get(uploaded.data.file.id).download_count,
+      2,
+    );
     const anonymousDownload = await jsonRequest(
       baseUrl,
       `/api/setups/${setupId}/files/${uploaded.data.file.id}/download`,
     );
     assert.equal(anonymousDownload.status, 401);
+    const anonymousPackageDownload = await jsonRequest(
+      baseUrl,
+      `/api/setups/${setupId}/package/download`,
+    );
+    assert.equal(anonymousPackageDownload.status, 401);
 
     assert.equal(managedUser.canAccessSkins, false);
     const blockedSkins = await jsonRequest(baseUrl, '/api/skins', { cookie: userCookie });

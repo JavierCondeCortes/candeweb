@@ -143,6 +143,17 @@ export class SetupApiService {
     return `/api/setups/${encodeURIComponent(setupId)}/files/${encodeURIComponent(fileId)}/download`;
   }
 
+  packageDownloadUrl(setupId: string) {
+    return `/api/setups/${encodeURIComponent(setupId)}/package/download`;
+  }
+
+  downloadFileBlob(setupId: string, fileId: string) {
+    return this.http.get(this.downloadUrl(setupId, fileId), {
+      withCredentials: true,
+      responseType: 'blob',
+    });
+  }
+
   getAccessManagement() {
     return this.http.get<{
       users: ManagedSetupAccount[];
