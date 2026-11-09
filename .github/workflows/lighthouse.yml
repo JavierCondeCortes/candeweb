@@ -32,7 +32,10 @@ jobs:
           mkdir -p "$LH_DATA"
           DATABASE_PATH="$LH_DATA/db.sqlite" UPLOAD_DIR="$LH_DATA/uploads" SETUP_DIR="$LH_DATA/setups" \
             PUBLIC_APP_URL=http://localhost:3000 nohup node server/server.mjs > "$LH_DATA/server.log" 2>&1 &
-          for i in $(seq 1 30); do curl -fsS http://localhost:3000/api/health && break || sleep 1; done
+          for _ in $(seq 1 30); do
+            if curl -fsS http://localhost:3000/api/health; then break; fi
+            sleep 1
+          done
           curl -fsS http://localhost:3000/api/health
       - name: Lighthouse CI
         run: npx --yes @lhci/cli@0.14.0 autorun --config=lighthouserc.json

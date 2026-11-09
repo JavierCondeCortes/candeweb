@@ -100,8 +100,9 @@ jobs:
           PUBLIC_APP_URL: https://candemor.com
         run: |
           docker run -d --name candeweb -p 3000:3000 -e PUBLIC_APP_URL="$PUBLIC_APP_URL" candeweb:ci
-          for i in $(seq 1 30); do
-            curl -fsS http://127.0.0.1:3000/api/health && break || sleep 2
+          for _ in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3000/api/health; then break; fi
+            sleep 2
           done
           curl -fsS http://127.0.0.1:3000/api/health
           curl -fsS http://127.0.0.1:3000/sitemap.xml | grep -q '<loc>https://candemor.com/candeonato</loc>'
