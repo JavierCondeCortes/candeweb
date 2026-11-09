@@ -2,18 +2,33 @@
 
 ## CI/CD (GitHub Actions)
 
+Ramas: `develop` es la rama de integración de PR; `Main` es producción y la rama por defecto.
+
 | Workflow | Cuándo | Qué hace |
 | --- | --- | --- |
-| `verify.yml` | PR y push a `develop` y `Main` | En paralelo: i18n, tests de servidor, tests unitarios, build + `test:seo`, `npm audit` y smoke test de la imagen Docker (health, sitemap, robots, 404). |
-| `codeql.yml` | PR, push y lunes | Análisis estático de seguridad (JavaScript/TypeScript). |
-| `lighthouse.yml` | PR | Lighthouse CI sobre `/`, `/candeonato` y `/candeonatos`; la categoría SEO debe ser ≥ 0.95. |
-| `docker-publish.yml` | Push a `Main` y tags `vX.Y.Z` | Reutiliza `verify.yml` y publica `ghcr.io/<repo>` (`latest`, semver, sha). |
-| `dependabot.yml` | Semanal | PRs de npm (agrupados Angular/tooling), GitHub Actions y Docker. |
+| `verify.yml` | PR, push a `develop`, y llamado desde `docker-publish.yml` | En paralelo: i18n, tests de servidor, tests unitarios, build + `test:seo`, `npm audit --audit-level=high` y smoke test de la imagen Docker (health, sitemap, robots, 404). |
+| `docker-publish.yml` | Push a `Main` y tags `vX.Y.Z` | Ejecuta `verify.yml` y, si pasa, publica `ghcr.io/<repo>` con `latest`, semver y sha, con provenance y SBOM. |
+| `codeql.yml` | PR, push a `develop`/`Main` y lunes | Análisis estático de seguridad (JavaScript/TypeScript). |
+| `dependency-review.yml` | PR | Falla si el PR introduce dependencias con vulnerabilidades altas o licencias GPL/AGPL. |
+| `lighthouse.yml` | PR | Lighthouse CI (3 pasadas) sobre `/`, `/candeonato` y `/candeonatos`; SEO ≥ 0.95. Los informes se guardan como artefacto del run, no en almacenamiento público. |
+| `actionlint.yml` | Cambios en `.github/workflows/` | Valida la sintaxis de los workflows. |
+| `production-monitor.yml` | Cada 30 minutos | Comprueba en producción `/api/health`, `/sitemap.xml`, `/robots.txt` y los metadatos SEO de la portada. Requiere la variable `PUBLIC_APP_URL` en Settings → Variables. |
+| `dependabot.yml` | Semanal | PRs de npm (parches y menores agrupados), GitHub Actions y Docker. Las mayores de Angular, TypeScript, Vitest y jsdom están ignoradas hasta planificar la migración. |
 
-Render sigue desplegando con `autoDeployTrigger: checksPass`, así que no se publica nada si
-`verify.yml` falla. `.nvmrc` fija Node 22.13.0 para CI y desarrollo local.
+Decisiones:
+- **Sin `push` a `Main` en `verify.yml`:** `docker-publish.yml` ya lo ejecuta. Tenerlos los dos
+  causaba ejecuciones que se cancelaban entre sí por el mismo grupo de concurrencia.
+- **Acciones fijadas por SHA** (con la versión en comentario). Dependabot actualiza los SHA.
+- **`persist-credentials: false`** en `checkout`: el token no queda en el repositorio clonado.
+- **Render** sigue con `autoDeployTrigger: checksPass`: no despliega si `verify.yml` falla.
 
-Recomendado (en GitHub, no versionable): proteger `Main` y `develop` exigiendo los checks de `verify.yml`.
+Pendiente en GitHub (no versionable):
+- Proteger `Main` y `develop` exigiendo los checks de `verify.yml`, `codeql` y `dependency-review`.
+- Definir la variable `PUBLIC_APP_URL` para que `production-monitor` funcione.
+- Activar las notificaciones de Actions para recibir el aviso de fallo del monitor.
+
+Desajuste conocido: CI usa Node 22.13 (`.nvmrc`), la imagen Docker usa `node:24`, y hay un PR
+de Dependabot para `node:26`. Conviene alinearlos en una sola decisión.
 
 ## SEO (equipo de iRacing / simracing)
 
