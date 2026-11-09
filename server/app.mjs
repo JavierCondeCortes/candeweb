@@ -1,5 +1,5 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
-import { createReadStream, existsSync, mkdirSync, statSync } from 'node:fs';
+import { createReadStream, existsSync, mkdirSync, readFileSync, statSync } from 'node:fs';
 import { unlink, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { dirname, extname, join, normalize, resolve, sep } from 'node:path';
@@ -12,6 +12,7 @@ import {
   createFatcatStandingsService,
   reconcileStandingsWithDriverIds,
 } from './fatcat-standings.mjs';
+import { NOINDEX_HEADER, renderIndexHtml, renderRobots, renderSitemap } from './seo.mjs';
 import { createTwitchStatusService } from './twitch.mjs';
 import { routeSetupApi, runSetupCleanup } from './setups.mjs';
 import { routeWebUpdatesApi } from './web-updates.mjs';
@@ -579,7 +580,29 @@ async function routeRequest(context) {
     return serveUpload(request, response, path, context.uploadDir);
   }
 
-  return serveFrontend(request, response, path, context.browserDir);
+  if (method === 'GET' || method === 'HEAD') {
+    if (path === '/robots.txt') {
+      return sendText(request, response, 'text/plain; charset=utf-8', renderRobots(context.publicAppUrl));
+    }
+    if (path === '/sitemap.xml') {
+      const championships = db
+        .prepare(
+          `SELECT ${CHAMPIONSHIP_COLUMNS} FROM championships
+           WHERE status IN ('registration', 'active', 'finished') AND deleted_at IS NULL
+           ORDER BY edition_number DESC`,
+        )
+        .all()
+        .map((row) => championshipFromDatabaseRow(db, row));
+      return sendText(
+        request,
+        response,
+        'application/xml; charset=utf-8',
+        renderSitemap(context.publicAppUrl, championships),
+      );
+    }
+  }
+
+  return serveFrontend(request, response, path, context.browserDir, context.publicAppUrl);
 }
 
 async function routeAdmin(context) {
@@ -2786,12 +2809,48 @@ function serveUpload(request, response, path, uploadDir) {
   else createReadStream(filePath).pipe(response);
 }
 
-function serveFrontend(request, response, path, browserDir) {
+function sendText(request, response, contentType, body) {
+  response.writeHead(200, {
+    ...BASE_SECURITY_HEADERS,
+    'Content-Type': contentType,
+    'Content-Length': Buffer.byteLength(body),
+    'Cache-Control': 'public, max-age=3600',
+  });
+  response.end(request.method === 'HEAD' ? undefined : body);
+}
+
+// Sirve el index.html de la SPA con metadatos SEO propios de la ruta. Las rutas desconocidas
+// responden 404 (con la SPA, que redirige al inicio) para evitar soft-404 en buscadores.
+function serveSpaIndex(request, response, path, indexPath, publicAppUrl) {
+  const { html, status, robots } = renderIndexHtml(
+    readFileSync(indexPath, 'utf8'),
+    path,
+    publicAppUrl,
+  );
+  const body = Buffer.from(html);
+  const headers = {
+    ...BASE_SECURITY_HEADERS,
+    'Content-Type': 'text/html; charset=utf-8',
+    'Cache-Control': 'no-cache',
+    'Content-Length': body.length,
+  };
+  if (robots === NOINDEX_HEADER) headers['X-Robots-Tag'] = robots;
+  response.writeHead(status, headers);
+  response.end(request.method === 'HEAD' ? undefined : body);
+}
+
+function serveFrontend(request, response, path, browserDir, publicAppUrl) {
   if (!existsSync(browserDir)) throw new ApiError(404, 'NOT_FOUND', 'No existe ese recurso.');
+  const indexPath = join(browserDir, 'index.html');
   const relative = path === '/' ? 'index.html' : normalize(path).replace(/^[/\\]+/, '');
-  let filePath = resolve(browserDir, relative);
-  if (!filePath.startsWith(resolve(browserDir)) || !existsSync(filePath)) {
-    filePath = join(browserDir, 'index.html');
+  const filePath = resolve(browserDir, relative);
+  if (
+    !filePath.startsWith(resolve(browserDir)) ||
+    !existsSync(filePath) ||
+    statSync(filePath).isDirectory() ||
+    filePath === resolve(indexPath)
+  ) {
+    return serveSpaIndex(request, response, path, indexPath, publicAppUrl);
   }
   const size = statSync(filePath).size;
   const headers = {

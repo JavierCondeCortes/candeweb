@@ -1,0 +1,33 @@
+name: Lighthouse SEO
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lighthouse-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Start server
+        run: |
+          mkdir -p /tmp/lh-data
+          DATABASE_PATH=/tmp/lh-data/db.sqlite UPLOAD_DIR=/tmp/lh-data/uploads SETUP_DIR=/tmp/lh-data/setups \
+            PUBLIC_APP_URL=http://localhost:3000 node server/server.mjs &
+          for i in $(seq 1 30); do curl -fsS http://localhost:3000/api/health && break || sleep 1; done
+      - name: Lighthouse CI
+        run: npx --yes @lhci/cli@0.14.0 autorun --config=lighthouserc.json

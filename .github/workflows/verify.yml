@@ -3,31 +3,96 @@ name: Verify
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [Main, develop]
+  workflow_call:
 
 permissions:
   contents: read
 
 concurrency:
-  group: verify-${{ github.ref }}
+  group: verify-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  test:
+  checks:
+    name: Tests (${{ matrix.check }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - check: i18n
+            command: npm run test:i18n
+          - check: server
+            command: npm run test:server
+          - check: unit
+            command: npm test -- --watch=false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: ${{ matrix.command }}
+
+  build:
+    name: Build and SEO check
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 22.13.0
+          node-version-file: .nvmrc
           cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Check SEO output
+        run: npm run test:seo
+      - uses: actions/upload-artifact@v4
+        with:
+          name: browser-dist
+          path: dist/candeweb/browser
+          retention-days: 7
 
-      - name: Install dependencies
-        run: npm ci
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm audit --omit=dev
 
-      - name: Verify application
-        run: npm run verify
+  docker:
+    name: Docker image smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: candeweb:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Container serves health, sitemap and robots
+        run: |
+          docker run -d --name candeweb -p 3000:3000 -e PUBLIC_APP_URL=https://candemor.com candeweb:ci
+          for i in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:3000/api/health && break || sleep 2
+          done
+          curl -fsS http://127.0.0.1:3000/api/health
+          curl -fsS http://127.0.0.1:3000/sitemap.xml | grep -q '<loc>https://candemor.com/candeonato</loc>'
+          curl -fsS http://127.0.0.1:3000/robots.txt | grep -q 'Sitemap: https://candemor.com/sitemap.xml'
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/ruta-inexistente)" = 404
+      - if: failure()
+        run: docker logs candeweb

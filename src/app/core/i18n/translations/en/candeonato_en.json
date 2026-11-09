@@ -1,8 +1,11 @@
 {
   "meta": {
-    "title": "Candeonato #8 · New Era Edition",
-    "historyTitle": "Candeonato archive",
-    "detailTitle": "Standings · Candeonato"
+    "title": "Candeonato #8 · New Era Edition | Sim racing championship",
+    "description": "Candeonato: sim racing championship run by Candemor Racing Team. Check requirements, rules and schedule, and sign up for the current edition.",
+    "historyTitle": "Candeonato archive · Standings and races",
+    "historyDescription": "Archive of Candeonato editions with driver and team standings, race results and sim racing championship statistics.",
+    "detailTitle": "Standings · Candeonato",
+    "detailDescription": "Standings, races and statistics for an edition of the Candeonato, the sim racing championship by Candemor Racing Team."
   },
   "language": { "label": "Select language" },
   "skip": "Skip to main content",

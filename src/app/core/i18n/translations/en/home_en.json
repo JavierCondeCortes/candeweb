@@ -1,5 +1,8 @@
 {
-  "meta": { "title": "Candemor Racing Team · Sim racing and community" },
+  "meta": {
+    "title": "Candemor Racing Team · iRacing and sim racing team",
+    "description": "Candemor Racing Team is an iRacing and sim racing team with Twitch streams, a Discord community and the Candeonato, our online racing championship."
+  },
   "language": { "label": "Select language" },
   "common": {
     "newTab": "opens in a new tab",
@@ -405,7 +408,10 @@
     }
   },
   "spotter": {
-    "meta": { "title": "Chiquito Spotter · Candemor Racing Team" },
+    "meta": {
+      "title": "Chiquito Spotter · Voice spotter for sim racing | Candemor Racing Team",
+      "description": "Chiquito Spotter: voice callouts for your sim racing and iRacing sessions, made by the Candemor Racing Team community."
+    },
     "skip": "Skip to Chiquito Spotter content",
     "nav": {
       "label": "Chiquito Spotter navigation",

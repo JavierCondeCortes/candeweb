@@ -1,5 +1,8 @@
 {
-  "meta": { "title": "Candemor Racing Team · Simracing y comunidad" },
+  "meta": {
+    "title": "Candemor Racing Team · Equipo de iRacing y simracing en español",
+    "description": "Candemor Racing Team es un equipo de iRacing y simracing con directos en Twitch, comunidad en Discord y el Candeonato, nuestro campeonato de carreras online."
+  },
   "language": { "label": "Seleccionar idioma" },
   "common": {
     "newTab": "se abre en una pestaña nueva",
@@ -405,7 +408,10 @@
     }
   },
   "spotter": {
-    "meta": { "title": "Chiquito Spotter · Candemor Racing Team" },
+    "meta": {
+      "title": "Chiquito Spotter · Spotter de voz para simracing | Candemor Racing Team",
+      "description": "Chiquito Spotter: avisos de voz para tus carreras de simracing e iRacing, creados por la comunidad de Candemor Racing Team."
+    },
     "skip": "Saltar al contenido de Chiquito Spotter",
     "nav": {
       "label": "Navegación de Chiquito Spotter",
