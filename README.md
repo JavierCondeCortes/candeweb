@@ -82,7 +82,7 @@ usa únicamente su portada.
 npm run test:server
 npm test
 npm run build
-npm audit --omit=dev
+npm audit --omit=dev --audit-level=high
 ```
 
 También puede ejecutarse todo en orden con `npm run verify`. El mismo comando se utiliza en GitHub
