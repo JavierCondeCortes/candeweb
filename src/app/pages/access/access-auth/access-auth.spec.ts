@@ -66,7 +66,6 @@ describe('AccessAuth', () => {
     component.loginForm.setValue({
       email: 'piloto@candemor.test',
       password: 'password-piloto-123',
-      mfaCode: '123456',
       rememberMe: true,
     });
     component.login();

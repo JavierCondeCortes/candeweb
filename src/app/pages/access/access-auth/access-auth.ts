@@ -39,8 +39,6 @@ export class AccessAuth implements OnInit {
   readonly loginForm = this.formBuilder.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(12)]],
-    // Opcional: solo lo exige el servidor a administradores (MFA_REQUIRED).
-    mfaCode: [''],
     rememberMe: [false],
   });
   readonly requestForm = this.formBuilder.nonNullable.group({
