@@ -53,6 +53,12 @@ export function destroySession(db, token) {
   db.prepare('DELETE FROM admin_sessions WHERE token_hash = ?').run(hashToken(token));
 }
 
+// El segundo factor (TOTP) solo es obligatorio para administradores. Las cuentas estándar
+// (account_type 'setup_user') entran con contraseña; sus secretos TOTP se conservan sin usar.
+export function requiresTotp(accountType) {
+  return accountType === 'administrator';
+}
+
 export function getSession(db, request) {
   const token = parseCookies(request.headers.cookie ?? '')[SESSION_COOKIE];
   if (!token) return null;
@@ -89,7 +95,7 @@ export function getSession(db, request) {
       canAccessSetups: session.account_type === 'administrator' || session.can_access_setups === 1,
       canUploadSetups: session.account_type === 'administrator' || session.can_upload_setups === 1,
       canAccessSkins: session.account_type === 'administrator' || session.can_access_skins === 1,
-      mfaEnabled: session.totp_enabled === 1,
+      mfaEnabled: requiresTotp(session.account_type) ? session.totp_enabled === 1 : true,
       emailVerified: Boolean(session.email_verified_at),
     },
   };
