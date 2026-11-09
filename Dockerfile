@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 
-FROM node:24-bookworm-slim AS build
+FROM node:26-bookworm-slim AS build
 
 WORKDIR /app
 
@@ -13,7 +13,7 @@ COPY src ./src
 
 RUN npm run build
 
-FROM node:24-bookworm-slim AS runtime
+FROM node:26-bookworm-slim AS runtime
 
 LABEL org.opencontainers.image.title="Candeweb" \
       org.opencontainers.image.description="Web y panel de administración de Candemor Racing Team"
