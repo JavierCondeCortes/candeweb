@@ -1,0 +1,40 @@
+name: Production monitor
+
+# Comprueba cada 30 minutos que la web de producción responde con sus metadatos SEO.
+# Si falla, el run queda en rojo y GitHub avisa por correo si tienes activadas las notificaciones.
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      APP_URL: ${{ vars.PUBLIC_APP_URL }}
+    steps:
+      - name: Check configuration
+        run: |
+          if [ -z "$APP_URL" ]; then
+            echo "Define la variable de repositorio PUBLIC_APP_URL (Settings > Secrets and variables > Actions > Variables)."
+            exit 1
+          fi
+      - name: Health, sitemap and robots
+        run: |
+          base="${APP_URL%/}"
+          curl -fsS --retry 3 --retry-delay 10 "$base/api/health" | grep -q '"ok":true'
+          curl -fsS --retry 3 --retry-delay 10 "$base/sitemap.xml" | grep -q '<urlset'
+          curl -fsS --retry 3 --retry-delay 10 "$base/robots.txt" | grep -q 'Sitemap:'
+      - name: Public home declares SEO metadata
+        run: |
+          base="${APP_URL%/}"
+          html=$(curl -fsS --retry 3 --retry-delay 10 "$base/")
+          echo "$html" | grep -q 'rel="canonical"'
+          echo "$html" | grep -q 'name="description"'
+          if echo "$html" | grep -q 'content="noindex'; then
+            echo "La portada tiene noindex"; exit 1
+          fi

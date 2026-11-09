@@ -236,38 +236,45 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
     let userCookie = sessionCookieFrom(accepted.response);
     let userCsrf = accepted.data.csrfToken;
 
+    // La invitación queda consumida al aceptarla (ya no hace falta confirmar TOTP).
     const reusableBeforeMfa = await jsonRequest(
       baseUrl,
       `/api/access/invitations/verify?token=${encodeURIComponent(invitationToken)}`,
     );
-    assert.equal(reusableBeforeMfa.status, 200);
+    assert.equal(reusableBeforeMfa.status, 404);
     const managementBeforeMfa = await jsonRequest(baseUrl, '/api/access/users', {
       cookie: adminCookie,
     });
+    // Las cuentas estándar no necesitan TOTP: aparecen en el listado al aceptar la invitación.
     assert.equal(
       managementBeforeMfa.data.users.some((user) => user.email === 'piloto@candemor.test'),
-      false,
+      true,
     );
     assert.equal(
       managementBeforeMfa.data.requests.some(
         (request) => request.email === 'piloto@candemor.test' && request.status === 'approved',
       ),
-      true,
+      false,
     );
 
     const acceptedAgain = await jsonRequest(baseUrl, '/api/access/invitations/accept', {
       method: 'POST',
       body: { token: invitationToken, password: 'password-piloto-123' },
     });
-    assert.equal(acceptedAgain.status, 200);
-    userCookie = sessionCookieFrom(acceptedAgain.response);
-    userCsrf = acceptedAgain.data.csrfToken;
+    assert.equal(acceptedAgain.status, 404);
+    const loggedIn = await jsonRequest(baseUrl, '/api/access/login', {
+      method: 'POST',
+      body: { email: 'piloto@candemor.test', password: 'password-piloto-123' },
+    });
+    assert.equal(loggedIn.status, 200);
+    userCookie = sessionCookieFrom(loggedIn.response);
+    userCsrf = loggedIn.data.csrfToken;
 
-    const blockedBeforeMfa = await jsonRequest(baseUrl, '/api/setups', {
+    // Sin TOTP la cuenta estándar ya puede usar los setups; el segundo factor es opcional.
+    const accessWithoutMfa = await jsonRequest(baseUrl, '/api/setups', {
       cookie: userCookie,
     });
-    assert.equal(blockedBeforeMfa.status, 403);
-    assert.equal(blockedBeforeMfa.data.error.code, 'MFA_SETUP_REQUIRED');
+    assert.notEqual(accessWithoutMfa.data?.error?.code, 'MFA_SETUP_REQUIRED');
     const userMfa = await jsonRequest(baseUrl, '/api/access/mfa/setup', {
       method: 'POST',
       cookie: userCookie,

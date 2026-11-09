@@ -6,7 +6,7 @@
         "http://localhost:3000/candeonato",
         "http://localhost:3000/candeonatos"
       ],
-      "numberOfRuns": 1,
+      "numberOfRuns": 3,
       "settings": { "preset": "desktop" }
     },
     "assert": {
@@ -21,6 +21,6 @@
         "document-title": "error"
       }
     },
-    "upload": { "target": "temporary-public-storage" }
+    "upload": { "target": "filesystem", "outputDir": ".lighthouseci" }
   }
 }
