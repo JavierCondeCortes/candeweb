@@ -3,7 +3,9 @@ name: Verify
 on:
   pull_request:
   push:
-    branches: [Main, develop]
+    # Main lo ejecuta docker-publish.yml vía workflow_call. No añadir Main aquí: dos ejecuciones
+    # con el mismo grupo de concurrencia se cancelarían entre sí.
+    branches: [develop]
   workflow_call:
 
 permissions:
@@ -29,8 +31,10 @@ jobs:
           - check: unit
             command: npm test -- --watch=false
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version-file: .nvmrc
           cache: npm
@@ -42,8 +46,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version-file: .nvmrc
           cache: npm
@@ -51,7 +57,7 @@ jobs:
       - run: npm run build
       - name: Check SEO output
         run: npm run test:seo
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: browser-dist
           path: dist/candeweb/browser
@@ -62,12 +68,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      # Bloquea altas y críticas en producción. Las moderadas se ven en el log sin romper el CI.
       - run: npm audit --omit=dev --audit-level=high
 
   docker:
@@ -75,24 +84,33 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v7
-      - uses: docker/setup-buildx-action@v4
-      - uses: docker/build-push-action@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
           context: .
           load: true
           tags: candeweb:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      - name: Container serves health, sitemap and robots
+      - name: Container serves health, sitemap, robots and 404
+        env:
+          PUBLIC_APP_URL: https://candemor.com
         run: |
-          docker run -d --name candeweb -p 3000:3000 -e PUBLIC_APP_URL=https://candemor.com candeweb:ci
-          for i in $(seq 1 30); do
-            curl -fsS http://127.0.0.1:3000/api/health && break || sleep 2
+          docker run -d --name candeweb -p 3000:3000 -e PUBLIC_APP_URL="$PUBLIC_APP_URL" candeweb:ci
+          for _ in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3000/api/health; then break; fi
+            sleep 2
           done
           curl -fsS http://127.0.0.1:3000/api/health
           curl -fsS http://127.0.0.1:3000/sitemap.xml | grep -q '<loc>https://candemor.com/candeonato</loc>'
           curl -fsS http://127.0.0.1:3000/robots.txt | grep -q 'Sitemap: https://candemor.com/sitemap.xml'
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/ruta-inexistente)" = 404
-      - if: failure()
+      - name: Container logs on failure
+        if: failure()
         run: docker logs candeweb
+      - name: Remove container
+        if: always()
+        run: docker rm -f candeweb || true

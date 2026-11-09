@@ -9,8 +9,21 @@ updates:
     groups:
       angular:
         patterns: ['@angular/*', '@angular-devkit/*']
+        update-types: ['minor', 'patch']
       tooling:
-        patterns: ['prettier', 'typescript', 'vitest', 'jsdom', 'tailwindcss', '@tailwindcss/*', 'postcss']
+        patterns: ['prettier', 'tailwindcss', '@tailwindcss/*', 'postcss']
+        update-types: ['minor', 'patch']
+    ignore:
+      # Mayores que requieren migración planificada (ver docs/ci-cd-seo.md).
+      - dependency-name: '@angular/*'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@angular-devkit/*'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'typescript'
+      - dependency-name: 'vitest'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'jsdom'
+        update-types: ['version-update:semver-major']
     commit-message:
       prefix: 'deps'
   - package-ecosystem: github-actions
