@@ -10,11 +10,13 @@ export const routes: Routes = [
   {
     path: '',
     title: 'home.meta.title',
+    data: { description: 'home.meta.description' },
     loadComponent: () => import('./pages/home/home-page').then((module) => module.HomePage),
   },
   {
     path: 'candeonato',
     title: 'candeonato.meta.title',
+    data: { description: 'candeonato.meta.description' },
     canActivate: [currentChampionshipGuard],
     loadComponent: () =>
       import('./pages/candeonato/candeonato-page').then((module) => module.CandeonatoPage),
@@ -22,6 +24,7 @@ export const routes: Routes = [
   {
     path: 'candeonatos',
     title: 'candeonato.meta.historyTitle',
+    data: { description: 'candeonato.meta.historyDescription' },
     loadComponent: () =>
       import('./pages/championship-history/championship-history-page').then(
         (module) => module.ChampionshipHistoryPage,
@@ -30,6 +33,7 @@ export const routes: Routes = [
   {
     path: 'candeonatos/:torneoId',
     title: 'candeonato.meta.detailTitle',
+    data: { description: 'candeonato.meta.detailDescription' },
     loadComponent: () =>
       import('./pages/championship-history/championship-detail-page').then(
         (module) => module.ChampionshipDetailPage,
@@ -38,6 +42,7 @@ export const routes: Routes = [
   {
     path: 'chiquito-spotter',
     title: 'home.spotter.meta.title',
+    data: { description: 'home.spotter.meta.description' },
     loadComponent: () =>
       import('./pages/chiquito-spotter/chiquito-spotter-page').then(
         (module) => module.ChiquitoSpotterPage,

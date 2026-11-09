@@ -82,7 +82,7 @@ usa únicamente su portada.
 npm run test:server
 npm test
 npm run build
-npm audit --omit=dev
+npm audit --omit=dev --audit-level=high
 ```
 
 También puede ejecutarse todo en orden con `npm run verify`. El mismo comando se utiliza en GitHub
@@ -93,6 +93,9 @@ compatibles de VS Code en `.vscode/mcp.json`. El iniciador del proyecto detecta 
 Windows y Linux; también admite las variables `CHROME_PATH` y `EDGE_PATH`. Tras confiar en el
 proyecto y reiniciar Codex o el editor puede utilizarse para medir Core Web Vitals, revisar la red y
 comprobar el árbol de accesibilidad sobre la aplicación renderizada.
+
+CI/CD (workflows, publicación de imagen en GHCR, Lighthouse, CodeQL) y SEO (metadatos por ruta,
+sitemap, robots, `PUBLIC_APP_URL`) están documentados en [`docs/ci-cd-seo.md`](docs/ci-cd-seo.md).
 
 ## Copias de seguridad
 

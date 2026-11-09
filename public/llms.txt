@@ -1,5 +1,7 @@
 # Candemor Racing Team
 
+> Candemor Racing Team es un equipo de iRacing y simracing en español con directos en Twitch, comunidad en Discord y su propio campeonato online, el Candeonato.
+
 Sitio oficial de la comunidad Candemor Racing Team y de su campeonato, el Candeonato.
 
 ## Secciones públicas
@@ -7,5 +9,8 @@ Sitio oficial de la comunidad Candemor Racing Team y de su campeonato, el Candeo
 - [Inicio](/): comunidad, equipo, contenido y acceso al canal oficial de Twitch.
 - [Candeonato](/candeonato): presentación y requisitos del campeonato.
 - [Historial de Candeonatos](/candeonatos): ediciones, clasificaciones y carreras publicadas.
+- [Chiquito Spotter](/chiquito-spotter): avisos de voz para carreras de simracing e iRacing.
+
+Mapa del sitio: /sitemap.xml
 
 La administración se encuentra en una zona privada y no forma parte del contenido público.

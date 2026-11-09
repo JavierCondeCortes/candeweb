@@ -1,8 +1,11 @@
 {
   "meta": {
-    "title": "Candeonato #8 · New Era Edition",
-    "historyTitle": "Historial de Candeonatos",
-    "detailTitle": "Clasificación · Candeonato"
+    "title": "Candeonato #8 · New Era Edition | Campeonato de simracing",
+    "description": "Candeonato: campeonato de simracing organizado por Candemor Racing Team. Consulta requisitos, normas, calendario e inscríbete a la edición actual.",
+    "historyTitle": "Historial del Candeonato · Clasificaciones y carreras",
+    "historyDescription": "Historial de ediciones del Candeonato con clasificaciones de pilotos y equipos, resultados por carrera y estadísticas del campeonato de simracing.",
+    "detailTitle": "Clasificación · Candeonato",
+    "detailDescription": "Clasificación, carreras y estadísticas de una edición del Candeonato, el campeonato de simracing de Candemor Racing Team."
   },
   "language": { "label": "Seleccionar idioma" },
   "skip": "Saltar al contenido principal",

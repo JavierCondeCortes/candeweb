@@ -1,0 +1,26 @@
+{
+  "ci": {
+    "collect": {
+      "url": [
+        "http://localhost:3000/",
+        "http://localhost:3000/candeonato",
+        "http://localhost:3000/candeonatos"
+      ],
+      "numberOfRuns": 1,
+      "settings": { "preset": "desktop" }
+    },
+    "assert": {
+      "assertions": {
+        "categories:seo": ["error", { "minScore": 0.95 }],
+        "categories:accessibility": ["warn", { "minScore": 0.9 }],
+        "categories:best-practices": ["warn", { "minScore": 0.9 }],
+        "categories:performance": ["warn", { "minScore": 0.7 }],
+        "is-crawlable": "error",
+        "canonical": "error",
+        "meta-description": "error",
+        "document-title": "error"
+      }
+    },
+    "upload": { "target": "temporary-public-storage" }
+  }
+}

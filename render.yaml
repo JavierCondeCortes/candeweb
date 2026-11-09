@@ -15,6 +15,8 @@ services:
         value: production
       - key: API_HOST
         value: 0.0.0.0
+      - key: PUBLIC_APP_URL
+        sync: false
       - key: ADMIN_SETUP_TOKEN
         generateValue: true
       - key: WEB_UPDATES_API_TOKEN
