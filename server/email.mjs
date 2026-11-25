@@ -37,6 +37,17 @@ const ACCESS_REQUEST_NOTIFICATION_TEMPLATE = Object.freeze({
   css: `${DEFAULT_TEMPLATE.css}\n${readFileSync(join(ACCESS_REQUEST_NOTIFICATION_DIR, 'styles.css'), 'utf8')}`,
   textTemplate: readFileSync(join(ACCESS_REQUEST_NOTIFICATION_DIR, 'template.txt'), 'utf8'),
 });
+const PASSWORD_RESET_DIR = join(
+  dirname(fileURLToPath(import.meta.url)),
+  'email-templates',
+  'password-reset',
+);
+const PASSWORD_RESET_TEMPLATE = Object.freeze({
+  subjectTemplate: 'Recupera tu contraseña de {{brandName}}',
+  htmlTemplate: readFileSync(join(PASSWORD_RESET_DIR, 'template.html'), 'utf8'),
+  css: DEFAULT_TEMPLATE.css,
+  textTemplate: readFileSync(join(PASSWORD_RESET_DIR, 'template.txt'), 'utf8'),
+});
 const ALLOWED_VARIABLES = new Set([
   'brandName',
   'displayName',
@@ -329,6 +340,59 @@ export async function sendMfaRecoveryCodesEmail({
       'No se pudo preparar el correo con códigos de recuperación.',
       safeMailError(error),
     );
+    return { status: 'failed' };
+  }
+}
+
+export function renderPasswordResetEmail(values) {
+  const websiteUrl = normalizePublicUrl(values.websiteUrl);
+  const normalized = {
+    brandName: values.brandName || 'Candemor Racing Team',
+    displayName: values.displayName || 'Piloto Candemor',
+    resetUrl: new URL(values.resetPath, `${websiteUrl}/`).toString(),
+    expiresAt: formatMadridDate(values.expiresAt),
+    supportEmail: values.supportEmail || 'candemorracingteam@gmail.com',
+    websiteUrl,
+  };
+  const subject = replaceVariables(
+    PASSWORD_RESET_TEMPLATE.subjectTemplate,
+    normalized,
+    escapePlainText,
+  );
+  const html = replaceVariables(PASSWORD_RESET_TEMPLATE.htmlTemplate, normalized, escapeHtml);
+  const text = replaceVariables(PASSWORD_RESET_TEMPLATE.textTemplate, normalized, escapePlainText);
+  return {
+    subject,
+    html: juice.inlineContent(html, PASSWORD_RESET_TEMPLATE.css, {
+      applyStyleTags: true,
+      preserveMediaQueries: true,
+      removeStyleTags: true,
+    }),
+    text,
+  };
+}
+
+export async function sendPasswordResetEmail({
+  emailService,
+  to,
+  displayName,
+  resetPath,
+  expiresAt,
+  publicAppUrl,
+  supportEmail,
+}) {
+  if (!emailService?.isConfigured()) return { status: 'disabled' };
+  try {
+    const rendered = renderPasswordResetEmail({
+      displayName,
+      resetPath,
+      expiresAt,
+      supportEmail,
+      websiteUrl: publicAppUrl,
+    });
+    return await emailService.send({ to, ...rendered });
+  } catch (error) {
+    console.error('No se pudo preparar el correo de recuperación.', safeMailError(error));
     return { status: 'failed' };
   }
 }

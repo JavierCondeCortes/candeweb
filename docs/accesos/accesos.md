@@ -110,6 +110,28 @@ cuenta no debe habilitar automáticamente Setups ni Skins.
   `Secure`. Cerrar sesión o revocar una cuenta invalida la sesión aunque se hubiera recordado.
 - El mismo comportamiento se aplica al inicio de sesión del panel de administración.
 
+### Segundo factor en el formulario de acceso
+
+- Las cuentas estándar entran con correo y contraseña: la invitación ya no muestra QR ni códigos
+  de recuperación.
+- El campo **Código TOTP o de recuperación** no aparece al principio. Si la cuenta es owner o
+  admin, el servidor responde `MFA_REQUIRED` y entonces el formulario muestra el campo (también
+  tras un `INVALID_MFA_CODE`).
+
+### Recuperar la contraseña
+
+- `/acceso` enlaza a `/recuperar-contrasena`, donde se escribe el correo. El enlace del correo
+  lleva a `/restablecer-contrasena?token=…`.
+- `POST /api/access/password/forgot` responde siempre `202`, exista o no la cuenta, para no revelar
+  qué correos están registrados. Límite: 10 por IP y hora, 3 por correo y hora.
+- El token (32 bytes aleatorios, solo se guarda su hash en `password_reset_tokens`) caduca a la
+  hora y es de un solo uso; pedir otro invalida el anterior.
+- `GET /api/access/password/verify` valida el enlace y `POST /api/access/password/reset` guarda la
+  contraseña nueva (mínimo 12 caracteres) y cierra todas las sesiones abiertas de la cuenta.
+- Owner y admin siguen necesitando TOTP o código de recuperación al entrar después del cambio.
+- Requiere SMTP configurado (`SMTP_ENABLED=true`); sin él no se envía ningún correo.
+- Plantilla: `server/email-templates/password-reset/`.
+
 ## Envío opcional de invitaciones por SMTP
 
 > Estado: primera versión implementada. El editor, la vista previa y la entrega automática están

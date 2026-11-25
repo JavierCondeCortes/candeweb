@@ -78,6 +78,20 @@ export const routes: Routes = [
       import('./pages/access/access-auth/access-auth').then((module) => module.AccessAuth),
   },
   {
+    path: 'recuperar-contrasena',
+    title: 'home.access.meta.forgot',
+    data: { mode: 'forgot' },
+    loadComponent: () =>
+      import('./pages/access/access-auth/access-auth').then((module) => module.AccessAuth),
+  },
+  {
+    path: 'restablecer-contrasena',
+    title: 'home.access.meta.reset',
+    data: { mode: 'reset' },
+    loadComponent: () =>
+      import('./pages/access/access-auth/access-auth').then((module) => module.AccessAuth),
+  },
+  {
     path: 'aceptar-invitacion',
     title: 'home.access.meta.invitation',
     data: { mode: 'invitation' },

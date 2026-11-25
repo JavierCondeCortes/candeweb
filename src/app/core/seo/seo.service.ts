@@ -2,7 +2,7 @@ import { DOCUMENT } from '@angular/common';
 import { inject, Injectable } from '@angular/core';
 import { Meta } from '@angular/platform-browser';
 
-const PRIVATE_PATH = /^\/(?:admin|setups|skins|acceso|solicitar-acceso|aceptar-invitacion)(?:\/|$)/;
+const PRIVATE_PATH = /^\/(?:admin|setups|skins|acceso|solicitar-acceso|aceptar-invitacion|recuperar-contrasena|restablecer-contrasena)(?:\/|$)/;
 
 /**
  * Mantiene sincronizados description, canonical, robots y Open Graph al navegar o cambiar de

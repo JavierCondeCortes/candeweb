@@ -56,45 +56,7 @@
       @if (errorMessage()) {
         <div class="setup-alert is-error" role="alert">{{ errorMessage() }}</div>
       }
-      @if (recoveryCodes().length) {
-        <div class="setup-alert is-success" role="status">
-          <strong>{{ 'home.access.recoveryTitle' | translate }}</strong>
-          <p>{{ 'home.access.recoveryHelp' | translate }}</p>
-          @if (recoveryEmailMessage()) {
-            <p>{{ recoveryEmailMessage() | translate }}</p>
-          }
-        </div>
-        <ul class="admin-recovery-codes">
-          @for (code of recoveryCodes(); track code) {
-            <li>
-              <code>{{ code }}</code>
-            </li>
-          }
-        </ul>
-        <button class="setup-button is-primary" type="button" (click)="continueAfterSetup()">
-          {{ 'home.access.continue' | translate }}
-        </button>
-      } @else if (mfaSetup(); as setup) {
-        <p>{{ 'home.access.mfaIntro' | translate }}</p>
-        <figure class="admin-totp-qr">
-          <img [src]="setup.qrCodeDataUrl" [alt]="'home.access.qrAlt' | translate" />
-          <figcaption>{{ setup.secret }}</figcaption>
-        </figure>
-        <form class="setup-form" [formGroup]="mfaForm" (ngSubmit)="confirmMfa()">
-          <label
-            ><span>{{ 'home.access.mfaCode' | translate }}</span
-            ><input
-              type="text"
-              formControlName="code"
-              inputmode="numeric"
-              autocomplete="one-time-code"
-              maxlength="6"
-          /></label>
-          <button class="setup-button is-primary" type="submit" [disabled]="submitting()">
-            {{ 'home.access.confirmMfa' | translate }}
-          </button>
-        </form>
-      } @else if (invitation(); as data) {
+      @if (invitation(); as data) {
         <p>{{ data.displayName }} · {{ data.email }}</p>
         <form class="setup-form" [formGroup]="invitationForm" (ngSubmit)="acceptInvitation()">
           <label>
@@ -133,6 +95,98 @@
             {{ 'home.access.activate' | translate }}
           </button>
         </form>
+      }
+    } @else if (mode === 'forgot') {
+      <p class="setup-eyebrow">{{ 'home.access.forgotEyebrow' | translate }}</p>
+      <h1
+        id="access-auth-title"
+        class="display-title setup-display-title"
+        [attr.data-title]="'home.access.forgotTitle' | translate"
+      >
+        {{ 'home.access.forgotTitle' | translate }}
+      </h1>
+      <p>{{ 'home.access.forgotIntro' | translate }}</p>
+      @if (sent()) {
+        <div class="setup-alert is-success" role="status">
+          <strong>{{ 'home.access.forgotSentTitle' | translate }}</strong>
+          <p>{{ 'home.access.forgotSentText' | translate }}</p>
+        </div>
+        <a class="setup-button" routerLink="/acceso">{{ 'home.access.backToLogin' | translate }}</a>
+      } @else {
+        @if (errorMessage()) {
+          <div class="setup-alert is-error" role="alert">{{ errorMessage() }}</div>
+        }
+        <form class="setup-form" [formGroup]="forgotForm" (ngSubmit)="requestPasswordReset()">
+          <label
+            ><span>{{ 'home.access.email' | translate }}</span
+            ><input type="email" formControlName="email" autocomplete="email"
+          /></label>
+          <button class="setup-button is-primary" type="submit" [disabled]="submitting()">
+            {{ 'home.access.forgotSubmit' | translate }}
+          </button>
+        </form>
+        <p class="setup-auth-secondary">
+          <a routerLink="/acceso">{{ 'home.access.backToLogin' | translate }}</a>
+        </p>
+      }
+    } @else if (mode === 'reset') {
+      <p class="setup-eyebrow">{{ 'home.access.resetEyebrow' | translate }}</p>
+      <h1
+        id="access-auth-title"
+        class="display-title setup-display-title"
+        [attr.data-title]="'home.access.resetTitle' | translate"
+      >
+        {{ 'home.access.resetTitle' | translate }}
+      </h1>
+      @if (resetDone()) {
+        <div class="setup-alert is-success" role="status">
+          <strong>{{ 'home.access.resetDoneTitle' | translate }}</strong>
+          <p>{{ 'home.access.resetDoneText' | translate }}</p>
+        </div>
+        <a class="setup-button is-primary" routerLink="/acceso">{{
+          'home.access.backToLogin' | translate
+        }}</a>
+      } @else if (resetEmail()) {
+        <p>{{ resetEmail() }}</p>
+        @if (errorMessage()) {
+          <div class="setup-alert is-error" role="alert">{{ errorMessage() }}</div>
+        }
+        <form class="setup-form" [formGroup]="resetForm" (ngSubmit)="submitPasswordReset()">
+          <label>
+            <span>{{ 'home.access.newPassword' | translate }}</span>
+            <div class="setup-password-field">
+              <input
+                id="access-reset-password"
+                [type]="resetPasswordVisible() ? 'text' : 'password'"
+                formControlName="password"
+                autocomplete="new-password"
+                minlength="12"
+              />
+              <button
+                type="button"
+                aria-controls="access-reset-password"
+                [attr.aria-pressed]="resetPasswordVisible()"
+                (click)="toggleResetPassword()"
+              >
+                {{
+                  (resetPasswordVisible() ? 'home.access.hidePassword' : 'home.access.showPassword')
+                    | translate
+                }}
+              </button>
+            </div>
+            <small>{{ 'home.access.passwordHelp' | translate }}</small>
+          </label>
+          <button class="setup-button is-primary" type="submit" [disabled]="submitting()">
+            {{ 'home.access.resetSubmit' | translate }}
+          </button>
+        </form>
+      } @else {
+        @if (errorMessage()) {
+          <div class="setup-alert is-error" role="alert">{{ errorMessage() }}</div>
+        }
+        <a class="setup-button" routerLink="/recuperar-contrasena">{{
+          'home.access.resetRequestNew' | translate
+        }}</a>
       }
     } @else {
       <p class="setup-eyebrow">{{ 'home.access.loginEyebrow' | translate }}</p>
@@ -179,6 +233,17 @@
             </button>
           </div>
         </label>
+        @if (mfaRequired()) {
+          <label
+            ><span>{{ 'home.access.mfaCode' | translate }}</span
+            ><input
+              type="text"
+              formControlName="mfaCode"
+              autocomplete="one-time-code"
+              autocapitalize="characters"
+              maxlength="32"
+          /></label>
+        }
         <label class="setup-checkbox">
           <input type="checkbox" formControlName="rememberMe" />
           <span>{{ 'home.access.rememberMe' | translate }}</span>
@@ -188,6 +253,9 @@
           {{ 'home.access.login' | translate }}
         </button>
       </form>
+      <p class="setup-auth-secondary">
+        <a routerLink="/recuperar-contrasena">{{ 'home.access.forgotLink' | translate }}</a>
+      </p>
       <p class="setup-auth-secondary">
         {{ 'home.access.noAccess' | translate }}
         <a routerLink="/solicitar-acceso">{{ 'home.access.requestLink' | translate }}</a>

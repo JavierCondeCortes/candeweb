@@ -4,7 +4,11 @@ import { unlink, writeFile } from 'node:fs/promises';
 import { basename, extname, join, resolve } from 'node:path';
 import { ZipArchive } from 'archiver';
 import { recordAudit } from './database.mjs';
-import { sendAccessInvitation, sendAccessRequestNotification } from './email.mjs';
+import {
+  sendAccessInvitation,
+  sendAccessRequestNotification,
+  sendPasswordResetEmail,
+} from './email.mjs';
 import {
   consumeRecoveryCode,
   createSession,
@@ -73,6 +77,16 @@ export async function routeSetupApi(context) {
   }
   if (method === 'POST' && path === '/api/access/invitations/accept') {
     return acceptSetupInvitation(context);
+  }
+
+  if (method === 'POST' && path === '/api/access/password/forgot') {
+    return requestPasswordReset(context);
+  }
+  if (method === 'GET' && path === '/api/access/password/verify') {
+    return verifyPasswordReset(context);
+  }
+  if (method === 'POST' && path === '/api/access/password/reset') {
+    return resetPassword(context);
   }
 
   if (method === 'GET' && path === '/api/setup-access/session') {
@@ -158,7 +172,11 @@ async function loginToAccess(context) {
   }
   if (requiresTotp(account.account_type)) {
     if (account.totp_enabled !== 1) {
-      throw new ApiError(403, 'MFA_SETUP_REQUIRED', 'Completa la configuración de TOTP para entrar.');
+      throw new ApiError(
+        403,
+        'MFA_SETUP_REQUIRED',
+        'Completa la configuración de TOTP para entrar.',
+      );
     }
     const mfaCode = String(input.mfaCode ?? '').trim();
     if (!mfaCode) throw new ApiError(401, 'MFA_REQUIRED', 'Introduce tu código de segundo factor.');
@@ -429,6 +447,115 @@ async function acceptSetupInvitation(context) {
     account: setupAccountFromRow(account),
     csrfToken: session.csrfToken,
   });
+}
+
+const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000;
+
+async function requestPasswordReset(context) {
+  const { db, request, response, actionAttempts } = context;
+  const remoteAddress = request.socket.remoteAddress ?? 'local';
+  consumeActionLimit(actionAttempts, `password-forgot:${remoteAddress}`, 10, 60 * 60 * 1000);
+  const input = await readJson(request);
+  const email = String(input.email ?? '')
+    .trim()
+    .toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw new ApiError(422, 'VALIDATION_ERROR', 'Introduce un correo válido.', {
+      email: 'Introduce un correo válido.',
+    });
+  }
+  consumeActionLimit(actionAttempts, `password-forgot-email:${email}`, 3, 60 * 60 * 1000);
+  // La respuesta es siempre la misma exista o no la cuenta, para no revelar qué correos están registrados.
+  const account = db
+    .prepare('SELECT id, email, display_name FROM admin_profiles WHERE email = ? AND active = 1')
+    .get(email);
+  if (account) {
+    const token = randomBytes(32).toString('base64url');
+    const timestamp = new Date().toISOString();
+    const expiresAt = new Date(Date.now() + PASSWORD_RESET_TTL_MS).toISOString();
+    db.prepare('DELETE FROM password_reset_tokens WHERE admin_id = ? OR expires_at <= ?').run(
+      account.id,
+      timestamp,
+    );
+    db.prepare(
+      `INSERT INTO password_reset_tokens (id, admin_id, token_hash, expires_at, created_at)
+       VALUES (?, ?, ?, ?, ?)`,
+    ).run(randomUUID(), account.id, hashToken(token), expiresAt, timestamp);
+    const settings = db.prepare('SELECT contact_email FROM site_settings WHERE id = 1').get();
+    const delivery = await sendPasswordResetEmail({
+      emailService: context.emailService,
+      to: account.email,
+      displayName: account.display_name,
+      resetPath: `/restablecer-contrasena?token=${encodeURIComponent(token)}`,
+      expiresAt,
+      publicAppUrl: context.publicAppUrl,
+      supportEmail: settings?.contact_email,
+    });
+    recordAudit(
+      db,
+      account.id,
+      `access.password_reset_email_${delivery.status}`,
+      'account',
+      account.id,
+    );
+  }
+  return sendJson(response, 202, { requested: true });
+}
+
+function findValidPasswordReset(db, token) {
+  const normalized = String(token ?? '').trim();
+  if (!/^[A-Za-z0-9_-]{40,100}$/.test(normalized)) return null;
+  return db
+    .prepare(
+      `SELECT t.id, t.admin_id, p.email, p.display_name
+       FROM password_reset_tokens t
+       JOIN admin_profiles p ON p.id = t.admin_id
+       WHERE t.token_hash = ? AND t.used_at IS NULL AND t.expires_at > ? AND p.active = 1`,
+    )
+    .get(hashToken(normalized), new Date().toISOString());
+}
+
+function verifyPasswordReset(context) {
+  const reset = findValidPasswordReset(context.db, context.url.searchParams.get('token'));
+  if (!reset) {
+    throw new ApiError(404, 'INVALID_RESET_LINK', 'El enlace no es válido o ha caducado.');
+  }
+  return sendJson(context.response, 200, { valid: true, email: reset.email });
+}
+
+async function resetPassword(context) {
+  const { db, request, response, actionAttempts } = context;
+  consumeActionLimit(
+    actionAttempts,
+    `password-reset:${request.socket.remoteAddress ?? 'local'}`,
+    10,
+    60 * 60 * 1000,
+  );
+  const input = await readJson(request);
+  const reset = findValidPasswordReset(db, input.token);
+  if (!reset) {
+    throw new ApiError(404, 'INVALID_RESET_LINK', 'El enlace no es válido o ha caducado.');
+  }
+  const identity = validateAdminIdentity({ email: reset.email, password: input.password });
+  const passwordHash = await hashPassword(identity.password);
+  const timestamp = new Date().toISOString();
+  db.exec('BEGIN');
+  try {
+    db.prepare('UPDATE admin_profiles SET password_hash = ?, updated_at = ? WHERE id = ?').run(
+      passwordHash,
+      timestamp,
+      reset.admin_id,
+    );
+    db.prepare('DELETE FROM password_reset_tokens WHERE admin_id = ?').run(reset.admin_id);
+    // Cierra todas las sesiones abiertas: quien tuviera la contraseña anterior pierde el acceso.
+    db.prepare('DELETE FROM admin_sessions WHERE admin_id = ?').run(reset.admin_id);
+    recordAudit(db, reset.admin_id, 'access.password_reset', 'account', reset.admin_id);
+    db.exec('COMMIT');
+  } catch (error) {
+    db.exec('ROLLBACK');
+    throw error;
+  }
+  return sendJson(response, 200, { reset: true });
 }
 
 function findValidSetupInvitation(db, token) {
