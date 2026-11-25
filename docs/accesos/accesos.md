@@ -5,8 +5,8 @@
 
 ## Objetivo
 
-Una persona tendrá una sola cuenta, una sola contraseña, un único TOTP y los mismos códigos de
-recuperación para toda la web. Sobre esa identidad, owner y admins podrán conceder o retirar
+Una persona tendrá una sola cuenta y una sola contraseña para toda la web. El TOTP es obligatorio
+solo para administradores; las cuentas estándar no lo necesitan. Sobre esa identidad, owner y admins podrán conceder o retirar
 permisos independientes para **Setups** y **Skins**, sin convertir al usuario en administrador del
 panel editorial.
 
@@ -65,10 +65,10 @@ En móvil, cada cuenta se transformará en una tarjeta y mantendrá el mismo ord
 2. Si los avisos están activados, cada owner y admin activo recibe un correo individual con un
    enlace a `/admin/accesos`.
 3. Owner o admin revisa la solicitud y genera una invitación privada con caducidad.
-4. La persona establece su contraseña. La invitación continúa disponible mientras no haya
-   confirmado el TOTP y no haya caducado.
-5. La persona configura y confirma su TOTP; solo entonces la cuenta pasa a considerarse autorizada,
-   la solicitud queda activada y la invitación se consume.
+4. La persona establece su contraseña. Al aceptar, la cuenta queda autorizada, la solicitud pasa a
+   activada y la invitación se consume.
+5. Las cuentas estándar no tienen pantalla de TOTP en la web: no se les pide ni pueden activarlo
+   desde la interfaz. Los endpoints `/api/access/mfa/*` siguen existiendo, pero no hay flujo visible.
 6. Desde `/admin/accesos` se activan los productos autorizados.
 7. Al iniciar sesión, la API devuelve los permisos vigentes y cada ruta comprueba el suyo.
 
@@ -91,12 +91,9 @@ cuenta no debe habilitar automáticamente Setups ni Skins.
 
 - Establecer la contraseña crea una cuenta provisional, pero no la muestra dentro de **Cuentas
   autorizadas**.
-- Mientras el TOTP no se confirme, el mismo enlace de invitación puede abrirse de nuevo hasta su
-  fecha de caducidad. Volver a usarlo permite reiniciar el paso de contraseña y reemplaza las
-  sesiones provisionales anteriores.
-- Confirmar correctamente el TOTP completa el alta de forma atómica: activa la solicitud, consume
-  las invitaciones pendientes del correo y hace visible la cuenta en la gestión de accesos.
-- Tras completar el TOTP, reutilizar el enlace devuelve `INVALID_INVITATION`.
+- Aceptar la invitación completa el alta de forma atómica: activa la solicitud, consume las
+  invitaciones pendientes del correo y hace visible la cuenta en la gestión de accesos.
+- Reutilizar el enlace después de aceptarlo devuelve `INVALID_INVITATION`.
 
 ### Contraseña y permanencia de la sesión
 
@@ -112,6 +109,28 @@ cuenta no debe habilitar automáticamente Setups ni Skins.
 - La cookie de autenticación continúa siendo `HttpOnly`, `SameSite=Strict` y, en producción,
   `Secure`. Cerrar sesión o revocar una cuenta invalida la sesión aunque se hubiera recordado.
 - El mismo comportamiento se aplica al inicio de sesión del panel de administración.
+
+### Segundo factor en el formulario de acceso
+
+- Las cuentas estándar entran con correo y contraseña: la invitación ya no muestra QR ni códigos
+  de recuperación.
+- El campo **Código TOTP o de recuperación** no aparece al principio. Si la cuenta es owner o
+  admin, el servidor responde `MFA_REQUIRED` y entonces el formulario muestra el campo (también
+  tras un `INVALID_MFA_CODE`).
+
+### Recuperar la contraseña
+
+- `/acceso` enlaza a `/recuperar-contrasena`, donde se escribe el correo. El enlace del correo
+  lleva a `/restablecer-contrasena?token=…`.
+- `POST /api/access/password/forgot` responde siempre `202`, exista o no la cuenta, para no revelar
+  qué correos están registrados. Límite: 10 por IP y hora, 3 por correo y hora.
+- El token (32 bytes aleatorios, solo se guarda su hash en `password_reset_tokens`) caduca a la
+  hora y es de un solo uso; pedir otro invalida el anterior.
+- `GET /api/access/password/verify` valida el enlace y `POST /api/access/password/reset` guarda la
+  contraseña nueva (mínimo 12 caracteres) y cierra todas las sesiones abiertas de la cuenta.
+- Owner y admin siguen necesitando TOTP o código de recuperación al entrar después del cambio.
+- Requiere SMTP configurado (`SMTP_ENABLED=true`); sin él no se envía ningún correo.
+- Plantilla: `server/email-templates/password-reset/`.
 
 ## Envío opcional de invitaciones por SMTP
 
@@ -144,8 +163,7 @@ de administradores, que continúan siendo competencia exclusiva del owner.
    - **Invitación creada y correo enviado**.
    - **Invitación creada; el correo no pudo enviarse. Copia el enlace manualmente**.
    - **Invitación creada; SMTP no está configurado. Copia el enlace manualmente**.
-7. La persona abre el enlace, elige su contraseña y configura su TOTP y códigos de recuperación.
-   El enlace se consume al confirmar el TOTP, no al guardar la contraseña.
+7. La persona abre el enlace y elige su contraseña. El enlace se consume al aceptarlo.
 
 El fallo del proveedor de correo no debe deshacer la aprobación ni borrar la invitación válida. El
 SMTP es un canal de entrega adicional, no una dependencia para poder conceder acceso.
@@ -227,8 +245,7 @@ El correo tendrá versión de texto plano y HTML mínimo, ambas con la misma inf
 - Botón **Confirmar acceso** enlazado mediante HTTPS.
 - URL completa visible para poder copiarla si el botón no funciona.
 - Fecha y hora de caducidad expresada en zona `Europe/Madrid` e indicando que dura 24 horas.
-- Aviso de enlace personal, temporal y que no debe compartirse. Puede reutilizarse únicamente
-  mientras el alta TOTP siga incompleta.
+- Aviso de enlace personal, temporal y que no debe compartirse. Solo sirve una vez.
 - Indicación para ignorar el mensaje si la persona no solicitó acceso.
 - Correo de respuesta o contacto, cuando esté configurado.
 
@@ -294,9 +311,9 @@ defecto y no se permitirá ejecutar JavaScript ni expresiones arbitrarias:
 | `{{supportEmail}}`    | Correo público de soporte                       | No          |
 | `{{websiteUrl}}`      | URL pública de Candemor                         | No          |
 
-Los códigos de recuperación no existen todavía cuando se envía esta invitación. Se generan después,
-al confirmar TOTP. En ese momento el servidor envía un segundo correo de seguridad con la variable
-`{{recoveryCodes}}`, que representa los códigos separados por saltos de línea.
+Los códigos de recuperación no existen cuando se envía esta invitación. Solo se generan al confirmar
+TOTP, que hoy solo se exige a administradores. En ese caso el servidor envía un segundo correo de
+seguridad con la variable `{{recoveryCodes}}`.
 
 El correo de códigos cumple estas reglas:
 

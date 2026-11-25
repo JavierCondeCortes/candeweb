@@ -76,8 +76,8 @@ administrativo completo.
 3. Envía nombre visible y correo desde `/setups/solicitar-acceso`.
 4. Owner o admin acepta o rechaza la solicitud desde `/admin/accesos`.
 5. Al aprobarla se genera una invitación privada y con caducidad de 24 horas.
-6. La persona define su propia contraseña y confirma su TOTP. Hasta completar el TOTP, la cuenta no
-   figura como autorizada y puede reutilizar la misma invitación.
+6. La persona define su propia contraseña. La cuenta queda autorizada al aceptar la invitación y
+   la invitación se consume en ese momento. El TOTP es opcional (ver «Segundo factor»).
 7. Entra al catálogo con permiso de descarga.
 8. Owner o admin puede conceder posteriormente `can_upload_setups`, que habilita la creación,
    publicación y eliminación de setups propios.
@@ -87,9 +87,12 @@ Setups no elimina la cuenta si esa persona conserva otros permisos.
 
 ### Segundo factor
 
-- Todas las cuentas configuran TOTP obligatorio durante su alta.
-- Cada cuenta conserva su propio secreto TOTP y sus propios códigos de recuperación.
-- La misma configuración protege Setups, Skins y cualquier futura zona privada.
+- Las cuentas **administrador** (owner y admin) configuran TOTP obligatorio. Sin TOTP confirmado no
+  pueden entrar.
+- Las cuentas **estándar** (`setup_user`) entran solo con correo y contraseña. El TOTP no se les
+  exige ni tienen pantalla para activarlo en la web; las cuentas existentes siguen funcionando sin él.
+- Los secretos TOTP de las cuentas estándar que ya lo tenían se conservan en base de datos sin usar.
+- Cada cuenta conserva sus propios códigos de recuperación si configuró TOTP.
 
 ### Sesiones
 
@@ -351,7 +354,7 @@ Owner y admin obtienen sus capacidades por rol; no es necesario crear filas redu
 
 - No revelar el catálogo, nombres de archivos ni autores a personas sin permiso.
 - Tokens de invitación aleatorios, almacenados mediante hash y con caducidad; se invalidan al
-  completar el TOTP y pueden reutilizarse únicamente mientras el alta siga incompleta.
+  aceptarlos y no pueden reutilizarse.
 - Rate limit en login, solicitudes e invitaciones. Subidas y descargas pueden incorporar un límite
   específico cuando el uso real permita dimensionarlo.
 - Validar autorización en cada descarga; conocer una URL o UUID no concede acceso.

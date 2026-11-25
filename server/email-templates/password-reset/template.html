@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Recupera tu contraseña de {{ brandName }}</title>
+  </head>
+  <body>
+    <table class="email-shell" role="presentation" width="100%" cellspacing="0" cellpadding="0">
+      <tr>
+        <td class="email-shell__cell" align="center">
+          <table class="email-card" role="presentation" width="600" cellspacing="0" cellpadding="0">
+            <tr>
+              <td class="email-card__accent"></td>
+            </tr>
+            <tr>
+              <td class="email-card__content">
+                <p class="brand">CANDE<span>MOR</span></p>
+                <p class="eyebrow">RECUPERAR CONTRASEÑA</p>
+                <h1>Hola, {{ displayName }}</h1>
+                <p>
+                  Hemos recibido una solicitud para cambiar la contraseña de tu cuenta en
+                  {{ brandName }}.
+                </p>
+                <p class="button-row">
+                  <a class="confirmation-button" href="{{ resetUrl }}">Cambiar contraseña</a>
+                </p>
+                <p class="secondary-copy">
+                  Si el botón no funciona, copia y pega este enlace en tu navegador:
+                </p>
+                <p class="fallback-link">{{ resetUrl }}</p>
+                <div class="notice">
+                  <strong>Enlace personal, de un solo uso.</strong><br />
+                  Caduca el {{ expiresAt }}. No lo compartas con otras personas.
+                </div>
+                <p class="secondary-copy">
+                  Si no lo solicitaste, ignora este mensaje: tu contraseña no cambiará. Ayuda:
+                  {{ supportEmail }}
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td class="email-card__footer">
+                {{ brandName }} · <a href="{{ websiteUrl }}">{{ websiteUrl }}</a>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

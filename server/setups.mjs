@@ -4,7 +4,11 @@ import { unlink, writeFile } from 'node:fs/promises';
 import { basename, extname, join, resolve } from 'node:path';
 import { ZipArchive } from 'archiver';
 import { recordAudit } from './database.mjs';
-import { sendAccessInvitation, sendAccessRequestNotification } from './email.mjs';
+import {
+  sendAccessInvitation,
+  sendAccessRequestNotification,
+  sendPasswordResetEmail,
+} from './email.mjs';
 import {
   consumeRecoveryCode,
   createSession,
@@ -14,6 +18,7 @@ import {
   hashPassword,
   hashToken,
   requireCsrf,
+  requiresTotp,
   sessionCookie,
   verifyPassword,
   verifyTotp,
@@ -72,6 +77,16 @@ export async function routeSetupApi(context) {
   }
   if (method === 'POST' && path === '/api/access/invitations/accept') {
     return acceptSetupInvitation(context);
+  }
+
+  if (method === 'POST' && path === '/api/access/password/forgot') {
+    return requestPasswordReset(context);
+  }
+  if (method === 'GET' && path === '/api/access/password/verify') {
+    return verifyPasswordReset(context);
+  }
+  if (method === 'POST' && path === '/api/access/password/reset') {
+    return resetPassword(context);
   }
 
   if (method === 'GET' && path === '/api/setup-access/session') {
@@ -155,22 +170,28 @@ async function loginToAccess(context) {
     registerFailedLogin(loginAttempts, attemptKey);
     throw new ApiError(401, 'INVALID_CREDENTIALS', 'El correo o la contraseña no son correctos.');
   }
-  if (account.totp_enabled !== 1) {
-    throw new ApiError(403, 'MFA_SETUP_REQUIRED', 'Completa la configuración de TOTP para entrar.');
-  }
-  const mfaCode = String(input.mfaCode ?? '').trim();
-  if (!mfaCode) throw new ApiError(401, 'MFA_REQUIRED', 'Introduce tu código de segundo factor.');
-  const remainingRecoveryCodes = consumeRecoveryCode(mfaCode, account.recovery_codes);
-  if (!verifyTotp(mfaCode, account.totp_secret) && remainingRecoveryCodes === null) {
-    registerFailedLogin(loginAttempts, attemptKey);
-    throw new ApiError(401, 'INVALID_MFA_CODE', 'El código de segundo factor no es válido.');
-  }
-  if (remainingRecoveryCodes !== null) {
-    db.prepare('UPDATE admin_profiles SET recovery_codes = ?, updated_at = ? WHERE id = ?').run(
-      remainingRecoveryCodes,
-      new Date().toISOString(),
-      account.id,
-    );
+  if (requiresTotp(account.account_type)) {
+    if (account.totp_enabled !== 1) {
+      throw new ApiError(
+        403,
+        'MFA_SETUP_REQUIRED',
+        'Completa la configuración de TOTP para entrar.',
+      );
+    }
+    const mfaCode = String(input.mfaCode ?? '').trim();
+    if (!mfaCode) throw new ApiError(401, 'MFA_REQUIRED', 'Introduce tu código de segundo factor.');
+    const remainingRecoveryCodes = consumeRecoveryCode(mfaCode, account.recovery_codes);
+    if (!verifyTotp(mfaCode, account.totp_secret) && remainingRecoveryCodes === null) {
+      registerFailedLogin(loginAttempts, attemptKey);
+      throw new ApiError(401, 'INVALID_MFA_CODE', 'El código de segundo factor no es válido.');
+    }
+    if (remainingRecoveryCodes !== null) {
+      db.prepare('UPDATE admin_profiles SET recovery_codes = ?, updated_at = ? WHERE id = ?').run(
+        remainingRecoveryCodes,
+        new Date().toISOString(),
+        account.id,
+      );
+    }
   }
   loginAttempts.delete(attemptKey);
   const session = createSession(db, account.id, { remember: rememberMe });
@@ -206,14 +227,14 @@ async function loginToSetups(context) {
     registerFailedLogin(loginAttempts, attemptKey);
     throw new ApiError(401, 'INVALID_CREDENTIALS', 'El correo o la contraseña no son correctos.');
   }
-  if (account.totp_enabled !== 1) {
-    throw new ApiError(
-      403,
-      'MFA_SETUP_REQUIRED',
-      'Completa la configuración de TOTP antes de entrar.',
-    );
-  }
-  if (account.totp_enabled === 1) {
+  if (requiresTotp(account.account_type)) {
+    if (account.totp_enabled !== 1) {
+      throw new ApiError(
+        403,
+        'MFA_SETUP_REQUIRED',
+        'Completa la configuración de TOTP antes de entrar.',
+      );
+    }
     const mfaCode = String(input.mfaCode ?? '').trim();
     if (!mfaCode) {
       throw new ApiError(401, 'MFA_REQUIRED', 'Introduce tu código de segundo factor.');
@@ -363,10 +384,7 @@ async function acceptSetupInvitation(context) {
   const existingAccount = db
     .prepare('SELECT * FROM admin_profiles WHERE email = ?')
     .get(identity.email);
-  if (
-    existingAccount &&
-    (existingAccount.account_type !== 'setup_user' || existingAccount.totp_enabled === 1)
-  ) {
+  if (existingAccount) {
     throw new ApiError(409, 'ACCOUNT_EXISTS', 'Ya existe una cuenta para ese correo.');
   }
   const id = existingAccount?.id ?? randomUUID();
@@ -408,6 +426,14 @@ async function acceptSetupInvitation(context) {
     recordAudit(db, id, 'access.invitation_started', 'account', id, {
       invitedBy: invitation.created_by,
     });
+    // Sin paso obligatorio de TOTP, la invitación y la solicitud se cierran al aceptar.
+    db.prepare(
+      `UPDATE setup_invitations SET accepted_at = ? WHERE email = ? AND accepted_at IS NULL`,
+    ).run(timestamp, identity.email);
+    db.prepare(
+      `UPDATE setup_access_requests SET status = 'activated', updated_at = ?
+       WHERE email = ? AND status = 'approved'`,
+    ).run(timestamp, identity.email);
     db.exec('COMMIT');
   } catch (error) {
     db.exec('ROLLBACK');
@@ -421,6 +447,115 @@ async function acceptSetupInvitation(context) {
     account: setupAccountFromRow(account),
     csrfToken: session.csrfToken,
   });
+}
+
+const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000;
+
+async function requestPasswordReset(context) {
+  const { db, request, response, actionAttempts } = context;
+  const remoteAddress = request.socket.remoteAddress ?? 'local';
+  consumeActionLimit(actionAttempts, `password-forgot:${remoteAddress}`, 10, 60 * 60 * 1000);
+  const input = await readJson(request);
+  const email = String(input.email ?? '')
+    .trim()
+    .toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw new ApiError(422, 'VALIDATION_ERROR', 'Introduce un correo válido.', {
+      email: 'Introduce un correo válido.',
+    });
+  }
+  consumeActionLimit(actionAttempts, `password-forgot-email:${email}`, 3, 60 * 60 * 1000);
+  // La respuesta es siempre la misma exista o no la cuenta, para no revelar qué correos están registrados.
+  const account = db
+    .prepare('SELECT id, email, display_name FROM admin_profiles WHERE email = ? AND active = 1')
+    .get(email);
+  if (account) {
+    const token = randomBytes(32).toString('base64url');
+    const timestamp = new Date().toISOString();
+    const expiresAt = new Date(Date.now() + PASSWORD_RESET_TTL_MS).toISOString();
+    db.prepare('DELETE FROM password_reset_tokens WHERE admin_id = ? OR expires_at <= ?').run(
+      account.id,
+      timestamp,
+    );
+    db.prepare(
+      `INSERT INTO password_reset_tokens (id, admin_id, token_hash, expires_at, created_at)
+       VALUES (?, ?, ?, ?, ?)`,
+    ).run(randomUUID(), account.id, hashToken(token), expiresAt, timestamp);
+    const settings = db.prepare('SELECT contact_email FROM site_settings WHERE id = 1').get();
+    const delivery = await sendPasswordResetEmail({
+      emailService: context.emailService,
+      to: account.email,
+      displayName: account.display_name,
+      resetPath: `/restablecer-contrasena?token=${encodeURIComponent(token)}`,
+      expiresAt,
+      publicAppUrl: context.publicAppUrl,
+      supportEmail: settings?.contact_email,
+    });
+    recordAudit(
+      db,
+      account.id,
+      `access.password_reset_email_${delivery.status}`,
+      'account',
+      account.id,
+    );
+  }
+  return sendJson(response, 202, { requested: true });
+}
+
+function findValidPasswordReset(db, token) {
+  const normalized = String(token ?? '').trim();
+  if (!/^[A-Za-z0-9_-]{40,100}$/.test(normalized)) return null;
+  return db
+    .prepare(
+      `SELECT t.id, t.admin_id, p.email, p.display_name
+       FROM password_reset_tokens t
+       JOIN admin_profiles p ON p.id = t.admin_id
+       WHERE t.token_hash = ? AND t.used_at IS NULL AND t.expires_at > ? AND p.active = 1`,
+    )
+    .get(hashToken(normalized), new Date().toISOString());
+}
+
+function verifyPasswordReset(context) {
+  const reset = findValidPasswordReset(context.db, context.url.searchParams.get('token'));
+  if (!reset) {
+    throw new ApiError(404, 'INVALID_RESET_LINK', 'El enlace no es válido o ha caducado.');
+  }
+  return sendJson(context.response, 200, { valid: true, email: reset.email });
+}
+
+async function resetPassword(context) {
+  const { db, request, response, actionAttempts } = context;
+  consumeActionLimit(
+    actionAttempts,
+    `password-reset:${request.socket.remoteAddress ?? 'local'}`,
+    10,
+    60 * 60 * 1000,
+  );
+  const input = await readJson(request);
+  const reset = findValidPasswordReset(db, input.token);
+  if (!reset) {
+    throw new ApiError(404, 'INVALID_RESET_LINK', 'El enlace no es válido o ha caducado.');
+  }
+  const identity = validateAdminIdentity({ email: reset.email, password: input.password });
+  const passwordHash = await hashPassword(identity.password);
+  const timestamp = new Date().toISOString();
+  db.exec('BEGIN');
+  try {
+    db.prepare('UPDATE admin_profiles SET password_hash = ?, updated_at = ? WHERE id = ?').run(
+      passwordHash,
+      timestamp,
+      reset.admin_id,
+    );
+    db.prepare('DELETE FROM password_reset_tokens WHERE admin_id = ?').run(reset.admin_id);
+    // Cierra todas las sesiones abiertas: quien tuviera la contraseña anterior pierde el acceso.
+    db.prepare('DELETE FROM admin_sessions WHERE admin_id = ?').run(reset.admin_id);
+    recordAudit(db, reset.admin_id, 'access.password_reset', 'account', reset.admin_id);
+    db.exec('COMMIT');
+  } catch (error) {
+    db.exec('ROLLBACK');
+    throw error;
+  }
+  return sendJson(response, 200, { reset: true });
 }
 
 function findValidSetupInvitation(db, token) {
@@ -443,7 +578,7 @@ async function routeSetupAccessManagement(context) {
                 can_upload_setups, can_access_skins, totp_enabled, created_at, updated_at
          FROM admin_profiles
          WHERE account_type = 'administrator'
-            OR (account_type = 'setup_user' AND totp_enabled = 1)
+            OR account_type = 'setup_user'
          ORDER BY account_type ASC, is_owner DESC, display_name ASC`,
       )
       .all()
@@ -488,10 +623,7 @@ async function routeSetupAccessManagement(context) {
       .prepare('SELECT * FROM admin_profiles WHERE email = ?')
       .get(accessRequest.email);
     const timestamp = new Date();
-    if (
-      existingAccount &&
-      (existingAccount.account_type === 'administrator' || existingAccount.totp_enabled === 1)
-    ) {
+    if (existingAccount) {
       db.prepare(
         `UPDATE admin_profiles SET can_access_setups = ?, active = 1, updated_at = ? WHERE id = ?`,
       ).run(
@@ -1493,7 +1625,7 @@ function setupAccountFromRow(row) {
     canAccessSetups: row.account_type === 'administrator' || row.can_access_setups === 1,
     canUploadSetups: row.account_type === 'administrator' || row.can_upload_setups === 1,
     canAccessSkins: row.account_type === 'administrator' || row.can_access_skins === 1,
-    mfaEnabled: row.totp_enabled === 1,
+    mfaEnabled: requiresTotp(row.account_type) ? row.totp_enabled === 1 : true,
   };
 }
 

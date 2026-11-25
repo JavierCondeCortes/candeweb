@@ -236,38 +236,119 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
     let userCookie = sessionCookieFrom(accepted.response);
     let userCsrf = accepted.data.csrfToken;
 
+    // La invitación queda consumida al aceptarla (ya no hace falta confirmar TOTP).
     const reusableBeforeMfa = await jsonRequest(
       baseUrl,
       `/api/access/invitations/verify?token=${encodeURIComponent(invitationToken)}`,
     );
-    assert.equal(reusableBeforeMfa.status, 200);
+    assert.equal(reusableBeforeMfa.status, 404);
     const managementBeforeMfa = await jsonRequest(baseUrl, '/api/access/users', {
       cookie: adminCookie,
     });
+    // Las cuentas estándar no necesitan TOTP: aparecen en el listado al aceptar la invitación.
     assert.equal(
       managementBeforeMfa.data.users.some((user) => user.email === 'piloto@candemor.test'),
-      false,
+      true,
     );
     assert.equal(
       managementBeforeMfa.data.requests.some(
         (request) => request.email === 'piloto@candemor.test' && request.status === 'approved',
       ),
-      true,
+      false,
     );
 
     const acceptedAgain = await jsonRequest(baseUrl, '/api/access/invitations/accept', {
       method: 'POST',
       body: { token: invitationToken, password: 'password-piloto-123' },
     });
-    assert.equal(acceptedAgain.status, 200);
-    userCookie = sessionCookieFrom(acceptedAgain.response);
-    userCsrf = acceptedAgain.data.csrfToken;
+    assert.equal(acceptedAgain.status, 404);
+    const loggedIn = await jsonRequest(baseUrl, '/api/access/login', {
+      method: 'POST',
+      body: { email: 'piloto@candemor.test', password: 'password-piloto-123' },
+    });
+    assert.equal(loggedIn.status, 200);
+    userCookie = sessionCookieFrom(loggedIn.response);
+    userCsrf = loggedIn.data.csrfToken;
 
-    const blockedBeforeMfa = await jsonRequest(baseUrl, '/api/setups', {
+    // Recuperación de contraseña: respuesta idéntica exista o no la cuenta, enlace de un solo uso.
+    const emailsBeforeReset = sentEmails.length;
+    const unknownForgot = await jsonRequest(baseUrl, '/api/access/password/forgot', {
+      method: 'POST',
+      body: { email: 'nadie@candemor.test' },
+    });
+    assert.equal(unknownForgot.status, 202);
+    assert.equal(sentEmails.length, emailsBeforeReset);
+    const forgot = await jsonRequest(baseUrl, '/api/access/password/forgot', {
+      method: 'POST',
+      body: { email: 'piloto@candemor.test' },
+    });
+    assert.equal(forgot.status, 202);
+    assert.deepEqual(forgot.data, unknownForgot.data);
+    const resetEmail = sentEmails.at(-1);
+    assert.equal(sentEmails.length, emailsBeforeReset + 1);
+    assert.equal(resetEmail.to, 'piloto@candemor.test');
+    const resetToken = /restablecer-contrasena\?token=([A-Za-z0-9_-]+)/.exec(resetEmail.text)?.[1];
+    assert.ok(resetToken);
+    const resetVerified = await jsonRequest(
+      baseUrl,
+      `/api/access/password/verify?token=${encodeURIComponent(resetToken)}`,
+    );
+    assert.equal(resetVerified.status, 200);
+    const shortReset = await jsonRequest(baseUrl, '/api/access/password/reset', {
+      method: 'POST',
+      body: { token: resetToken, password: 'corta' },
+    });
+    assert.equal(shortReset.status, 422);
+    const resetDone = await jsonRequest(baseUrl, '/api/access/password/reset', {
+      method: 'POST',
+      body: { token: resetToken, password: 'password-nueva-456' },
+    });
+    assert.equal(resetDone.status, 200);
+    const resetReused = await jsonRequest(baseUrl, '/api/access/password/reset', {
+      method: 'POST',
+      body: { token: resetToken, password: 'password-otra-789' },
+    });
+    assert.equal(resetReused.status, 404);
+    const sessionAfterReset = await jsonRequest(baseUrl, '/api/access/session', {
       cookie: userCookie,
     });
-    assert.equal(blockedBeforeMfa.status, 403);
-    assert.equal(blockedBeforeMfa.data.error.code, 'MFA_SETUP_REQUIRED');
+    assert.equal(sessionAfterReset.data.authenticated, false);
+    const oldPassword = await jsonRequest(baseUrl, '/api/access/login', {
+      method: 'POST',
+      body: { email: 'piloto@candemor.test', password: 'password-piloto-123' },
+    });
+    assert.equal(oldPassword.status, 401);
+    const newPassword = await jsonRequest(baseUrl, '/api/access/login', {
+      method: 'POST',
+      body: { email: 'piloto@candemor.test', password: 'password-nueva-456' },
+    });
+    assert.equal(newPassword.status, 200);
+    // Se devuelve la contraseña original para que el resto del escenario siga igual.
+    const forgotAgain = await jsonRequest(baseUrl, '/api/access/password/forgot', {
+      method: 'POST',
+      body: { email: 'piloto@candemor.test' },
+    });
+    assert.equal(forgotAgain.status, 202);
+    const restoreToken = /restablecer-contrasena\?token=([A-Za-z0-9_-]+)/.exec(
+      sentEmails.at(-1).text,
+    )?.[1];
+    const restored = await jsonRequest(baseUrl, '/api/access/password/reset', {
+      method: 'POST',
+      body: { token: restoreToken, password: 'password-piloto-123' },
+    });
+    assert.equal(restored.status, 200);
+    const relogin = await jsonRequest(baseUrl, '/api/access/login', {
+      method: 'POST',
+      body: { email: 'piloto@candemor.test', password: 'password-piloto-123' },
+    });
+    userCookie = sessionCookieFrom(relogin.response);
+    userCsrf = relogin.data.csrfToken;
+
+    // Sin TOTP la cuenta estándar ya puede usar los setups; el segundo factor es opcional.
+    const accessWithoutMfa = await jsonRequest(baseUrl, '/api/setups', {
+      cookie: userCookie,
+    });
+    assert.notEqual(accessWithoutMfa.data?.error?.code, 'MFA_SETUP_REQUIRED');
     const userMfa = await jsonRequest(baseUrl, '/api/access/mfa/setup', {
       method: 'POST',
       cookie: userCookie,

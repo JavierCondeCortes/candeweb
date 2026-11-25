@@ -7,7 +7,7 @@
 Crear un catálogo privado de skins mantenido por owner y admins. Solo las cuentas con el permiso
 `can_access_skins` podrán ver las fichas y abrir la URL asociada.
 
-Skins reutiliza la identidad, sesión, TOTP e invitaciones existentes. La concesión del permiso se
+Skins reutiliza la identidad, sesión e invitaciones existentes. Las cuentas estándar entran sin TOTP; los administradores lo mantienen. La concesión del permiso se
 realiza desde la [gestión centralizada de accesos](../accesos/accesos.md), no desde una pantalla de
 usuarios propia.
 

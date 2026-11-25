@@ -1,0 +1,14 @@
+Hola, {{displayName}}:
+
+Hemos recibido una solicitud para cambiar la contraseña de tu cuenta en {{brandName}}.
+
+Cambia la contraseña desde este enlace personal (un solo uso):
+{{resetUrl}}
+
+El enlace caduca el {{expiresAt}}. No lo compartas con otras personas.
+
+Si no lo solicitaste, ignora este mensaje: tu contraseña no cambiará.
+Ayuda: {{supportEmail}}
+
+{{brandName}}
+{{websiteUrl}}
