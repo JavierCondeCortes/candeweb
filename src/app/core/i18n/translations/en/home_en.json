@@ -313,6 +313,8 @@
       "title": "Community setups",
       "intro": "Configurations organised by simulator, car and circuit. Download active versions only and always review their expiry date.",
       "upload": "Upload a setup",
+      "downloadApp": "DOWNLOAD SETUPS APP",
+      "downloadAppSoon": "No app has been published yet.",
       "searchEyebrow": "Find your combination",
       "searchTitle": "Search the garage",
       "searchLabel": "Title, car or circuit",

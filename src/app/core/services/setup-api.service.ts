@@ -11,6 +11,7 @@ import {
   SetupInvitation,
   SetupSession,
   SetupSessionType,
+  SetupsAppInfo,
 } from '../models/setup.model';
 
 @Injectable({ providedIn: 'root' })
@@ -184,6 +185,10 @@ export class SetupApiService {
       { canAccessSetups, canUploadSetups },
       this.options(true),
     );
+  }
+
+  getSetupsApp() {
+    return this.http.get<{ app: SetupsAppInfo | null }>('/api/setups/app', this.options());
   }
 
   private options(mutating = false) {

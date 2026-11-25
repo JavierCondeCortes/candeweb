@@ -50,9 +50,7 @@ describe('SetupShell', () => {
     expect(language).toBeTruthy();
     expect(menuButton).toBeTruthy();
     expect(
-      Boolean(
-        language!.compareDocumentPosition(menuButton!) & Node.DOCUMENT_POSITION_FOLLOWING,
-      ),
+      Boolean(language!.compareDocumentPosition(menuButton!) & Node.DOCUMENT_POSITION_FOLLOWING),
     ).toBe(true);
   });
 

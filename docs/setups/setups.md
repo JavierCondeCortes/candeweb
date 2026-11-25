@@ -214,6 +214,19 @@ Si el volumen crece o se ejecutan varias instancias, los binarios deben migrar a
 objetos privado. La base de datos conservará únicamente metadatos y una clave de almacenamiento; las
 descargas usarán URLs firmadas de duración corta.
 
+## Aplicación de escritorio de Setups
+
+- Owner y admin suben el instalador (`.exe`, `.msi` o `.zip`, máximo 300 MB) en
+  **Administración → Ajustes → Aplicación de Setups**. Subir uno nuevo sustituye al anterior; también
+  se puede retirar.
+- El archivo se guarda en `<SETUP_DIR>/desktop-app/` junto con `meta.json` (nombre, tamaño, SHA-256,
+  fecha y quién lo subió). No se versiona ni se expone en `/uploads/`.
+- El catálogo de setups muestra el botón amarillo **DESCARGAR APP SETUPS**, junto a "Subir un
+  setup", solo cuando hay una aplicación publicada y solo a cuentas con acceso a Setups.
+- API: `GET/PUT/DELETE /api/admin/setups-app` (administración, con CSRF),
+  `GET /api/setups/app` y `GET /api/setups/app/download` (cuentas con acceso a Setups).
+- Subida y descarga quedan en el registro de auditoría.
+
 ## Retención y eliminación automática
 
 ### Configuración

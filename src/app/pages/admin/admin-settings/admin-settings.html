@@ -216,4 +216,46 @@
       </p>
     }
   </form>
+
+  <section class="admin-form-section" aria-labelledby="settings-setups-app-title">
+    <div>
+      <h2 id="settings-setups-app-title">{{ 'admin.settings.setupsApp' | translate }}</h2>
+      <p>{{ 'admin.settings.setupsAppHelp' | translate }}</p>
+    </div>
+    <div class="admin-form-grid">
+      @if (appMessage()) {
+        <p class="admin-alert is-success is-wide" role="status">{{ appMessage() }}</p>
+      }
+      @if (appError()) {
+        <p class="admin-alert is-error is-wide" role="alert">{{ appError() }}</p>
+      }
+      @if (setupsApp(); as app) {
+        <p class="admin-form-meta is-wide">
+          <strong>{{ app.fileName }}</strong> · {{ formatMegabytes(app.byteSize) }} MB ·
+          {{ app.uploadedAt | date: 'short' }} · {{ app.uploadedByName }}<br />
+          SHA-256: <code>{{ app.sha256 }}</code>
+        </p>
+      }
+      <label class="is-wide">
+        <span>{{ 'admin.settings.setupsAppFile' | translate }}</span>
+        <input
+          #appFile
+          type="file"
+          accept=".exe,.msi,.zip"
+          [disabled]="appUploading()"
+          (change)="uploadSetupsApp(appFile)"
+        />
+        @if (appUploading()) {
+          <small role="status">{{ 'admin.settings.setupsAppUploading' | translate }}</small>
+        }
+      </label>
+      @if (setupsApp()) {
+        <div class="admin-form-actions is-wide">
+          <button class="admin-button is-danger" type="button" (click)="deleteSetupsApp()">
+            {{ 'admin.settings.setupsAppDelete' | translate }}
+          </button>
+        </div>
+      }
+    </div>
+  </section>
 }

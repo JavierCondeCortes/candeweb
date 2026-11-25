@@ -127,3 +127,11 @@ export interface EmailDelivery {
   status: EmailDeliveryStatus;
   sentAt?: string;
 }
+
+export interface SetupsAppInfo {
+  fileName: string;
+  byteSize: number;
+  sha256: string;
+  uploadedAt: string;
+  uploadedByName: string;
+}
