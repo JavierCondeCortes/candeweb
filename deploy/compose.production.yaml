@@ -1,0 +1,17 @@
+# Compose de producción para Dokploy (origen GitHub, rama Main).
+# Las variables de entorno se definen en la pestaña Environment de Dokploy, no aquí.
+services:
+  candeweb:
+    image: ghcr.io/javiercondecortes/candeweb:latest
+    pull_policy: always
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - /root/apps/candeweb/data:/app/data
+    networks:
+      - dokploy-network
+
+networks:
+  dokploy-network:
+    external: true
