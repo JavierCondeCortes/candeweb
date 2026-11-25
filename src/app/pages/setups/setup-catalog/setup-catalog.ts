@@ -3,7 +3,7 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
-import { RacingSetup, SetupCapabilities } from '../../../core/models/setup.model';
+import { RacingSetup, SetupCapabilities, SetupsAppInfo } from '../../../core/models/setup.model';
 import { SetupApiService } from '../../../core/services/setup-api.service';
 
 @Component({
@@ -25,8 +25,14 @@ export class SetupCatalog implements OnInit {
   });
   readonly filters = this.formBuilder.nonNullable.group({ q: [''], simulator: [''] });
 
+  readonly setupsApp = signal<SetupsAppInfo | null>(null);
+
   ngOnInit(): void {
     this.load();
+    this.api.getSetupsApp().subscribe({
+      next: ({ app }) => this.setupsApp.set(app),
+      error: () => this.setupsApp.set(null),
+    });
   }
 
   load(): void {

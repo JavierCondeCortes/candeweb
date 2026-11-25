@@ -20,7 +20,12 @@ import {
   EmailTemplateConfiguration,
   EmailTemplatePreview,
 } from '../models/content-admin.model';
-import { ManagedSetupAccount, SetupAccessRequest, SetupInvitation } from '../models/setup.model';
+import {
+  ManagedSetupAccount,
+  SetupAccessRequest,
+  SetupInvitation,
+  SetupsAppInfo,
+} from '../models/setup.model';
 import { SkinContent, SkinInput } from '../models/skin.model';
 
 type MemberInput = Omit<
@@ -298,6 +303,22 @@ export class AdminApiService {
       input,
       this.options(true),
     );
+  }
+
+  getSetupsApp() {
+    return this.http.get<{ app: SetupsAppInfo | null }>('/api/admin/setups-app', this.options());
+  }
+
+  uploadSetupsApp(file: File) {
+    return this.http.put<{ app: SetupsAppInfo }>(
+      `/api/admin/setups-app?fileName=${encodeURIComponent(file.name)}`,
+      file,
+      this.options(true),
+    );
+  }
+
+  deleteSetupsApp() {
+    return this.http.delete<void>('/api/admin/setups-app', this.options(true));
   }
 
   getSettings() {

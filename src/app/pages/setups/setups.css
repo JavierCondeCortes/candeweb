@@ -354,6 +354,32 @@
   box-shadow: 0 0.65rem 1.5rem rgb(222 255 0 / 22%);
 }
 
+.setup-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.setup-button.is-lime {
+  border-color: var(--lime);
+  background: var(--lime);
+  color: #050505;
+}
+
+.setup-button.is-lime:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.setup-button.is-lime:hover:not(:disabled) {
+  border-color: var(--magenta);
+  background: var(--magenta);
+  color: #050505;
+  box-shadow: 0 0.65rem 1.5rem rgb(255 0 184 / 22%);
+}
+
 .setup-button.is-danger,
 .setup-text-button.is-danger {
   border-color: var(--danger);

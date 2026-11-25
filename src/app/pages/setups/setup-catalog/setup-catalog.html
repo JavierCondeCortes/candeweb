@@ -8,11 +8,27 @@
     {{ 'home.setups.catalog.title' | translate }}
   </h1>
   <p>{{ 'home.setups.catalog.intro' | translate }}</p>
-  @if (capabilities().canUpload) {
-    <a class="setup-button is-primary" routerLink="/setups/nuevo">{{
-      'home.setups.catalog.upload' | translate
-    }}</a>
-  }
+  <div class="setup-hero-actions">
+    @if (capabilities().canUpload) {
+      <a class="setup-button is-primary" routerLink="/setups/nuevo">{{
+        'home.setups.catalog.upload' | translate
+      }}</a>
+    }
+    @if (setupsApp()) {
+      <a class="setup-button is-lime" href="/api/setups/app/download" download>{{
+        'home.setups.catalog.downloadApp' | translate
+      }}</a>
+    } @else {
+      <button
+        class="setup-button is-lime"
+        type="button"
+        disabled
+        [title]="'home.setups.catalog.downloadAppSoon' | translate"
+      >
+        {{ 'home.setups.catalog.downloadApp' | translate }}
+      </button>
+    }
+  </div>
 </section>
 
 <section class="setup-panel" aria-labelledby="setup-filter-title">

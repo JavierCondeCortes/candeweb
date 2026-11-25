@@ -23,6 +23,7 @@ import {
   verifyPassword,
   verifyTotp,
 } from './security.mjs';
+import { downloadSetupsApp, getSetupsApp } from './setups-app.mjs';
 import { ApiError, validateAccessRequest, validateAdminIdentity } from './validation.mjs';
 
 const JSON_LIMIT = 1024 * 1024;
@@ -844,6 +845,9 @@ async function routeSetupAccessManagement(context) {
 async function routeSetupLibrary(context) {
   const { db, response, path, method, session } = context;
   const administrator = isSetupAdministrator(session);
+
+  if (method === 'GET' && path === '/api/setups/app') return getSetupsApp(context);
+  if (method === 'GET' && path === '/api/setups/app/download') return downloadSetupsApp(context);
 
   if (method === 'GET' && path === '/api/setups') {
     const q = String(context.url.searchParams.get('q') ?? '')

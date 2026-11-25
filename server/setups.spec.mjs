@@ -602,6 +602,43 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
     assert.equal(contributor.data.user.canAccessSkins, true);
     assert.equal(contributor.data.user.canUploadSetups, true);
 
+    // Aplicación de Setups: la sube administración y la descargan las cuentas con acceso.
+    const noApp = await jsonRequest(baseUrl, '/api/setups/app', { cookie: userCookie });
+    assert.equal(noApp.data.app, null);
+    const appBytes = Buffer.from('MZ-fake-installer-bytes');
+    const putApp = (cookie, csrf, fileName) =>
+      fetch(`${baseUrl}/api/admin/setups-app?fileName=${encodeURIComponent(fileName)}`, {
+        method: 'PUT',
+        headers: {
+          Cookie: cookie,
+          'X-CSRF-Token': csrf,
+          'Content-Type': 'application/octet-stream',
+        },
+        body: appBytes,
+      });
+    assert.equal((await putApp(userCookie, userCsrf, 'SetupsApp.exe')).status, 403);
+    assert.equal((await putApp(adminCookie, adminCsrf, 'virus.js')).status, 415);
+    const uploadedApp = await putApp(adminCookie, adminCsrf, 'SetupsApp.exe');
+    assert.equal(uploadedApp.status, 201);
+    const appInfo = await jsonRequest(baseUrl, '/api/setups/app', { cookie: userCookie });
+    assert.equal(appInfo.data.app.fileName, 'SetupsApp.exe');
+    assert.equal(appInfo.data.app.byteSize, appBytes.length);
+    const appDownload = await rawRequest(baseUrl, '/api/setups/app/download', {
+      cookie: userCookie,
+    });
+    assert.equal(appDownload.status, 200);
+    assert.deepEqual(appDownload.body, appBytes);
+    const appAnonymous = await rawRequest(baseUrl, '/api/setups/app/download');
+    assert.equal(appAnonymous.status, 401);
+    const removedApp = await jsonRequest(baseUrl, '/api/admin/setups-app', {
+      method: 'DELETE',
+      cookie: adminCookie,
+      csrf: adminCsrf,
+    });
+    assert.equal(removedApp.status, 204);
+    const goneApp = await jsonRequest(baseUrl, '/api/setups/app', { cookie: userCookie });
+    assert.equal(goneApp.data.app, null);
+
     const userSkins = await jsonRequest(baseUrl, '/api/skins', { cookie: userCookie });
     assert.equal(userSkins.status, 200);
     assert.equal(userSkins.data.skins[0].carName, 'Mazda MX-5 Cup');
