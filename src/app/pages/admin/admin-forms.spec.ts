@@ -62,6 +62,7 @@ describe('Admin reactive forms', () => {
 
   it('renders settings after loading their administered values', async () => {
     const api = {
+      getSetupsApp: () => of({ app: null }),
       getSettings: () =>
         of({
           settings: {
