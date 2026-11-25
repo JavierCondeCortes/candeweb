@@ -960,6 +960,23 @@ function migrate(db) {
     }
     db.prepare('INSERT INTO schema_migrations (version, applied_at) VALUES (27, ?)').run(now());
   }
+
+  const migration28Applied = db.prepare('SELECT 1 FROM schema_migrations WHERE version = 28').get();
+  if (!migration28Applied) {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS password_reset_tokens (
+        id TEXT PRIMARY KEY,
+        admin_id TEXT NOT NULL REFERENCES admin_profiles(id) ON DELETE CASCADE,
+        token_hash TEXT NOT NULL UNIQUE,
+        expires_at TEXT NOT NULL,
+        used_at TEXT,
+        created_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS password_reset_tokens_admin
+        ON password_reset_tokens(admin_id, created_at DESC);
+    `);
+    db.prepare('INSERT INTO schema_migrations (version, applied_at) VALUES (28, ?)').run(now());
+  }
 }
 
 function seed(db) {

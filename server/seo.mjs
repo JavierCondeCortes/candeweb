@@ -48,6 +48,8 @@ const PRIVATE_PREFIXES = [
   '/acceso',
   '/solicitar-acceso',
   '/aceptar-invitacion',
+  '/recuperar-contrasena',
+  '/restablecer-contrasena',
 ];
 
 const DETAIL_ROUTE = /^\/candeonatos\/[^/]+$/;
@@ -163,7 +165,10 @@ export function renderIndexHtml(html, rawPath, baseUrl) {
   } else {
     robots = NOINDEX_HEADER;
     status = 404;
-    meta = { title: `Página no encontrada · ${SITE_NAME}`, description: PUBLIC_ROUTES[0].description };
+    meta = {
+      title: `Página no encontrada · ${SITE_NAME}`,
+      description: PUBLIC_ROUTES[0].description,
+    };
   }
 
   const canonicalPath = kind === 'public' || kind === 'detail' ? path : '/';
@@ -177,7 +182,10 @@ export function renderIndexHtml(html, rawPath, baseUrl) {
   });
 
   const rendered = html.includes('<!--seo:start-->')
-    ? html.replace(/<!--seo:start-->[\s\S]*?<!--seo:end-->/, `<!--seo:start-->\n${head}\n    <!--seo:end-->`)
+    ? html.replace(
+        /<!--seo:start-->[\s\S]*?<!--seo:end-->/,
+        `<!--seo:start-->\n${head}\n    <!--seo:end-->`,
+      )
     : html;
   return { html: rendered, status, robots };
 }

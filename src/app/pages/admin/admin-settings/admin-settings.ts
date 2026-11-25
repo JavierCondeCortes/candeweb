@@ -7,6 +7,7 @@ import {
   SiteSettings,
   TwitchChannelSetting,
 } from '../../../core/models/content-admin.model';
+import { SetupsAppInfo } from '../../../core/models/setup.model';
 import { AdminApiService } from '../../../core/services/admin-api.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
@@ -36,6 +37,10 @@ export class AdminSettings implements OnInit {
   readonly message = signal('');
   readonly errorMessage = signal('');
   readonly fieldErrors = signal<Record<string, string>>({});
+  readonly setupsApp = signal<SetupsAppInfo | null>(null);
+  readonly appUploading = signal(false);
+  readonly appMessage = signal('');
+  readonly appError = signal('');
 
   readonly form = this.formBuilder.nonNullable.group({
     twitchChannelLogin: ['', [Validators.required]],
@@ -51,6 +56,7 @@ export class AdminSettings implements OnInit {
   });
 
   ngOnInit(): void {
+    this.api.getSetupsApp().subscribe({ next: ({ app }) => this.setupsApp.set(app) });
     forkJoin({ settings: this.api.getSettings(), championships: this.api.getChampionships() })
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
@@ -164,6 +170,40 @@ export class AdminSettings implements OnInit {
           focusErrorSummary('settings-form-error');
         },
       });
+  }
+
+  uploadSetupsApp(input: HTMLInputElement): void {
+    const file = input.files?.[0];
+    if (!file || this.appUploading()) return;
+    this.appUploading.set(true);
+    this.appMessage.set('');
+    this.appError.set('');
+    this.api
+      .uploadSetupsApp(file)
+      .pipe(finalize(() => this.appUploading.set(false)))
+      .subscribe({
+        next: ({ app }) => {
+          this.setupsApp.set(app);
+          this.appMessage.set(this.i18n.translate('admin.settings.setupsAppUploaded'));
+          input.value = '';
+        },
+        error: (error) => this.appError.set(apiErrorMessage(error)),
+      });
+  }
+
+  deleteSetupsApp(): void {
+    if (this.appUploading()) return;
+    this.api.deleteSetupsApp().subscribe({
+      next: () => {
+        this.setupsApp.set(null);
+        this.appMessage.set(this.i18n.translate('admin.settings.setupsAppDeleted'));
+      },
+      error: (error) => this.appError.set(apiErrorMessage(error)),
+    });
+  }
+
+  formatMegabytes(bytes: number): string {
+    return (bytes / (1024 * 1024)).toFixed(1);
   }
 }
 

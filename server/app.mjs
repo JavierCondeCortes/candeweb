@@ -15,6 +15,7 @@ import {
 import { NOINDEX_HEADER, renderIndexHtml, renderRobots, renderSitemap } from './seo.mjs';
 import { createTwitchStatusService } from './twitch.mjs';
 import { routeSetupApi, runSetupCleanup } from './setups.mjs';
+import { deleteSetupsApp, getSetupsApp, uploadSetupsApp } from './setups-app.mjs';
 import { routeWebUpdatesApi } from './web-updates.mjs';
 import {
   createEmailService,
@@ -582,7 +583,12 @@ async function routeRequest(context) {
 
   if (method === 'GET' || method === 'HEAD') {
     if (path === '/robots.txt') {
-      return sendText(request, response, 'text/plain; charset=utf-8', renderRobots(context.publicAppUrl));
+      return sendText(
+        request,
+        response,
+        'text/plain; charset=utf-8',
+        renderRobots(context.publicAppUrl),
+      );
     }
     if (path === '/sitemap.xml') {
       const championships = db
@@ -1365,6 +1371,13 @@ async function routeAdmin(context) {
           : 'championship.featured';
     recordAudit(db, session.admin.id, auditAction, 'championship', championship.id);
     return sendJson(response, 200, { championship: findChampionship(db, championship.id) });
+  }
+
+  if (path === '/api/admin/setups-app') {
+    requireAdministrator(session);
+    if (method === 'GET') return getSetupsApp(context);
+    if (method === 'PUT') return uploadSetupsApp(context);
+    if (method === 'DELETE') return deleteSetupsApp(context);
   }
 
   if (method === 'GET' && path === '/api/admin/settings') {

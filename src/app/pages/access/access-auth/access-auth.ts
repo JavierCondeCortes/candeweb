@@ -1,16 +1,15 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { finalize, switchMap } from 'rxjs';
+import { finalize } from 'rxjs';
 import { LanguageSwitcher } from '../../../core/i18n/language-switcher/language-switcher';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
-import { MfaSetup } from '../../../core/models/content-admin.model';
 import { SetupInvitation } from '../../../core/models/setup.model';
 import { AccessApiService } from '../../../core/services/access-api.service';
 import { CandeBrand } from '../../../shared/components/cande-brand/cande-brand';
 
-type AccessMode = 'login' | 'request' | 'invitation';
+type AccessMode = 'login' | 'request' | 'invitation' | 'forgot' | 'reset';
 
 @Component({
   selector: 'app-access-auth',
@@ -25,21 +24,23 @@ export class AccessAuth implements OnInit {
   private readonly i18n = inject(I18nService);
 
   readonly mode = this.route.snapshot.data['mode'] as AccessMode;
-  readonly loading = signal(this.mode !== 'request');
+  readonly loading = signal(!['request', 'forgot'].includes(this.mode));
   readonly submitting = signal(false);
   readonly sent = signal(false);
   readonly errorMessage = signal('');
   readonly invitation = signal<SetupInvitation | null>(null);
-  readonly mfaSetup = signal<MfaSetup | null>(null);
-  readonly recoveryCodes = signal<string[]>([]);
-  readonly recoveryEmailMessage = signal('');
+  readonly mfaRequired = signal(false);
+  readonly resetEmail = signal('');
+  readonly resetDone = signal(false);
   readonly loginPasswordVisible = signal(false);
   readonly invitationPasswordVisible = signal(false);
+  readonly resetPasswordVisible = signal(false);
 
   readonly loginForm = this.formBuilder.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(12)]],
     rememberMe: [false],
+    mfaCode: [''],
   });
   readonly requestForm = this.formBuilder.nonNullable.group({
     displayName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(80)]],
@@ -48,12 +49,31 @@ export class AccessAuth implements OnInit {
   readonly invitationForm = this.formBuilder.nonNullable.group({
     password: ['', [Validators.required, Validators.minLength(12)]],
   });
-  readonly mfaForm = this.formBuilder.nonNullable.group({
-    code: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
+  readonly forgotForm = this.formBuilder.nonNullable.group({
+    email: ['', [Validators.required, Validators.email]],
+  });
+  readonly resetForm = this.formBuilder.nonNullable.group({
+    password: ['', [Validators.required, Validators.minLength(12)]],
   });
 
   ngOnInit(): void {
-    if (this.mode === 'request') return;
+    if (this.mode === 'request' || this.mode === 'forgot') return;
+    if (this.mode === 'reset') {
+      const token = this.route.snapshot.queryParamMap.get('token') ?? '';
+      if (!token) {
+        this.loading.set(false);
+        this.errorMessage.set(this.i18n.translate('home.access.resetInvalid'));
+        return;
+      }
+      this.api
+        .verifyPasswordReset(token)
+        .pipe(finalize(() => this.loading.set(false)))
+        .subscribe({
+          next: ({ email }) => this.resetEmail.set(email),
+          error: () => this.errorMessage.set(this.i18n.translate('home.access.resetInvalid')),
+        });
+      return;
+    }
     if (this.mode === 'invitation') {
       const token = this.route.snapshot.queryParamMap.get('token') ?? '';
       if (!token) {
@@ -90,8 +110,54 @@ export class AccessAuth implements OnInit {
       .pipe(finalize(() => this.submitting.set(false)))
       .subscribe({
         next: () => void this.navigateToAuthorizedArea(),
+        error: (error) => {
+          const code = accessErrorCode(error);
+          // El código TOTP o de recuperación solo se pide a owner y admin: el servidor lo exige
+          // y, solo entonces, el formulario muestra el campo.
+          if (code === 'MFA_REQUIRED') {
+            this.mfaRequired.set(true);
+            this.errorMessage.set(this.i18n.translate('home.access.mfaRequired'));
+          } else {
+            if (code === 'INVALID_MFA_CODE') this.mfaRequired.set(true);
+            this.errorMessage.set(accessError(error));
+          }
+        },
+      });
+  }
+
+  requestPasswordReset(): void {
+    this.forgotForm.markAllAsTouched();
+    if (this.forgotForm.invalid || this.submitting()) return;
+    this.submitting.set(true);
+    this.errorMessage.set('');
+    this.api
+      .forgotPassword(this.forgotForm.controls.email.value)
+      .pipe(finalize(() => this.submitting.set(false)))
+      .subscribe({
+        next: () => this.sent.set(true),
         error: (error) => this.errorMessage.set(accessError(error)),
       });
+  }
+
+  submitPasswordReset(): void {
+    this.resetForm.markAllAsTouched();
+    if (this.resetForm.invalid || this.submitting()) return;
+    this.submitting.set(true);
+    this.errorMessage.set('');
+    this.api
+      .resetPassword({
+        token: this.route.snapshot.queryParamMap.get('token') ?? '',
+        password: this.resetForm.controls.password.value,
+      })
+      .pipe(finalize(() => this.submitting.set(false)))
+      .subscribe({
+        next: () => this.resetDone.set(true),
+        error: (error) => this.errorMessage.set(accessError(error)),
+      });
+  }
+
+  toggleResetPassword(): void {
+    this.resetPasswordVisible.update((visible) => !visible);
   }
 
   toggleLoginPassword(): void {
@@ -129,35 +195,11 @@ export class AccessAuth implements OnInit {
     this.errorMessage.set('');
     this.api
       .acceptInvitation({ token, password: this.invitationForm.controls.password.value })
-      .pipe(
-        switchMap(() => this.api.startMfaSetup()),
-        finalize(() => this.submitting.set(false)),
-      )
-      .subscribe({
-        next: (setup) => this.mfaSetup.set(setup),
-        error: (error) => this.errorMessage.set(accessError(error)),
-      });
-  }
-
-  confirmMfa(): void {
-    this.mfaForm.markAllAsTouched();
-    if (this.mfaForm.invalid || this.submitting()) return;
-    this.submitting.set(true);
-    this.errorMessage.set('');
-    this.api
-      .confirmMfa(this.mfaForm.controls.code.value)
       .pipe(finalize(() => this.submitting.set(false)))
       .subscribe({
-        next: ({ recoveryCodes, emailDelivery }) => {
-          this.recoveryCodes.set(recoveryCodes);
-          this.recoveryEmailMessage.set(`home.access.recoveryEmail.${emailDelivery.status}`);
-        },
+        next: () => void this.navigateToAuthorizedArea(),
         error: (error) => this.errorMessage.set(accessError(error)),
       });
-  }
-
-  continueAfterSetup(): void {
-    void this.api.refreshSession().subscribe({ next: () => void this.navigateToAuthorizedArea() });
   }
 
   private navigateToAuthorizedArea(): void {

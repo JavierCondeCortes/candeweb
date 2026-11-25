@@ -53,3 +53,25 @@ jobs:
           sbom: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  # Auto-despliegue en producción: solo para pushes a Main (no para tags).
+  # Pide a Dokploy que vuelva a descargar la imagen :latest y reinicie el servicio.
+  # Requiere el secreto DOKPLOY_DEPLOY_WEBHOOK (URL del webhook del servicio candeweb en Dokploy).
+  deploy:
+    needs: publish
+    if: github.event_name == 'push' && github.ref == 'refs/heads/Main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      DEPLOY_WEBHOOK_URL: ${{ secrets.DOKPLOY_DEPLOY_WEBHOOK }}
+    steps:
+      - name: Disparar redespliegue en Dokploy
+        run: |
+          if [ -z "$DEPLOY_WEBHOOK_URL" ]; then
+            echo "::error::Falta el secreto DOKPLOY_DEPLOY_WEBHOOK"
+            exit 1
+          fi
+          curl --fail --silent --show-error --max-time 30 \
+            -X POST -H 'Content-Type: application/json' -d '{}' \
+            "$DEPLOY_WEBHOOK_URL" > /dev/null
+          echo "Redespliegue solicitado a Dokploy."

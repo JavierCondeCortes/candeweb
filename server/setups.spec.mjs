@@ -270,6 +270,80 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
     userCookie = sessionCookieFrom(loggedIn.response);
     userCsrf = loggedIn.data.csrfToken;
 
+    // Recuperación de contraseña: respuesta idéntica exista o no la cuenta, enlace de un solo uso.
+    const emailsBeforeReset = sentEmails.length;
+    const unknownForgot = await jsonRequest(baseUrl, '/api/access/password/forgot', {
+      method: 'POST',
+      body: { email: 'nadie@candemor.test' },
+    });
+    assert.equal(unknownForgot.status, 202);
+    assert.equal(sentEmails.length, emailsBeforeReset);
+    const forgot = await jsonRequest(baseUrl, '/api/access/password/forgot', {
+      method: 'POST',
+      body: { email: 'piloto@candemor.test' },
+    });
+    assert.equal(forgot.status, 202);
+    assert.deepEqual(forgot.data, unknownForgot.data);
+    const resetEmail = sentEmails.at(-1);
+    assert.equal(sentEmails.length, emailsBeforeReset + 1);
+    assert.equal(resetEmail.to, 'piloto@candemor.test');
+    const resetToken = /restablecer-contrasena\?token=([A-Za-z0-9_-]+)/.exec(resetEmail.text)?.[1];
+    assert.ok(resetToken);
+    const resetVerified = await jsonRequest(
+      baseUrl,
+      `/api/access/password/verify?token=${encodeURIComponent(resetToken)}`,
+    );
+    assert.equal(resetVerified.status, 200);
+    const shortReset = await jsonRequest(baseUrl, '/api/access/password/reset', {
+      method: 'POST',
+      body: { token: resetToken, password: 'corta' },
+    });
+    assert.equal(shortReset.status, 422);
+    const resetDone = await jsonRequest(baseUrl, '/api/access/password/reset', {
+      method: 'POST',
+      body: { token: resetToken, password: 'password-nueva-456' },
+    });
+    assert.equal(resetDone.status, 200);
+    const resetReused = await jsonRequest(baseUrl, '/api/access/password/reset', {
+      method: 'POST',
+      body: { token: resetToken, password: 'password-otra-789' },
+    });
+    assert.equal(resetReused.status, 404);
+    const sessionAfterReset = await jsonRequest(baseUrl, '/api/access/session', {
+      cookie: userCookie,
+    });
+    assert.equal(sessionAfterReset.data.authenticated, false);
+    const oldPassword = await jsonRequest(baseUrl, '/api/access/login', {
+      method: 'POST',
+      body: { email: 'piloto@candemor.test', password: 'password-piloto-123' },
+    });
+    assert.equal(oldPassword.status, 401);
+    const newPassword = await jsonRequest(baseUrl, '/api/access/login', {
+      method: 'POST',
+      body: { email: 'piloto@candemor.test', password: 'password-nueva-456' },
+    });
+    assert.equal(newPassword.status, 200);
+    // Se devuelve la contraseña original para que el resto del escenario siga igual.
+    const forgotAgain = await jsonRequest(baseUrl, '/api/access/password/forgot', {
+      method: 'POST',
+      body: { email: 'piloto@candemor.test' },
+    });
+    assert.equal(forgotAgain.status, 202);
+    const restoreToken = /restablecer-contrasena\?token=([A-Za-z0-9_-]+)/.exec(
+      sentEmails.at(-1).text,
+    )?.[1];
+    const restored = await jsonRequest(baseUrl, '/api/access/password/reset', {
+      method: 'POST',
+      body: { token: restoreToken, password: 'password-piloto-123' },
+    });
+    assert.equal(restored.status, 200);
+    const relogin = await jsonRequest(baseUrl, '/api/access/login', {
+      method: 'POST',
+      body: { email: 'piloto@candemor.test', password: 'password-piloto-123' },
+    });
+    userCookie = sessionCookieFrom(relogin.response);
+    userCsrf = relogin.data.csrfToken;
+
     // Sin TOTP la cuenta estándar ya puede usar los setups; el segundo factor es opcional.
     const accessWithoutMfa = await jsonRequest(baseUrl, '/api/setups', {
       cookie: userCookie,
@@ -527,6 +601,43 @@ test('gestiona acceso, permisos, versiones privadas, descargas y caducidad de se
     assert.equal(contributor.status, 200);
     assert.equal(contributor.data.user.canAccessSkins, true);
     assert.equal(contributor.data.user.canUploadSetups, true);
+
+    // Aplicación de Setups: la sube administración y la descargan las cuentas con acceso.
+    const noApp = await jsonRequest(baseUrl, '/api/setups/app', { cookie: userCookie });
+    assert.equal(noApp.data.app, null);
+    const appBytes = Buffer.from('MZ-fake-installer-bytes');
+    const putApp = (cookie, csrf, fileName) =>
+      fetch(`${baseUrl}/api/admin/setups-app?fileName=${encodeURIComponent(fileName)}`, {
+        method: 'PUT',
+        headers: {
+          Cookie: cookie,
+          'X-CSRF-Token': csrf,
+          'Content-Type': 'application/octet-stream',
+        },
+        body: appBytes,
+      });
+    assert.equal((await putApp(userCookie, userCsrf, 'SetupsApp.exe')).status, 403);
+    assert.equal((await putApp(adminCookie, adminCsrf, 'virus.js')).status, 415);
+    const uploadedApp = await putApp(adminCookie, adminCsrf, 'SetupsApp.exe');
+    assert.equal(uploadedApp.status, 201);
+    const appInfo = await jsonRequest(baseUrl, '/api/setups/app', { cookie: userCookie });
+    assert.equal(appInfo.data.app.fileName, 'SetupsApp.exe');
+    assert.equal(appInfo.data.app.byteSize, appBytes.length);
+    const appDownload = await rawRequest(baseUrl, '/api/setups/app/download', {
+      cookie: userCookie,
+    });
+    assert.equal(appDownload.status, 200);
+    assert.deepEqual(appDownload.body, appBytes);
+    const appAnonymous = await rawRequest(baseUrl, '/api/setups/app/download');
+    assert.equal(appAnonymous.status, 401);
+    const removedApp = await jsonRequest(baseUrl, '/api/admin/setups-app', {
+      method: 'DELETE',
+      cookie: adminCookie,
+      csrf: adminCsrf,
+    });
+    assert.equal(removedApp.status, 204);
+    const goneApp = await jsonRequest(baseUrl, '/api/setups/app', { cookie: userCookie });
+    assert.equal(goneApp.data.app, null);
 
     const userSkins = await jsonRequest(baseUrl, '/api/skins', { cookie: userCookie });
     assert.equal(userSkins.status, 200);

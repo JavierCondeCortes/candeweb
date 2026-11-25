@@ -1,8 +1,7 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { tap } from 'rxjs';
-import { MfaSetup } from '../models/content-admin.model';
-import { EmailDelivery, SetupInvitation, SetupSession } from '../models/setup.model';
+import { SetupInvitation, SetupSession } from '../models/setup.model';
 import { SkinContent } from '../models/skin.model';
 
 @Injectable({ providedIn: 'root' })
@@ -18,7 +17,7 @@ export class AccessApiService {
       .pipe(tap((session) => this.sessionState.set(session)));
   }
 
-  login(input: { email: string; password: string; rememberMe: boolean }) {
+  login(input: { email: string; password: string; rememberMe: boolean; mfaCode?: string }) {
     return this.http
       .post<SetupSession>('/api/access/login', input, { withCredentials: true })
       .pipe(tap((session) => this.sessionState.set(session)));
@@ -46,16 +45,18 @@ export class AccessApiService {
       .pipe(tap((session) => this.sessionState.set(session)));
   }
 
-  startMfaSetup() {
-    return this.http.post<MfaSetup>('/api/access/mfa/setup', {}, this.options(true));
+  forgotPassword(email: string) {
+    return this.http.post<{ requested: boolean }>('/api/access/password/forgot', { email });
   }
 
-  confirmMfa(code: string) {
-    return this.http.post<{ recoveryCodes: string[]; emailDelivery: EmailDelivery }>(
-      '/api/access/mfa/confirm',
-      { code },
-      this.options(true),
+  verifyPasswordReset(token: string) {
+    return this.http.get<{ valid: boolean; email: string }>(
+      `/api/access/password/verify?token=${encodeURIComponent(token)}`,
     );
+  }
+
+  resetPassword(input: { token: string; password: string }) {
+    return this.http.post<{ reset: boolean }>('/api/access/password/reset', input);
   }
 
   getSkins() {
